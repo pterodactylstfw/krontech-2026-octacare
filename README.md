@@ -1,0 +1,1 @@
+# krontech-2026-octacare
