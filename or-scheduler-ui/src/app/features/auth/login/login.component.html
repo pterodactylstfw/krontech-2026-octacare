@@ -2,34 +2,22 @@
   <div class="bg-gradient"></div>
 
   <div class="login-card">
-
     <div class="login-header">
       <div class="logo-icon">
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-          <circle cx="18" cy="18" r="18" fill="url(#grad)"/>
-          <path d="M18 8v10l6 3" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-          <path d="M11 13h2M11 18h2M11 23h2" stroke="white" stroke-width="2" stroke-linecap="round"/>
-          <defs>
-            <linearGradient id="grad" x1="0" y1="0" x2="36" y2="36">
-              <stop offset="0%" stop-color="#2563EB"/>
-              <stop offset="100%" stop-color="#0EA5E9"/>
-            </linearGradient>
-          </defs>
-        </svg>
+        <img src="/assets/images/Logo.jpeg" alt="Logo" class="logo-image" />
       </div>
       <h1 class="app-title">OR Scheduler</h1>
       <p class="app-subtitle">Log in to your account</p>
     </div>
 
     <div class="login-form">
-
       <div class="field-group">
-        <label>EMAIL ADDRESS</label>
+        <label>Email address</label>
         <div class="input-wrapper">
           <input
             type="email"
             [(ngModel)]="email"
-            placeholder="name@spital.ro"
+            placeholder="name@hospital.com"
             autocomplete="email"
           />
           <span class="input-icon">✉️</span>
@@ -37,7 +25,7 @@
       </div>
 
       <div class="field-group">
-        <label>PASSWORD</label>
+        <label>Password</label>
         <div class="input-wrapper">
           <input
             [type]="showPassword ? 'text' : 'password'"
@@ -50,7 +38,7 @@
           </button>
         </div>
         <div class="forgot-row">
-          <span class="forgot-link">Forgot password?</span>
+          <span class="forgot-link">Forgot your password?</span>
         </div>
       </div>
 
@@ -58,18 +46,14 @@
         {{ errorMessage }}
       </div>
 
-      <button
-        class="login-btn"
-        (click)="onLogin()"
-        [disabled]="isLoading"
-      >
+      <button class="login-btn" (click)="onLogin()" [disabled]="isLoading">
         <span *ngIf="!isLoading">LOG IN →</span>
         <span *ngIf="isLoading" class="spinner"></span>
       </button>
 
       <div class="login-footer">
         <p>Don't have an account?</p>
-        <p class="contact-admin">Contact your Administrator</p>
+        <p class="contact-admin">Contact your administrator</p>
       </div>
 
     </div>

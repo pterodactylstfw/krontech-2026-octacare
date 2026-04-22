@@ -10,37 +10,37 @@ import { Notification } from '../../shared/models/notification.model';
 export const MOCK_USERS: User[] = [
   {
     id: '1',
-    email: 'admin@spital.ro',
-    fullName: 'Admin Spital',
+    email: 'admin@hospital.com',
+    fullName: 'Hospital Administrator',
     role: UserRole.ADMIN,
     department: 'Management'
   },
   {
     id: '2',
-    email: 'ionescu@spital.ro',
+    email: 'ionescu@hospital.com',
     fullName: 'Dr. Ionescu Alexandru',
     role: UserRole.SURGEON,
-    specialization: 'Cardiac',
-    department: 'Cardiologie'
+    specialization: 'Cardiac surgery',
+    department: 'Cardiology'
   },
   {
     id: '3',
-    email: 'popescu@spital.ro',
+    email: 'popescu@hospital.com',
     fullName: 'Dr. Popescu Maria',
     role: UserRole.SURGEON,
-    specialization: 'Neuro',
-    department: 'Neurologie'
+    specialization: 'Neurosurgery',
+    department: 'Neurology'
   },
   {
     id: '4',
-    email: 'asistenta@spital.ro',
+    email: 'nurse@hospital.com',
     fullName: 'Ionescu Elena',
     role: UserRole.NURSE,
-    department: 'Cardiologie'
+    department: 'Cardiology'
   },
   {
     id: '5',
-    email: 'pacient@gmail.com',
+    email: 'patient@gmail.com',
     fullName: 'Gheorghe Ion',
     role: UserRole.PATIENT
   }
@@ -49,32 +49,32 @@ export const MOCK_USERS: User[] = [
 export const MOCK_ROOMS: OperatingRoom[] = [
   {
     id: '1',
-    name: 'Sala 1',
+    name: 'Operating Room 1',
     roomType: 'CARDIAC',
     status: RoomStatus.AVAILABLE,
     floor: 2,
     sterilizationTimeMinutes: 45,
-    equipment: ['ECG', 'Defibrilator', 'Bypass'],
+    equipment: ['ECG', 'Defibrillator', 'Bypass'],
     capacity: 6
   },
   {
     id: '2',
-    name: 'Sala 2',
+    name: 'Operating Room 2',
     roomType: 'GENERAL',
     status: RoomStatus.OCCUPIED,
     floor: 2,
     sterilizationTimeMinutes: 30,
-    equipment: ['Anestezie', 'Monitor'],
+    equipment: ['Anesthesia', 'Monitor'],
     capacity: 5
   },
   {
     id: '3',
-    name: 'Sala 3',
+    name: 'Operating Room 3',
     roomType: 'NEURO',
     status: RoomStatus.STERILIZING,
     floor: 3,
     sterilizationTimeMinutes: 60,
-    equipment: ['Neuronavigatie', 'Microscop'],
+    equipment: ['Neuronavigation', 'Microscope'],
     capacity: 7
   }
 ];
@@ -123,7 +123,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     id: '1',
     userId: '2',
     type: 'EMERGENCY',
-    message: 'Operatie de urgenta adaugata in Sala 1 la 14:00',
+    message: 'Emergency surgery added in Operating Room 1 at 2:00 PM',
     isRead: false,
     surgeryId: '3',
     createdAt: '2026-04-22T13:45:00'
@@ -132,7 +132,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     id: '2',
     userId: '2',
     type: 'REMINDER',
-    message: 'Operatie programata maine la 08:00 in Sala 1',
+    message: 'Scheduled surgery tomorrow at 8:00 AM in Operating Room 1',
     isRead: true,
     surgeryId: '1',
     createdAt: '2026-04-21T18:00:00'

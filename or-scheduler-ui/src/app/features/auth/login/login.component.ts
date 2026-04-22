@@ -27,7 +27,7 @@ export class LoginComponent {
 
   onLogin() {
     if (!this.email || !this.password) {
-      this.errorMessage = 'Completați toate câmpurile.';
+      this.errorMessage = 'Please fill in all fields.';
       return;
     }
 
@@ -38,10 +38,9 @@ export class LoginComponent {
       next: (response) => {
         this.isLoading = false;
         if (!response) {
-          this.errorMessage = 'Email sau parolă incorectă.';
+          this.errorMessage = 'Incorrect email or password.';
           return;
         }
-        // redirect în funcție de rol
         const role = this.authService.getCurrentUserRole();
         switch (role) {
           case UserRole.ADMIN:
@@ -58,7 +57,7 @@ export class LoginComponent {
       },
       error: () => {
         this.isLoading = false;
-        this.errorMessage = 'A apărut o eroare. Încercați din nou.';
+        this.errorMessage = 'An error occurred. Please try again.';
       }
     });
   }

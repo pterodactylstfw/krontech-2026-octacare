@@ -1,5 +1,6 @@
 .login-wrapper {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -22,7 +23,8 @@
 .login-card {
   position: relative;
   z-index: 1;
-  width: 380px;
+  height: 500px;
+  width: 400px;
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
@@ -41,6 +43,14 @@
 
   .logo-icon {
     margin-bottom: 12px;
+    display: flex;
+    justify-content: center;
+
+    .logo-image {
+      width: 65px;
+      height: 65px;
+      object-fit: contain;
+    }
   }
 
   .app-title {
