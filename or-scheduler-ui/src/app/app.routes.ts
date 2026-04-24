@@ -12,9 +12,21 @@ export const routes: Routes = [
       import('./features/auth/login/login.component').then((m) => m.LoginComponent)
   },
   {
-    path: 'staff',
+    path: '',
     loadComponent: () =>
-      import('./features/staff/staff-list/staff-list').then((m) => m.StaffList)
+      import('./shared/shell-layout/shell-layout').then((m) => m.ShellLayoutComponent),
+    children: [
+      {
+        path: 'calendar',
+        loadComponent: () =>
+          import('./features/calendar/calendar-view/calendar-view').then((m) => m.CalendarViewComponent)
+      },
+      {
+        path: 'staff',
+        loadComponent: () =>
+          import('./features/staff/staff-list/staff-list').then((m) => m.StaffList)
+      }
+    ]
   },
   {
     path: '**',
