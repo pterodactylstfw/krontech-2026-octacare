@@ -15,11 +15,12 @@
   --transition-fast: 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-html,
-body {
+html, body {
   height: 100%;
+  width: 100%;
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
 }
 
 body {
@@ -228,4 +229,17 @@ app-root {
     transition-duration: 0.01ms !important;
   }
 }
+html, html.light-mode,
+body, body.light-mode {
+  transition: background 0.3s ease !important;
+}
 
+html:not(.light-mode),
+body:not(.light-mode) {
+  background: #0a0e17 !important;
+}
+
+html.light-mode,
+body.light-mode {
+  background: #f0f4ff !important;
+}
