@@ -22,6 +22,13 @@ export const routes: Routes = [
           import('./features/calendar/calendar-view/calendar-view').then((m) => m.CalendarViewComponent)
       },
       {
+        path: 'operating-rooms',
+        loadComponent: () =>
+          import('./features/operating-rooms/operating-rooms-list/operating-rooms-list').then(
+            (m) => m.OperatingRoomsListComponent
+          )
+      },
+      {
         path: 'staff',
         loadComponent: () =>
           import('./features/staff/staff-list/staff-list').then((m) => m.StaffList)
