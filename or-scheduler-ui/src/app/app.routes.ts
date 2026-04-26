@@ -52,6 +52,11 @@ export const routes: Routes = [
         path: 'settings',
         loadComponent: () =>
           import('./features/settings/settings.component').then((m) => m.SettingsComponent)
+      },
+      {
+        path: 'patients/portal',
+        loadComponent: () =>
+          import('./features/patients/patient-portal/patient-portal.component').then((m) => m.PatientPortalComponent)
       }
     ]
   },
