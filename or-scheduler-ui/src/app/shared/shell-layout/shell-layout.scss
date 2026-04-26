@@ -1,5 +1,5 @@
 .shell {
-  --sb-bg: #0a0d14;
+  --sb-bg: rgba(10, 13, 20, 0.65);
   --sb-border: rgba(255,255,255,0.05);
   --sb-text: rgba(255,255,255,0.3);
   --sb-text-hover: rgba(255,255,255,0.85);
@@ -18,7 +18,7 @@
   overflow: hidden;
 
   &.light {
-    --sb-bg: #ffffff;
+    --sb-bg: linear-gradient(180deg, rgba(255,255,255,0.85) 0%, rgba(235,242,255,0.80) 100%);
     --sb-border: rgba(0,0,0,0.06);
     --sb-text: rgba(0,0,0,0.35);
     --sb-text-hover: rgba(0,0,0,0.85);
@@ -42,6 +42,8 @@
   display: flex;
   flex-direction: column;
   transition: background 0.3s ease;
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
 }
 
 // ─── LOGO ─────────────────────────────────────────────

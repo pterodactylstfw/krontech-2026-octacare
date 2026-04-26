@@ -34,7 +34,7 @@ export const routes: Routes = [
           )
       },
       {
-        path: 'surgeons',         
+        path: 'surgeons',
         loadComponent: () =>
           import('./features/surgeons/surgeons.component').then((m) => m.SurgeonsComponent)
       },
@@ -42,6 +42,16 @@ export const routes: Routes = [
         path: 'staff',
         loadComponent: () =>
           import('./features/staff/staff-list/staff-list').then((m) => m.StaffList)
+      },
+      {
+        path: 'reports',
+        loadComponent: () =>
+          import('./features/reports/reports.component').then((m) => m.ReportsComponent)
+      },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./features/settings/settings.component').then((m) => m.SettingsComponent)
       }
     ]
   },
