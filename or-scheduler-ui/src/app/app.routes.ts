@@ -17,6 +17,11 @@ export const routes: Routes = [
       import('./shared/shell-layout/shell-layout').then((m) => m.ShellLayoutComponent),
     children: [
       {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent)
+      },
+      {
         path: 'calendar',
         loadComponent: () =>
           import('./features/calendar/calendar-view/calendar-view').then((m) => m.CalendarViewComponent)
@@ -27,6 +32,11 @@ export const routes: Routes = [
           import('./features/operating-rooms/operating-rooms-list/operating-rooms-list').then(
             (m) => m.OperatingRoomsListComponent
           )
+      },
+      {
+        path: 'surgeons',         
+        loadComponent: () =>
+          import('./features/surgeons/surgeons.component').then((m) => m.SurgeonsComponent)
       },
       {
         path: 'staff',

@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { ThemeService } from '../../core/theme/theme.service';
 
 @Component({
   selector: 'app-shell-layout',
@@ -10,6 +11,7 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
   styleUrls: ['./shell-layout.scss']
 })
 export class ShellLayoutComponent {
+  theme = inject(ThemeService);
 
   navItems = [
     { label: 'Dashboard', icon: 'grid', route: '/dashboard' },

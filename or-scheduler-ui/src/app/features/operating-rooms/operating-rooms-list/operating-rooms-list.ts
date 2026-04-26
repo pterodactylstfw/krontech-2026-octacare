@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OperatingRoom, RoomType } from '../../../shared/models/room.model';
 import { RoomStatus } from '../../../core/enums/room-status.enum';
 import { MOCK_ROOMS, MOCK_SURGERIES, MOCK_USERS } from '../../../core/mock/mock-data';
 import { SurgeryStatus } from '../../../core/enums/surgery-status.enum';
+import { ThemeService } from '../../../core/theme/theme.service';
 
 type RoomFilter = 'ALL' | RoomStatus;
 
@@ -15,8 +16,8 @@ type RoomFilter = 'ALL' | RoomStatus;
   templateUrl: './operating-rooms-list.html',
   styleUrl: './operating-rooms-list.scss'
 })
-export class OperatingRoomsListComponent implements OnInit {
-  isDarkMode = true;
+export class OperatingRoomsListComponent {
+  theme = inject(ThemeService);
   readonly RoomStatus = RoomStatus;
 
   activeFilter: RoomFilter = 'ALL';
@@ -32,10 +33,8 @@ export class OperatingRoomsListComponent implements OnInit {
   showModal = false;
   isEditing = false;
   editingRoomId: string | null = null;
-
   equipmentText = '';
   roomDraft: Partial<OperatingRoom> = this.emptyRoom();
-
   rooms: OperatingRoom[] = [...MOCK_ROOMS];
 
   readonly roomTypes: { label: string; value: RoomType }[] = [
@@ -53,20 +52,7 @@ export class OperatingRoomsListComponent implements OnInit {
     { label: 'Maintenance', value: RoomStatus.MAINTENANCE }
   ];
 
-  ngOnInit() {
-    document.body.classList.remove('light-mode');
-    document.documentElement.classList.remove('light-mode');
-  }
-
-  toggleTheme() {
-    this.isDarkMode = !this.isDarkMode;
-    document.body.classList.toggle('light-mode', !this.isDarkMode);
-    document.documentElement.classList.toggle('light-mode', !this.isDarkMode);
-  }
-
-  setFilter(filter: RoomFilter) {
-    this.activeFilter = filter;
-  }
+  setFilter(filter: RoomFilter) { this.activeFilter = filter; }
 
   onSearch(event: Event) {
     this.searchQuery = (event.target as HTMLInputElement).value;
@@ -106,18 +92,14 @@ export class OperatingRoomsListComponent implements OnInit {
     this.showModal = true;
   }
 
-  closeModal() {
-    this.showModal = false;
-  }
+  closeModal() { this.showModal = false; }
 
   saveRoom() {
     const name = (this.roomDraft.name || '').trim();
     if (!name) return;
 
     const parsedEquipment = this.equipmentText
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
+      .split(',').map((s) => s.trim()).filter(Boolean);
 
     const next: OperatingRoom = {
       id: this.isEditing && this.editingRoomId ? this.editingRoomId : this.nextId(),
@@ -135,7 +117,6 @@ export class OperatingRoomsListComponent implements OnInit {
     } else {
       this.rooms = [next, ...this.rooms];
     }
-
     this.closeModal();
   }
 
@@ -146,13 +127,8 @@ export class OperatingRoomsListComponent implements OnInit {
 
   emptyRoom(): Partial<OperatingRoom> {
     return {
-      name: '',
-      roomType: 'GENERAL',
-      status: RoomStatus.AVAILABLE,
-      floor: 1,
-      sterilizationTimeMinutes: 30,
-      equipment: [],
-      capacity: 5
+      name: '', roomType: 'GENERAL', status: RoomStatus.AVAILABLE,
+      floor: 1, sterilizationTimeMinutes: 30, equipment: [], capacity: 5
     };
   }
 
@@ -166,31 +142,27 @@ export class OperatingRoomsListComponent implements OnInit {
 
   statusClass(status: RoomStatus): string {
     switch (status) {
-      case RoomStatus.AVAILABLE:
-        return 'green';
-      case RoomStatus.OCCUPIED:
-        return 'red';
-      case RoomStatus.STERILIZING:
-        return 'yellow';
-      case RoomStatus.MAINTENANCE:
-        return 'orange';
-      default:
-        return 'muted';
+      case RoomStatus.AVAILABLE: return 'green';
+      case RoomStatus.OCCUPIED: return 'red';
+      case RoomStatus.STERILIZING: return 'yellow';
+      case RoomStatus.MAINTENANCE: return 'orange';
+      default: return 'muted';
     }
   }
 
   utilizationPercent(room: OperatingRoom): number {
-    // Deterministic "UI-only" value until backend analytics exists.
     const seed = Array.from(room.id).reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-    const base = (seed * 37) % 71; // 0..70
+    const base = (seed * 37) % 71;
     const statusBoost =
-      room.status === RoomStatus.OCCUPIED ? 25 : room.status === RoomStatus.STERILIZING ? 10 : 0;
+      room.status === RoomStatus.OCCUPIED ? 25 :
+      room.status === RoomStatus.STERILIZING ? 10 : 0;
     return Math.max(0, Math.min(100, base + statusBoost));
   }
 
   getActiveSurgery(roomId: string) {
     const candidates = MOCK_SURGERIES.filter(
-      (s) => s.roomId === roomId && (s.status === SurgeryStatus.IN_PROGRESS || s.status === SurgeryStatus.SCHEDULED)
+      (s) => s.roomId === roomId &&
+      (s.status === SurgeryStatus.IN_PROGRESS || s.status === SurgeryStatus.SCHEDULED)
     );
     const active =
       candidates.find((s) => s.status === SurgeryStatus.IN_PROGRESS) ??
@@ -198,17 +170,12 @@ export class OperatingRoomsListComponent implements OnInit {
     if (!active) return null;
 
     const surgeon = MOCK_USERS.find((u) => u.id === active.surgeonId)?.fullName ?? 'Unknown surgeon';
-    const start = new Date(active.scheduledStart);
     const end = new Date(active.scheduledEnd);
     return {
       surgeon,
       endsAt: isNaN(end.getTime()) ? '' : end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      label:
-        active.status === SurgeryStatus.IN_PROGRESS
-          ? 'Current surgery'
-          : 'Next surgery',
+      label: active.status === SurgeryStatus.IN_PROGRESS ? 'Current surgery' : 'Next surgery',
       status: active.status
     };
   }
 }
-

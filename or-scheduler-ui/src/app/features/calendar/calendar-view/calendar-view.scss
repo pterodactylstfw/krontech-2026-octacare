@@ -413,3 +413,74 @@
 .badge-emergency    { background: rgba(239,68,68,0.2);  color: #f87171; }
 .badge-sterilization{ background: rgba(234,88,12,0.2);  color: #fb923c; }
 .badge-completed    { background: rgba(100,116,139,0.2);color: #94a3b8; }
+
+
+
+
+// ─── LIGHT MODE ──────────────────────────────────────
+.calendar-wrapper.light {
+  background: #f1f5f9;
+  color: #0f172a;
+
+  .calendar-header h1 { color: #0f172a; }
+  .date-label { color: #94a3b8; }
+
+  .nav-buttons {
+    background: #ffffff;
+    border-color: #e2e8f0;
+  }
+
+  .nav-btn {
+    color: #475569;
+    &:hover { background: #f1f5f9; color: #0f172a; }
+  }
+
+  .utilization-bar {
+    background: #ffffff;
+    border-color: #e2e8f0;
+  }
+
+  .util-label, .util-stat-label { color: #94a3b8; }
+  .util-stat-number { color: #0f172a; }
+  .util-percent { color: #0f172a; }
+
+  .calendar-grid-wrapper {
+    background: #ffffff;
+    border-color: #e2e8f0;
+  }
+
+  .time-header,
+  .room-header {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: #94a3b8;
+  }
+
+  .time-label {
+    background: #f8fafc;
+    color: #cbd5e1;
+    border-color: #e2e8f0;
+  }
+
+  .grid-cell {
+    border-color: #e2e8f0;
+    &:hover { background: #f1f5f9; }
+  }
+
+  .card-patient { color: #1e293b; }
+  .card-surgeon { color: #94a3b8; }
+  .card-type    { color: #64748b; }
+  .card-time    { color: #94a3b8; }
+
+  .modal-card {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.12);
+  }
+
+  .modal-header h2 { color: #0f172a; }
+  .modal-row { border-color: #f1f5f9; }
+  .modal-label { color: #94a3b8; }
+  .modal-value { color: #1e293b; }
+  .modal-close { color: #94a3b8; &:hover { background: #f1f5f9; color: #0f172a; } }
+}

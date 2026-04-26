@@ -1,4 +1,4 @@
-<div class="calendar-wrapper">
+<div class="calendar-wrapper" [class.light]="!theme.isDarkMode()">
 
   <!-- Header -->
   <div class="calendar-header">
@@ -12,6 +12,7 @@
         <button class="nav-btn today-btn" (click)="currentDate = today">Today</button>
         <button class="nav-btn" (click)="nextDay()">&#8250;</button>
       </div>
+
       <button class="add-btn">+ Add Surgery</button>
     </div>
   </div>
@@ -44,11 +45,9 @@
   <div class="calendar-grid-wrapper">
     <div class="calendar-grid">
 
-      <!-- Column Headers -->
       <div class="time-header"></div>
       <div class="room-header" *ngFor="let room of orRooms">{{ room.name }}</div>
 
-      <!-- Time Rows -->
       <ng-container *ngFor="let time of timeSlots">
         <div class="time-label">{{ time }}</div>
         <div class="grid-cell"

@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Staff } from '../models/staff';
+import { ThemeService } from '../../../core/theme/theme.service';
 
 @Component({
   selector: 'app-staff-list',
@@ -11,7 +12,7 @@ import { Staff } from '../models/staff';
   styleUrl: './staff-list.scss'
 })
 export class StaffList implements OnInit {
-  isDarkMode: boolean = true;
+   theme = inject(ThemeService);
   activeFilter: string = 'All';
   searchQuery: string = '';
   filters = ['All', 'Surgeons', 'Nurses', 'On Duty', 'On Leave'];
@@ -20,15 +21,8 @@ export class StaffList implements OnInit {
   newStaff: Partial<Staff> = this.emptyStaff();
 
   ngOnInit() {
-    document.body.classList.remove('light-mode');
-    document.documentElement.classList.remove('light-mode');
   }
 
-  toggleTheme() {
-    this.isDarkMode = !this.isDarkMode;
-    document.body.classList.toggle('light-mode', !this.isDarkMode);
-    document.documentElement.classList.toggle('light-mode', !this.isDarkMode);
-  }
 
   emptyStaff(): Partial<Staff> {
     return {

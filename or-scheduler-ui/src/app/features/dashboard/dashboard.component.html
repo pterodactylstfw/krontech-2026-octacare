@@ -1,0 +1,201 @@
+<h2 class="sr-only">Hospital Administrator Dashboard</h2>
+
+<div class="dashboard-shell" [class.light]="!theme.isDarkMode()">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo-dot"></div>
+      <span class="topbar-title">OR Scheduler</span>
+      <span class="topbar-sub">— Administrator Overview</span>
+    </div>
+    <div class="topbar-right">
+      <div class="badge-live">
+        <div class="live-dot"></div>
+        Live
+      </div>
+      <div class="topbar-time">{{ currentTime() }} · {{ currentDate() }}</div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="content">
+
+    <!-- KPI CARDS -->
+    <div class="section">
+      <div class="section-label">Today's overview</div>
+      <div class="kpi-row">
+        @for (kpi of data().kpis; track kpi.label) {
+          <div class="kpi-card" [ngClass]="kpi.accent">
+            <div class="kpi-label">{{ kpi.label }}</div>
+            <div class="kpi-value">{{ kpi.value }}</div>
+            <div class="kpi-delta" [ngClass]="'delta-' + kpi.deltaType">{{ kpi.delta }}</div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- MIDDLE ROW: OR rooms | Surgeons | Alerts -->
+    <div class="mid-row">
+
+      <!-- OPERATING ROOMS -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Operating Rooms</span>
+          <button class="panel-action" (click)="navigateTo('/operating-rooms')">View all ↗</button>
+        </div>
+        @for (or of data().operatingRooms; track or.id) {
+          <div class="or-bar">
+            <div class="or-bar-top">
+              <span class="or-name">{{ or.name }} · {{ or.specialty }} · {{ or.floor }}</span>
+              <span class="or-pct" [ngClass]="'pct-' + or.status">{{ or.utilization }}%</span>
+            </div>
+            <div class="or-track">
+              <div class="or-fill" [ngClass]="'fill-' + or.status" [style.width.%]="or.utilization"></div>
+            </div>
+            <div class="or-status-row">
+              <span class="or-tag" [ngClass]="'tag-' + or.status">{{ getOrStatusLabel(or.status) }}</span>
+              @if (or.status === 'active' && or.currentSurgeon) {
+                <span class="or-detail">{{ or.currentSurgeon }} · ends {{ or.endsAt }}</span>
+              }
+              @if (or.status === 'sterilizing' && or.nextSurgeon) {
+                <span class="or-detail">Next: {{ or.nextSurgeon }} {{ or.nextTime }}</span>
+              }
+              @if (or.status === 'available') {
+                <span class="or-detail">No surgeries scheduled</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- SURGEONS -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Top Surgeons Today</span>
+          <button class="panel-action" (click)="navigateTo('/staff')">View staff ↗</button>
+        </div>
+        <div class="surg-list">
+          @for (surgeon of data().surgeons; track surgeon.name) {
+            <div class="surg-row">
+              <div class="surg-avatar" [ngClass]="'avatar-' + surgeon.colorClass">
+                {{ surgeon.initials }}
+              </div>
+              <div class="surg-info">
+                <div class="surg-name">{{ surgeon.name }}</div>
+                <div class="surg-dept">
+                  {{ surgeon.department }}
+                  @if (surgeon.status === 'on-leave') {
+                    <span class="on-leave-badge">· On Leave</span>
+                  }
+                </div>
+              </div>
+              <div class="surg-count" [ngClass]="surgeon.status !== 'on-leave' ? 'count-' + surgeon.colorClass : 'count-muted'">
+                {{ surgeon.surgeriesToday > 0 ? surgeon.surgeriesToday + ' ops' : '—' }}
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- ALERTS -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Alerts</span>
+          <span class="critical-badge">
+            {{ data().alerts | alertCount : 'critical' }} critical
+          </span>
+        </div>
+        <div class="alert-list">
+          @for (alert of data().alerts; track alert.id) {
+            <div class="alert-row" [ngClass]="'alert-' + alert.severity">
+              <div class="alert-icon" [ngClass]="'icon-' + alert.severity">
+                {{ getAlertIcon(alert.severity) }}
+              </div>
+              <div class="alert-body">
+                <div class="alert-msg">{{ alert.message }}</div>
+                <div class="alert-time">{{ alert.detail }}</div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+
+    <!-- BOTTOM ROW: Timeline | Mini stats -->
+    <div class="bottom-row">
+
+      <!-- TIMELINE -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Today's timeline</span>
+          <span class="panel-sub">07:00 – 14:00</span>
+        </div>
+        <div class="timeline">
+          <div class="tl-header">
+            <div class="tl-hour-col"></div>
+            <div class="tl-room-label">OR 1</div>
+            <div class="tl-room-label">OR 2</div>
+            <div class="tl-room-label">OR 3</div>
+            <div class="tl-room-label">OR 4</div>
+          </div>
+          @for (row of data().timeline; track trackByIndex($index)) {
+            <div class="tl-row">
+              <div class="tl-hour">{{ row.hour }}</div>
+              <div class="tl-cell">
+                @if (!isEmptyBlock(row.or1)) {
+                  <div class="tl-block" [ngClass]="'tl-' + row.or1.colorType">
+                    <span class="tl-proc">{{ row.or1.procedureName }}{{ row.or1.hasAlert ? ' ⚠' : '' }}</span>
+                  </div>
+                }
+              </div>
+              <div class="tl-cell">
+                @if (!isEmptyBlock(row.or2)) {
+                  <div class="tl-block" [ngClass]="'tl-' + row.or2.colorType">
+                    <span class="tl-proc">{{ row.or2.procedureName }}</span>
+                  </div>
+                }
+              </div>
+              <div class="tl-cell">
+                @if (!isEmptyBlock(row.or3)) {
+                  <div class="tl-block" [ngClass]="'tl-' + row.or3.colorType">
+                    <span class="tl-proc">{{ row.or3.procedureName }}</span>
+                  </div>
+                }
+              </div>
+              <div class="tl-cell">
+                @if (!isEmptyBlock(row.or4)) {
+                  <div class="tl-block" [ngClass]="'tl-' + row.or4.colorType">
+                    <span class="tl-proc">{{ row.or4.procedureName }}{{ row.or4.hasAlert ? ' ⚠' : '' }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- MINI STATS + AI INSIGHT -->
+      <div class="stat-col">
+        @for (stat of data().miniStats; track stat.label) {
+          <div class="stat-mini">
+            <div class="stat-label">{{ stat.label }}</div>
+            <div class="stat-value" [ngClass]="'stat-val-' + stat.colorClass">{{ stat.value }}</div>
+            <div class="stat-bar">
+              <div class="stat-bar-fill" [ngClass]="'bar-' + stat.colorClass" [style.width.%]="stat.progressPct"></div>
+            </div>
+            <div class="stat-subtext">{{ stat.subtext }}</div>
+          </div>
+        }
+        <div class="ai-insight">
+          <div class="ai-label">AI Insights</div>
+          <div class="ai-text">{{ data().aiInsight }}</div>
+          <button class="ai-action" (click)="navigateTo('/reports')">Generate full report ↗</button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>

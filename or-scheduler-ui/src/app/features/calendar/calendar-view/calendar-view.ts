@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Surgery, ORRoom } from '../models/surgery.model';
+import { ThemeService } from '../../../core/theme/theme.service';
+
 
 @Component({
   selector: 'app-calendar-view',
@@ -10,6 +12,7 @@ import { Surgery, ORRoom } from '../models/surgery.model';
 styleUrls: ['./calendar-view.scss']
 })
 export class CalendarViewComponent implements OnInit {
+  theme = inject(ThemeService);
 
   currentDate = new Date();
   today = new Date();
