@@ -35,7 +35,7 @@ services:
       context: ./or-scheduler-ui
     container_name: or-scheduler-ui
     ports:
-      - "4200:4200"
+      - "4200:80"
     depends_on:
       - or-scheduler-core
 

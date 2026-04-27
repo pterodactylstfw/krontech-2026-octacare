@@ -8,7 +8,7 @@ RUN npm run build -- --configuration production
 
 # Stage 2: Serve
 FROM nginx:alpine
-COPY --from=build /app/dist/or-scheduler-ui /usr/share/nginx/html
-# If the app is deeper (e.g. browser folder), adjust the path above
+COPY --from=build /app/dist/or-scheduler-ui/browser /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
