@@ -1,0 +1,123 @@
+<div class="settings-wrapper">
+
+  <!-- Floating decorative bubbles -->
+  <div class="bubble bubble-blue"></div>
+  <div class="bubble bubble-purple"></div>
+  <div class="bubble bubble-blue-2"></div>
+
+  <!-- Header -->
+  <div class="settings-header">
+    <h1 class="page-title">Settings</h1>
+    <p class="page-subtitle">Manage your account, preferences &amp; system configuration</p>
+  </div>
+
+  <!-- Content Grid -->
+  <div class="settings-content">
+
+    <!-- Profile Card -->
+    <div class="glass-card profile-card">
+      <h2 class="card-title">Profile</h2>
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input class="form-input" type="text" [(ngModel)]="profile.fullName" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" [(ngModel)]="profile.email" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Role</label>
+          <input class="form-input" type="text" [(ngModel)]="profile.role" readonly />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Department</label>
+          <input class="form-input" type="text" [(ngModel)]="profile.department" readonly />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <input class="form-input" type="tel" [(ngModel)]="profile.phone" />
+      </div>
+    </div>
+
+    <!-- Notifications Card -->
+    <div class="glass-card notifications-card">
+      <h2 class="card-title">Notifications</h2>
+      <div class="toggle-group">
+        <label class="toggle-row">
+          <span class="toggle-label">Email alerts</span>
+          <span class="toggle-switch" [class.active]="notifications.emailAlerts" (click)="notifications.emailAlerts = !notifications.emailAlerts">
+            <span class="toggle-knob"></span>
+          </span>
+        </label>
+        <label class="toggle-row">
+          <span class="toggle-label">SMS alerts</span>
+          <span class="toggle-switch" [class.active]="notifications.smsAlerts" (click)="notifications.smsAlerts = !notifications.smsAlerts">
+            <span class="toggle-knob"></span>
+          </span>
+        </label>
+        <label class="toggle-row">
+          <span class="toggle-label">Schedule reminders</span>
+          <span class="toggle-switch" [class.active]="notifications.scheduleReminders" (click)="notifications.scheduleReminders = !notifications.scheduleReminders">
+            <span class="toggle-knob"></span>
+          </span>
+        </label>
+        <label class="toggle-row">
+          <span class="toggle-label">Report ready</span>
+          <span class="toggle-switch" [class.active]="notifications.reportReady" (click)="notifications.reportReady = !notifications.reportReady">
+            <span class="toggle-knob"></span>
+          </span>
+        </label>
+        <label class="toggle-row">
+          <span class="toggle-label">System updates</span>
+          <span class="toggle-switch" [class.active]="notifications.systemUpdates" (click)="notifications.systemUpdates = !notifications.systemUpdates">
+            <span class="toggle-knob"></span>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Appearance Card -->
+    <div class="glass-card appearance-card">
+      <h2 class="card-title">Appearance</h2>
+      <div class="form-group">
+        <label class="form-label">Theme</label>
+        <div class="radio-group">
+          <label class="radio-option" *ngFor="let opt of ['dark','light','system']">
+            <input type="radio" name="theme" [value]="opt" [(ngModel)]="appearance.theme" />
+            <span class="radio-dot"></span>
+            <span class="radio-text">{{ opt | titlecase }}</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Info Card -->
+    <div class="glass-card system-card">
+      <h2 class="card-title">System</h2>
+      <div class="info-row">
+        <span class="info-label">App Version</span>
+        <span class="info-value">v{{ system.version }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Last Backup</span>
+        <span class="info-value">{{ system.lastBackup }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Environment</span>
+        <span class="info-value env-badge">{{ system.environment }}</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Save Button -->
+  <div class="save-bar">
+    <button class="save-btn" (click)="onSave()">
+      <span *ngIf="!saved">Save Changes</span>
+      <span *ngIf="saved" class="saved-label">✓ Saved</span>
+    </button>
+  </div>
+
+</div>

@@ -1,0 +1,123 @@
+<div class="reports-wrapper" *ngIf="reportsData">
+
+  <!-- Floating decorative bubbles -->
+  <div class="bubble bubble-blue"></div>
+  <div class="bubble bubble-purple"></div>
+  <div class="bubble bubble-blue-2"></div>
+
+  <!-- Header -->
+  <div class="reports-header">
+    <div class="header-left">
+      <h1 class="page-title">{{ reportsData.title }}</h1>
+      <p class="page-subtitle">Generated {{ reportsData.generatedAt | date:'mediumDate' }}</p>
+    </div>
+    <span class="period-badge">{{ reportsData.period }}</span>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card" *ngFor="let kpi of reportsData.kpis">
+      <span class="kpi-label">{{ kpi.label }}</span>
+      <div class="kpi-value">{{ kpi.value }}</div>
+      <div class="kpi-delta" [ngClass]="'delta-' + kpi.trend">
+        <span class="delta-icon" *ngIf="kpi.trend === 'up'">↑</span>
+        <span class="delta-icon" *ngIf="kpi.trend === 'down'">↓</span>
+        <span class="delta-icon" *ngIf="kpi.trend === 'neutral'">→</span>
+        {{ kpi.delta }} vs last period
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Grid -->
+  <div class="reports-content">
+
+    <!-- Department Performance -->
+    <div class="glass-card department-card">
+      <h2 class="card-title">Department Performance</h2>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Department</th>
+              <th>Completed</th>
+              <th>Avg Duration</th>
+              <th>On-Time Rate</th>
+              <th>Cancellation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of reportsData.departmentRows">
+              <td class="dept-name">{{ row.department }}</td>
+              <td>
+                <span class="table-value">{{ row.completed }}</span>
+              </td>
+              <td>
+                <span class="table-value">{{ row.avgDurationMinutes }}<span class="unit">min</span></span>
+              </td>
+              <td>
+                <span class="pct-badge good" *ngIf="row.onTimeRatePct >= 85">{{ row.onTimeRatePct }}%</span>
+                <span class="pct-badge warn" *ngIf="row.onTimeRatePct >= 70 && row.onTimeRatePct < 85">{{ row.onTimeRatePct }}%</span>
+                <span class="pct-badge bad" *ngIf="row.onTimeRatePct < 70">{{ row.onTimeRatePct }}%</span>
+              </td>
+              <td>
+                <span class="pct-badge bad" *ngIf="row.cancellationRatePct >= 10">{{ row.cancellationRatePct }}%</span>
+                <span class="pct-badge warn" *ngIf="row.cancellationRatePct >= 5 && row.cancellationRatePct < 10">{{ row.cancellationRatePct }}%</span>
+                <span class="pct-badge good" *ngIf="row.cancellationRatePct < 5">{{ row.cancellationRatePct }}%</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Utilization Trend -->
+    <div class="glass-card utilization-card">
+      <h2 class="card-title">Utilization Trend</h2>
+      <div class="util-bars">
+        <div class="util-item" *ngFor="let u of reportsData.utilizationByMonth">
+          <div class="util-bar-track">
+            <div class="util-bar-fill" [style.height.%]="u.utilizationPct"></div>
+            <div class="util-target-line" [style.bottom.%]="u.targetPct"></div>
+          </div>
+          <span class="util-label">{{ u.month }}</span>
+          <span class="util-pct">{{ u.utilizationPct }}%</span>
+        </div>
+      </div>
+      <div class="util-legend">
+        <span class="legend-item"><span class="legend-dot fill"></span> Utilization</span>
+        <span class="legend-item"><span class="legend-line"></span> Target</span>
+      </div>
+    </div>
+
+    <!-- Insights & Recommendations -->
+    <div class="glass-card insights-card">
+      <h2 class="card-title">Insights &amp; Recommendations</h2>
+
+      <div class="bottlenecks-section">
+        <h3 class="section-subtitle">Identified Bottlenecks</h3>
+        <div class="bottleneck-item" *ngFor="let b of reportsData.bottlenecks">
+          <span class="severity-dot" [ngClass]="'severity-' + b.severity"></span>
+          <div class="bottleneck-text">
+            <strong>{{ b.title }}</strong>
+            <span>{{ b.detail }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="recommendations-section">
+        <h3 class="section-subtitle">Actionable Recommendations</h3>
+        <div class="rec-item" *ngFor="let rec of reportsData.recommendations; let i = index">
+          <span class="rec-number">{{ i + 1 }}</span>
+          <span class="rec-text">{{ rec }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="!reportsData" class="loading-state">
+  <div class="loading-spinner"></div>
+  <span>Loading reports…</span>
+</div>
