@@ -1,0 +1,43 @@
+services:
+  database:
+    image: postgres:18
+    container_name: or-scheduler-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-orscheduler}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-orscheduler}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
+  or-scheduler-core:
+    build:
+      context: ./or-scheduler-core
+    container_name: or-scheduler-core
+    depends_on:
+      database:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: ${DB_URL}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASS}
+
+  or-scheduler-ui:
+    build:
+      context: ./or-scheduler-ui
+    container_name: or-scheduler-ui
+    ports:
+      - "4200:80"
+    depends_on:
+      - or-scheduler-core
+
+volumes:
+  postgres_data:
