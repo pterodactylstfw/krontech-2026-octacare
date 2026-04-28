@@ -193,6 +193,18 @@ app-root {
   cursor: not-allowed;
 }
 
+.login-form-panel .demo-btn {
+  margin-top: 0;
+  background: rgba(0, 113, 227, 0.08);
+  color: var(--accent);
+  border: 1px solid rgba(0, 113, 227, 0.24);
+  box-shadow: none;
+}
+
+.login-form-panel .demo-btn:hover:not(:disabled) {
+  background: rgba(0, 113, 227, 0.14);
+}
+
 .login-form-panel .spinner {
   display: inline-block;
   width: 18px;

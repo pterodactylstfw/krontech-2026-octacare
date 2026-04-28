@@ -83,6 +83,16 @@
           <span *ngIf="!isLoading">Sign In</span>
           <span *ngIf="isLoading" class="spinner"></span>
         </button>
+
+        <button
+          *ngIf="showDemoLogin"
+          class="login-btn demo-btn"
+          (click)="onDemoLogin()"
+          [disabled]="isLoading"
+          type="button"
+        >
+          Enter Demo Dashboard
+        </button>
       </div>
 
         <div class="form-footer">

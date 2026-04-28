@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { UserRole } from '../../../core/enums/user-role.enum';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -18,6 +19,7 @@ export class LoginComponent {
   showPassword = false;
   isLoading = false;
   errorMessage = '';
+  showDemoLogin = !environment.production;
 
   constructor(private authService: AuthService, private router: Router) {}
 
@@ -41,24 +43,32 @@ export class LoginComponent {
           this.errorMessage = 'Incorrect email or password.';
           return;
         }
-        const role = this.authService.getCurrentUserRole();
-        switch (role) {
-          case UserRole.ADMIN:
-          case UserRole.SURGEON:
-          case UserRole.NURSE:
-            this.router.navigate(['/dashboard']);
-            break;
-          case UserRole.PATIENT:
-            this.router.navigate(['/patients/portal']);
-            break;
-          default:
-            this.router.navigate(['/dashboard']);
-        }
+        this.navigateByRole(this.authService.getCurrentUserRole());
       },
       error: () => {
         this.isLoading = false;
         this.errorMessage = 'An error occurred. Please try again.';
       }
     });
+  }
+
+  onDemoLogin() {
+    const demoUser = this.authService.demoLogin();
+    this.navigateByRole(demoUser.role);
+  }
+
+  private navigateByRole(role: UserRole | null) {
+    switch (role) {
+      case UserRole.ADMIN:
+      case UserRole.SURGEON:
+      case UserRole.NURSE:
+        this.router.navigate(['/dashboard']);
+        break;
+      case UserRole.PATIENT:
+        this.router.navigate(['/patients/portal']);
+        break;
+      default:
+        this.router.navigate(['/dashboard']);
+    }
   }
 }

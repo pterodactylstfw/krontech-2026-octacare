@@ -25,9 +25,7 @@ export class AuthService {
     if (environment.useMocks) {
       const user = MOCK_USERS.find(u => u.email === email);
       if (user) {
-        localStorage.setItem('token', 'mock-jwt-token');
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        this.currentUserSubject.next(user);
+        this.setSession('mock-jwt-token', user);
         return of({ token: 'mock-jwt-token', user });
       }
       return of(null);
@@ -35,11 +33,28 @@ export class AuthService {
 
     return this.http.post<any>(`${API_ENDPOINTS.auth}/login`, { email, password }).pipe(
       tap(response => {
-        localStorage.setItem('token', response.token);
-        localStorage.setItem('currentUser', JSON.stringify(response.user));
-        this.currentUserSubject.next(response.user);
+        this.setSession(response.token, response.user);
       })
     );
+  }
+
+  demoLogin(): User {
+    const demoUser = MOCK_USERS.find(u => u.role === UserRole.ADMIN) ?? MOCK_USERS[0] ?? {
+      id: 'demo-admin',
+      email: 'demo@hospital.com',
+      fullName: 'Demo Administrator',
+      role: UserRole.ADMIN,
+      department: 'Management'
+    };
+
+    this.setSession('demo-jwt-token', demoUser);
+    return demoUser;
+  }
+
+  private setSession(token: string, user: User): void {
+    localStorage.setItem('token', token);
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    this.currentUserSubject.next(user);
   }
 
   logout(): void {
