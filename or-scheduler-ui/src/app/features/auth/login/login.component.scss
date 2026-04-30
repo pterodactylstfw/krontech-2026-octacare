@@ -3,11 +3,16 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  min-height: 100dvh;
   font-family: var(--font-stack), sans-serif;
   position: relative;
   overflow: hidden;
   background: linear-gradient(to bottom, #ffffff 0%, #eff6ff 40%, #a1cbff 90%);
+}
+
+@supports (height: 100dvh) {
+  .login-wrapper {
+    min-height: 100dvh;
+  }
 }
 
 .login-image-panel {

@@ -2,8 +2,6 @@ import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { MOCK_SURGERIES, MOCK_USERS, MOCK_ROOMS } from '../../../core/mock/mock-data';
-import { Surgery } from '../../../shared/models/surgery.model';
-import { environment } from '../../../../environments/environment';
 
 export interface PatientSurgeryView {
   id: string;
