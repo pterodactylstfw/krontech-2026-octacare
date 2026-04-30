@@ -53,10 +53,24 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/settings/settings.component').then((m) => m.SettingsComponent)
       },
+    ]
+  },
+  {
+    path: 'patients',
+    children: [
       {
-        path: 'patients/portal',
+        path: '',
+        redirectTo: 'portal',
+        pathMatch: 'full'
+      },
+      {
+        path: 'portal',
         loadComponent: () =>
           import('./features/patients/patient-portal/patient-portal.component').then((m) => m.PatientPortalComponent)
+      },
+      {
+        path: '**',
+        redirectTo: 'portal'
       }
     ]
   },

@@ -115,6 +115,66 @@ export const MOCK_SURGERIES: Surgery[] = [
     status: SurgeryStatus.SCHEDULED,
     priority: SurgeryPriority.EMERGENCY,
     createdAt: '2026-04-21T08:00:00'
+  },
+  {
+    id: '4',
+    patientId: '5',
+    surgeonId: '2',
+    roomId: '1',
+    surgeryTypeId: '1',
+    scheduledStart: '2026-05-05T10:00:00',
+    scheduledEnd: '2026-05-05T12:00:00',
+    status: SurgeryStatus.SCHEDULED,
+    priority: SurgeryPriority.ELECTIVE,
+    createdAt: '2026-04-25T09:00:00'
+  },
+  {
+    id: '5',
+    patientId: '5',
+    surgeonId: '3',
+    roomId: '2',
+    surgeryTypeId: '2',
+    scheduledStart: '2026-05-12T14:30:00',
+    scheduledEnd: '2026-05-12T16:00:00',
+    status: SurgeryStatus.SCHEDULED,
+    priority: SurgeryPriority.URGENT,
+    createdAt: '2026-04-26T10:00:00'
+  },
+  {
+    id: '6',
+    patientId: '5',
+    surgeonId: '2',
+    roomId: '1',
+    surgeryTypeId: '1',
+    scheduledStart: '2026-02-10T08:00:00',
+    scheduledEnd: '2026-02-10T10:30:00',
+    status: SurgeryStatus.COMPLETED,
+    priority: SurgeryPriority.ELECTIVE,
+    createdAt: '2026-02-01T10:00:00'
+  },
+  {
+    id: '7',
+    patientId: '5',
+    surgeonId: '3',
+    roomId: '3',
+    surgeryTypeId: '3',
+    scheduledStart: '2025-11-22T09:00:00',
+    scheduledEnd: '2025-11-22T11:00:00',
+    status: SurgeryStatus.COMPLETED,
+    priority: SurgeryPriority.URGENT,
+    createdAt: '2025-11-15T08:00:00'
+  },
+  {
+    id: '8',
+    patientId: '5',
+    surgeonId: '2',
+    roomId: '2',
+    surgeryTypeId: '2',
+    scheduledStart: '2025-09-14T13:00:00',
+    scheduledEnd: '2025-09-14T14:30:00',
+    status: SurgeryStatus.CANCELLED,
+    priority: SurgeryPriority.ELECTIVE,
+    createdAt: '2025-09-01T08:00:00'
   }
 ];
 
