@@ -268,3 +268,8 @@
     border-radius: 10px;
   }
 }
+
+.main-content > div {
+  min-height: 100%;
+  position: relative;
+}

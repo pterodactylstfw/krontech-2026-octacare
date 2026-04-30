@@ -4,13 +4,26 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { ThemeService } from '../../core/theme/theme.service';
 import { AuthService } from '../../core/services/auth.service';
 import { UserRole } from '../../core/enums/user-role.enum';
+import { trigger, transition, style, animate, query } from '@angular/animations';
+
+
+
+export const routeFadeAnimation = trigger('routeFade', [
+  transition('* <=> *', [
+    query(':enter', [
+      style({ opacity: 0, transform: 'translateY(4px)' }),
+      animate('250ms ease', style({ opacity: 1, transform: 'translateY(0)' }))
+    ], { optional: true }),
+  ])
+]);
 
 @Component({
   selector: 'app-shell-layout',
   standalone: true,
   imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './shell-layout.html',
-  styleUrls: ['./shell-layout.scss']
+  styleUrls: ['./shell-layout.scss'],
+   animations: [routeFadeAnimation]
 })
 export class ShellLayoutComponent implements OnInit {
   theme = inject(ThemeService);
@@ -32,6 +45,18 @@ export class ShellLayoutComponent implements OnInit {
     { label: 'My Portal', icon: 'grid', route: '/patients/portal' },
     { label: 'Settings', icon: 'settings', route: '/settings' },
   ];
+
+  getRouteState(outlet: RouterOutlet): string {
+  try {
+    return outlet?.isActivated
+      ? (outlet.activatedRouteData?.['animation'] 
+         ?? outlet.activatedRoute?.snapshot?.url?.[0]?.path 
+         ?? 'default')
+      : 'default';
+  } catch {
+    return 'default';
+  }
+}
 
   userName = '';
   userRole = '';

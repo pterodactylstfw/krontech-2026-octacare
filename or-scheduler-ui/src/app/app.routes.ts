@@ -12,6 +12,18 @@ export const routes: Routes = [
       import('./features/auth/login/login.component').then((m) => m.LoginComponent)
   },
   {
+    path: 'doctor',
+    loadComponent: () =>
+      import('./features/doctor/dashboard.component')
+        .then(m => m.DoctorDashboardComponent),
+  },
+  {
+    path: 'nurse',
+    loadComponent: () =>
+      import('./features/nurse/dashboard.component')
+        .then(m => m.NurseDashboardComponent),
+  },
+  {
     path: '',
     loadComponent: () =>
       import('./shared/shell-layout/shell-layout').then((m) => m.ShellLayoutComponent),

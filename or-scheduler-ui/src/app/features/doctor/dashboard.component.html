@@ -1,0 +1,222 @@
+<div class="doctor-container" [class.light]="!theme.isDarkMode()">
+
+    <div class="topbar">
+        <div class="topbar-logo">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L2 7l10 5 10-5-10-5z" fill="#3b82f6" />
+                <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" />
+            </svg>
+            <span>OR Scheduler</span>
+        </div>
+        <button class="theme-btn" (click)="theme.toggle()">
+            <svg *ngIf="theme.isDarkMode()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round">
+                <circle cx="12" cy="12" r="4" />
+                <line x1="12" y1="2" x2="12" y2="4" />
+                <line x1="12" y1="20" x2="12" y2="22" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="2" y1="12" x2="4" y2="12" />
+                <line x1="20" y1="12" x2="22" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </svg>
+            <svg *ngIf="!theme.isDarkMode()" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+        </button>
+    </div>
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-left">
+            <div class="greeting-row">
+                <div class="avatar-lg" [style.background]="doctor().color + '22'" [style.color]="doctor().color"
+                    [style.border]="'1.5px solid ' + doctor().color + '55'">
+                    {{ doctor().initials }}
+                </div>
+                <div>
+                    <h1>Good morning, {{ doctor().firstName }}</h1>
+                    <span class="header-sub">{{ today }} · {{ doctor().specialty }} · {{ doctor().department }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <span class="stat-label">Surgeries Today</span>
+            <span class="stat-value accent">{{ stats().surgeriesToday }}</span>
+            <span class="stat-sub">{{ stats().completed }} completed</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Next Surgery</span>
+            <span class="stat-value">{{ stats().nextTime }}</span>
+            <span class="stat-sub">{{ stats().nextRoom }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">OR Status</span>
+            <span class="stat-value" [ngClass]="getOrStatusClass(stats().orStatus)">{{ stats().orStatus }}</span>
+            <span class="stat-sub">{{ stats().orName }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Success Rate</span>
+            <span class="stat-value success">{{ doctor().successRate }}%</span>
+            <span class="stat-sub">Last 30 days</span>
+        </div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="main-grid">
+
+        <!-- TODAY'S SCHEDULE -->
+        <div class="panel schedule-panel">
+            <div class="panel-header">
+                <span class="panel-title">Today's Schedule</span>
+                <span class="panel-badge">{{ todaySchedule().length }} surgeries</span>
+            </div>
+            <div class="timeline">
+                @for (surgery of todaySchedule(); track surgery.id) {
+                <div class="timeline-item" [class.active]="surgery.status === 'in-progress'"
+                    [class.done]="surgery.status === 'completed'" (click)="selectSurgery(surgery)">
+                    <div class="timeline-time">
+                        <span class="time-start">{{ surgery.startTime }}</span>
+                        <span class="time-dur">{{ surgery.duration }}m</span>
+                    </div>
+                    <div class="timeline-connector">
+                        <div class="dot" [ngClass]="surgery.status"></div>
+                        <div class="line"></div>
+                    </div>
+                    <div class="timeline-card">
+                        <div class="tc-top">
+                            <strong class="tc-name">{{ surgery.procedureName }}</strong>
+                            <span class="tc-badge" [ngClass]="surgery.status">{{ getStatusLabel(surgery.status)
+                                }}</span>
+                        </div>
+                        <div class="tc-details">
+                            <span>{{ surgery.patientName }}</span>
+                            <span class="tc-sep">·</span>
+                            <span>{{ surgery.room }}</span>
+                            <span class="tc-sep">·</span>
+                            <span>{{ surgery.type }}</span>
+                        </div>
+                        @if (surgery.notes) {
+                        <div class="tc-note">{{ surgery.notes }}</div>
+                        }
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="right-col">
+
+            <!-- OR STATUS -->
+            <div class="panel or-panel">
+                <div class="panel-header">
+                    <span class="panel-title">My Operating Room</span>
+                    <span class="or-live-dot"></span>
+                </div>
+                <div class="or-info">
+                    <div class="or-name-row">
+                        <span class="or-name">{{ currentOr().name }}</span>
+                        <span class="or-status-badge" [ngClass]="currentOr().status">{{ currentOr().statusLabel
+                            }}</span>
+                    </div>
+                    <div class="or-progress-wrap">
+                        <div class="or-progress-bar">
+                            <div class="or-progress-fill" [style.width.%]="currentOr().utilization"></div>
+                        </div>
+                        <span class="or-util-label">{{ currentOr().utilization }}% utilization</span>
+                    </div>
+                    <div class="or-meta-row">
+                        <div class="or-meta-item">
+                            <span class="meta-label">Floor</span>
+                            <strong>{{ currentOr().floor }}</strong>
+                        </div>
+                        <div class="or-meta-item">
+                            <span class="meta-label">Current patient</span>
+                            <strong>{{ currentOr().currentPatient || '—' }}</strong>
+                        </div>
+                        <div class="or-meta-item">
+                            <span class="meta-label">Next at</span>
+                            <strong>{{ currentOr().nextAt || '—' }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ALERTS -->
+            <div class="panel alerts-panel">
+                <div class="panel-header">
+                    <span class="panel-title">Alerts</span>
+                    @if (alerts().length > 0) {
+                    <span class="alert-count">{{ alerts().length }}</span>
+                    }
+                </div>
+                <div class="alerts-list">
+                    @for (alert of alerts(); track alert.id) {
+                    <div class="alert-item" [ngClass]="alert.severity" (click)="dismissAlert(alert.id)">
+                        <div class="alert-icon">
+                            <svg *ngIf="alert.severity === 'critical'" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <path
+                                    d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                <line x1="12" y1="9" x2="12" y2="13" />
+                                <line x1="12" y1="17" x2="12.01" y2="17" />
+                            </svg>
+                            <svg *ngIf="alert.severity === 'warning'" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="12" />
+                                <line x1="12" y1="16" x2="12.01" y2="16" />
+                            </svg>
+                            <svg *ngIf="alert.severity === 'info'" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="16" x2="12" y2="12" />
+                                <line x1="12" y1="8" x2="12.01" y2="8" />
+                            </svg>
+                        </div>
+                        <div class="alert-body">
+                            <span class="alert-msg">{{ alert.message }}</span>
+                            <span class="alert-time">{{ alert.time }}</span>
+                        </div>
+                    </div>
+                    }
+                    @if (alerts().length === 0) {
+                    <div class="no-alerts">No active alerts</div>
+                    }
+                </div>
+            </div>
+
+            <!-- RECENT PATIENTS -->
+            <div class="panel patients-panel">
+                <div class="panel-header">
+                    <span class="panel-title">Recent Patients</span>
+                    <button class="view-all-btn">View all</button>
+                </div>
+                <div class="patients-list">
+                    @for (patient of recentPatients(); track patient.id) {
+                    <div class="patient-row">
+                        <div class="patient-avatar">{{ patient.initials }}</div>
+                        <div class="patient-info">
+                            <span class="patient-name">{{ patient.name }}</span>
+                            <span class="patient-proc">{{ patient.procedure }}</span>
+                        </div>
+                        <div class="patient-right">
+                            <span class="patient-date">{{ patient.date }}</span>
+                            <span class="patient-outcome" [ngClass]="patient.outcome">{{ patient.outcomeLabel }}</span>
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>

@@ -89,6 +89,8 @@
   </aside>
 
   <main class="main-content">
-    <router-outlet />
-  </main>
+  <div [@routeFade]="getRouteState(outlet)">
+    <router-outlet #outlet="outlet" />
+  </div>
+</main>
 </div>
