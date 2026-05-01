@@ -1,0 +1,409 @@
+// ─── Dark-mode variables (default) ──────────────────────────────────────────
+:host {
+  --st-bg: linear-gradient(135deg, #0a0f1c 0%, #101829 50%, #0d1117 100%);
+  --st-text: #e2e8f0;
+  --st-text-secondary: #8892a4;
+  --st-card-bg: rgba(255, 255, 255, 0.04);
+  --st-card-border: rgba(255, 255, 255, 0.08);
+  --st-card-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+  --st-divider: rgba(255, 255, 255, 0.06);
+  --st-accent: #60a5fa;
+  --st-accent-glow: rgba(96, 165, 250, 0.25);
+  --st-input-bg: rgba(255, 255, 255, 0.06);
+  --st-input-border: rgba(255, 255, 255, 0.1);
+  --st-input-focus: rgba(96, 165, 250, 0.4);
+  --st-toggle-bg: rgba(255, 255, 255, 0.12);
+  --st-toggle-active: #60a5fa;
+  --st-btn-bg: linear-gradient(135deg, #3b82f6, #6366f1);
+  --st-btn-text: #fff;
+  --st-env-badge: rgba(52, 211, 153, 0.15);
+  --st-env-color: #34d399;
+}
+
+// ─── Light-mode overrides ───────────────────────────────────────────────────
+:host-context(.light) {
+  --st-bg: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 50%, #f8fafc 100%);
+  --st-text: #1e293b;
+  --st-text-secondary: #64748b;
+  --st-card-bg: rgba(255, 255, 255, 0.65);
+  --st-card-border: rgba(0, 0, 0, 0.08);
+  --st-card-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  --st-divider: rgba(0, 0, 0, 0.06);
+  --st-accent: #3b82f6;
+  --st-accent-glow: rgba(59, 130, 246, 0.25);
+  --st-input-bg: rgba(0, 0, 0, 0.04);
+  --st-input-border: rgba(0, 0, 0, 0.1);
+  --st-input-focus: rgba(59, 130, 246, 0.4);
+  --st-toggle-bg: rgba(0, 0, 0, 0.12);
+  --st-toggle-active: #3b82f6;
+  --st-btn-bg: linear-gradient(135deg, #3b82f6, #6366f1);
+  --st-btn-text: #fff;
+  --st-env-badge: rgba(16, 185, 129, 0.12);
+  --st-env-color: #059669;
+}
+
+// ─── Wrapper ────────────────────────────────────────────────────────────────
+.settings-wrapper {
+  position: relative;
+  min-height: 100%;
+  padding: 32px 36px 48px;
+  color: var(--st-text);
+  overflow: hidden;
+}
+
+// ─── Floating Bubbles ───────────────────────────────────────────────────────
+.bubble {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.18;
+  filter: blur(80px);
+  will-change: transform;
+  display: none; // hidden on dark theme by default
+}
+
+:host-context(.light) .bubble {
+  display: block;
+}
+
+.bubble-blue {
+  width: 340px;
+  height: 340px;
+  background: #3b82f6;
+  top: -60px;
+  right: -80px;
+  animation: st-float-a 18s ease-in-out infinite;
+}
+
+.bubble-purple {
+  width: 260px;
+  height: 260px;
+  background: #8b5cf6;
+  bottom: 60px;
+  left: -100px;
+  animation: st-float-b 22s ease-in-out infinite;
+}
+
+.bubble-blue-2 {
+  width: 200px;
+  height: 200px;
+  background: #06b6d4;
+  top: 50%;
+  left: 55%;
+  animation: st-float-c 20s ease-in-out infinite;
+}
+
+@keyframes st-float-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-30px, 20px) scale(1.08); }
+}
+
+@keyframes st-float-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(25px, -15px) scale(1.05); }
+}
+
+@keyframes st-float-c {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-20px, 25px) scale(1.1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble { animation: none !important; }
+}
+
+// ─── Header ─────────────────────────────────────────────────────────────────
+.settings-header {
+  position: relative;
+  margin-bottom: 28px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--st-text);
+}
+
+.page-subtitle {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--st-text-secondary);
+}
+
+// ─── Content Grid ───────────────────────────────────────────────────────────
+.settings-content {
+  position: relative;
+  display: grid;
+  gap: 22px;
+  grid-template-columns: 1fr;
+
+  @media (min-width: 860px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+// ─── Glass Card ─────────────────────────────────────────────────────────────
+.glass-card {
+  background: var(--st-card-bg);
+  border: 1px solid var(--st-card-border);
+  border-radius: 16px;
+  padding: 24px;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: var(--st-card-shadow);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    border-color: var(--st-accent-glow);
+    box-shadow: var(--st-card-shadow), 0 0 0 1px var(--st-accent-glow);
+  }
+}
+
+.card-title {
+  margin: 0 0 18px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--st-text);
+}
+
+// ─── Form Elements ──────────────────────────────────────────────────────────
+.form-group {
+  margin-bottom: 16px;
+
+  &:last-child { margin-bottom: 0; }
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--st-text-secondary);
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--st-text);
+  background: var(--st-input-bg);
+  border: 1px solid var(--st-input-border);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: var(--st-accent);
+    box-shadow: 0 0 0 3px var(--st-input-focus);
+  }
+
+  &[readonly] {
+    opacity: 0.55;
+    cursor: default;
+  }
+}
+
+// ─── Toggle Switch ──────────────────────────────────────────────────────────
+.toggle-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--st-divider);
+  cursor: pointer;
+
+  &:last-child { border-bottom: none; }
+}
+
+.toggle-label {
+  font-size: 13px;
+  color: var(--st-text);
+}
+
+.toggle-switch {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  border-radius: 12px;
+  background: var(--st-toggle-bg);
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+
+  &.active {
+    background: var(--st-toggle-active);
+  }
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+
+  .active & {
+    transform: translateX(18px);
+  }
+}
+
+// ─── Radio Group ────────────────────────────────────────────────────────────
+.radio-group {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--st-text);
+
+  input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.radio-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--st-input-border);
+  position: relative;
+  transition: border-color 0.2s ease;
+  flex-shrink: 0;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--st-accent);
+    transform: scale(0);
+    transition: transform 0.15s ease;
+  }
+
+  input:checked + & {
+    border-color: var(--st-accent);
+
+    &::after {
+      transform: scale(1);
+    }
+  }
+}
+
+.radio-text {
+  user-select: none;
+}
+
+// ─── Info Rows (System Card) ────────────────────────────────────────────────
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--st-divider);
+
+  &:last-child { border-bottom: none; }
+}
+
+.info-label {
+  font-size: 13px;
+  color: var(--st-text-secondary);
+}
+
+.info-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--st-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.env-badge {
+  padding: 3px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--st-env-badge);
+  color: var(--st-env-color);
+}
+
+// ─── Save Bar ───────────────────────────────────────────────────────────────
+.save-bar {
+  position: relative;
+  margin-top: 28px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.save-btn {
+  padding: 11px 32px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--st-btn-text);
+  background: var(--st-btn-bg);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+
+  &:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.saved-label {
+  color: #34d399;
+}
+
+// ─── Card placement helpers ─────────────────────────────────────────────────
+.profile-card {
+  @media (min-width: 860px) {
+    grid-row: 1 / 2;
+    grid-column: 1 / 2;
+  }
+}
+
+.notifications-card {
+  @media (min-width: 860px) {
+    grid-row: 1 / 2;
+    grid-column: 2 / 3;
+  }
+}
