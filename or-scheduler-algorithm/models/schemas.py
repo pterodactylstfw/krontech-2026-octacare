@@ -14,6 +14,7 @@ class SurgeryRequest(BaseModel):
     surgery_type_id: int
     priority: str = Field(..., description="ELECTIVE, URGENT, EMERGENCY")
     duration_minutes: int = Field(..., gt=0, description="Durata estimata in minute")
+    required_room_type: str = "GENERAL"
 
 class SurgeonAvailability(BaseModel):
     surgeon_id: int
