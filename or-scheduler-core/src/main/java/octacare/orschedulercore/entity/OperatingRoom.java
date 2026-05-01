@@ -1,10 +1,12 @@
-package octacare.orschedulercore.model;
+package octacare.orschedulercore.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import octacare.orschedulercore.entity.enums.RoomStatus;
+import octacare.orschedulercore.entity.enums.RoomType;
 
 import java.util.List;
 

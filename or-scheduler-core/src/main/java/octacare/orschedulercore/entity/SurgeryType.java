@@ -1,4 +1,4 @@
-package octacare.orschedulercore.model;
+package octacare.orschedulercore.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

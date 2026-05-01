@@ -1,10 +1,12 @@
-package octacare.orschedulercore.model;
+package octacare.orschedulercore.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import octacare.orschedulercore.entity.enums.SurgeryPriority;
+import octacare.orschedulercore.entity.enums.SurgeryStatus;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
