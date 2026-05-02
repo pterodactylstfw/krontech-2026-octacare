@@ -6,8 +6,14 @@ export const routes: Routes = [
     redirectTo: 'auth/login',
     pathMatch: 'full'
   },
+
   {
     path: 'auth/login',
+    loadComponent: () =>
+      import('./features/auth/login/login.component').then((m) => m.LoginComponent)
+  },
+  {
+    path: 'auth/callback',
     loadComponent: () =>
       import('./features/auth/login/login.component').then((m) => m.LoginComponent)
   },

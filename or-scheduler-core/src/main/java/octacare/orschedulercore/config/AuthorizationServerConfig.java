@@ -22,34 +22,21 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.time.Duration;
 import java.util.UUID;
 
 @Configuration
 public class AuthorizationServerConfig {
-
-    @Bean
-    public RegisteredClientRepository registeredClientRepository() {
-        return new InMemoryRegisteredClientRepository(
-                RegisteredClient.withId(UUID.randomUUID().toString())
-                        .clientId("or-scheduler-ui")
-                        .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
-                        .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-                        .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-                        .redirectUri("http://localhost:4200/auth/callback")
-                        .scope(OidcScopes.OPENID)
-                        .scope(OidcScopes.PROFILE)
-                        .clientSettings(ClientSettings.builder().requireProofKey(true).build())
-                        .build()
-        );
-    }
 
     @Bean
     @Order(1)
@@ -57,64 +44,76 @@ public class AuthorizationServerConfig {
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 new OAuth2AuthorizationServerConfigurer();
 
-        // Activează OpenID Connect (pentru scope-ul 'openid')
+        // Activăm OpenID Connect
         authorizationServerConfigurer.oidc(Customizer.withDefaults());
 
         http
-                // Spunem Spring Security ca acest filtru se aplică DOAR pe rutele de OAuth2 (ex: /oauth2/token, /oauth2/authorize)
+                // Spunem că acest filtru se aplică doar pe rutele de OAuth2
                 .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
                 .with(authorizationServerConfigurer, Customizer.withDefaults())
+                .cors(Customizer.withDefaults())
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/oauth2/token"))
                 .authorizeHttpRequests(authorize -> authorize
                         .anyRequest().authenticated()
                 )
-                // Dacă un user neautentificat încearcă să acceseze rutele de autorizare, îl trimitem la login
+                // Când cineva accesează rute de securitate fără să fie logat, îl trimitem la pagina noastră custom /login
                 .exceptionHandling(exceptions -> exceptions
                         .defaultAuthenticationEntryPointFor(
                                 new LoginUrlAuthenticationEntryPoint("/login"),
                                 new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
                         )
-                );
+                )
+                .oauth2ResourceServer(resourceServer -> resourceServer.jwt(Customizer.withDefaults()));
 
         return http.build();
     }
 
     @Bean
+    public RegisteredClientRepository registeredClientRepository(PasswordEncoder passwordEncoder) {
+        // Configurăm clientul pentru Angular. Mai târziu îl vom muta în DB!
+        RegisteredClient registeredClient = RegisteredClient.withId("or-scheduler-client-internal-id") // ID FIX, nu random!
+                .clientId("or-scheduler-ui")
+                .clientSecret(passwordEncoder.encode("secret")) // Generat corect cu BCrypt pe loc!
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST) // Acceptăm secret în body
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                .redirectUri("http://localhost:4200/auth/callback")
+                .scope(OidcScopes.OPENID)
+                .scope(OidcScopes.PROFILE)
+                .scope("role")
+                .clientSettings(ClientSettings.builder().requireProofKey(false).requireAuthorizationConsent(false).build())
+                // Am setat validitatea token-ului la 1 oră, fix cum a cerut Raul
+                .tokenSettings(TokenSettings.builder().accessTokenTimeToLive(Duration.ofHours(1)).build())
+                .build();
+
+        return new InMemoryRegisteredClientRepository(registeredClient);
+    }
+
+    @Bean
     public JWKSource<SecurityContext> jwkSource() {
-        // 1. Generăm perechea de chei (Publică / Privată)
         KeyPair keyPair = generateRsaKey();
         RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
         RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
-
-        // 2. Construim obiectul RSAKey (formatul standard pentru JWK)
-        RSAKey rsaKey = new RSAKey.Builder(publicKey)
-                .privateKey(privateKey)
-                .keyID(UUID.randomUUID().toString())
-                .build();
-
-        // 3. Îl împachetăm și îl returnăm ca sursă de chei
-        JWKSet jwkSet = new JWKSet(rsaKey);
-        return new ImmutableJWKSet<>(jwkSet);
+        RSAKey rsaKey = new RSAKey.Builder(publicKey).privateKey(privateKey).keyID(UUID.randomUUID().toString()).build();
+        return new ImmutableJWKSet<>(new JWKSet(rsaKey));
     }
 
     private static KeyPair generateRsaKey() {
-        KeyPair keyPair;
         try {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
             keyPairGenerator.initialize(2048);
-            keyPair = keyPairGenerator.generateKeyPair();
+            return keyPairGenerator.generateKeyPair();
         } catch (Exception ex) {
             throw new IllegalStateException(ex);
         }
-        return keyPair;
     }
 
-    // Bean necesar pentru a decoda token-urile pe partea de Authorization Server
     @Bean
     public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
         return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
     }
 
-    // Setările de bază ale serverului de autorizare (ex: endpoint-urile implicite)
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
         return AuthorizationServerSettings.builder().build();

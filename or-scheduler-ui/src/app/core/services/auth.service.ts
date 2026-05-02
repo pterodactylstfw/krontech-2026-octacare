@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import {HttpClient, HttpHeaders, HttpParams} from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
@@ -13,6 +13,8 @@ import { API_ENDPOINTS } from '../constants/api.constants';
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   currentUser$ = this.currentUserSubject.asObservable();
+  private readonly redirectUri = 'http://localhost:4200/auth/callback';
+  private readonly clientId = 'or-scheduler-ui';
 
   constructor(private http: HttpClient, private router: Router) {
     const saved = localStorage.getItem('currentUser');
@@ -60,6 +62,20 @@ export class AuthService {
         }
       })
     );
+  }
+
+  exchangeCodeForToken(code: string): Observable<any> {
+    const body = new HttpParams()
+      .set('grant_type', 'authorization_code')
+      .set('code', code)
+      .set('redirect_uri', this.redirectUri) // Obligatoriu sƒ fie /auth/callback
+      .set('client_id', 'or-scheduler-ui')
+      .set('client_secret', 'secret');
+
+    return this.http.post('http://localhost:8080/oauth2/token', body.toString(), {
+      headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' }),
+      withCredentials: true // Pentru a primi cookie-ul securizat[cite: 1]
+    });
   }
 
   demoLogin(): User {
