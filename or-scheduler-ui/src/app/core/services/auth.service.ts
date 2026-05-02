@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, map } from 'rxjs/operators';
 import { User } from '../../shared/models/user.model';
 import { UserRole } from '../enums/user-role.enum';
 import { environment } from '../../../environments/environment';
@@ -21,6 +21,12 @@ export class AuthService {
     }
   }
 
+  /**
+   * Login:
+   * - folosește mocks când environment.useMocks === true
+   * - altfel apelează backend-ul la API_ENDPOINTS.auth/login cu withCredentials
+   * Răspunsul backend poate avea diferite forme; încercăm să extragem user-ul și token-ul dacă există.
+   */
   login(email: string, password: string): Observable<any> {
     if (environment.useMocks) {
       const user = MOCK_USERS.find(u => u.email === email);
@@ -31,9 +37,27 @@ export class AuthService {
       return of(null);
     }
 
-    return this.http.post<any>(`${API_ENDPOINTS.auth}/login`, { email, password }).pipe(
-      tap(response => {
-        this.setSession(response.token, response.user);
+    // Request către backend; withCredentials: true pentru cookie HttpOnly (session/refresh cookie)
+    return this.http.post<any>(`${API_ENDPOINTS.auth}/login`, { email, password }, { withCredentials: true }).pipe(
+      map(response => {
+        // Normalize response: user poate veni sub property 'user' sau numai 'email'
+        const userFromResponse: User | undefined = response?.user
+          ? response.user
+          : response?.email
+            ? { id: response?.id ?? '', email: response.email, fullName: response?.fullName ?? response.email, role: response?.role ?? null, department: response?.department ?? '' } as User
+            : undefined;
+
+        const tokenFromResponse: string | undefined = response?.token;
+
+        return { raw: response, user: userFromResponse, token: tokenFromResponse };
+      }),
+      tap(({ user, token }) => {
+        // Dacă server nu returnează user (dar a creat sesiune cookie), putem apela un endpoint /api/auth/me separat.
+        // Ca fallback, dacă nu avem user în răspuns, nu setăm session local (poți decide altfel).
+        if (user) {
+          // dacă token nu este trimis (cookie session), folosim token gol sau null
+          this.setSession(token ?? '', user);
+        }
       })
     );
   }
@@ -51,13 +75,25 @@ export class AuthService {
     return demoUser;
   }
 
-  private setSession(token: string, user: User): void {
-    localStorage.setItem('token', token);
+  private setSession(token: string | null, user: User): void {
+    // token poate fi gol când server folosește cookie HttpOnly
+    if (token !== null && token !== undefined && token !== '') {
+      localStorage.setItem('token', token);
+    } else {
+      // opțional: eliminăm token stocat anterior
+      localStorage.removeItem('token');
+    }
+
     localStorage.setItem('currentUser', JSON.stringify(user));
     this.currentUserSubject.next(user);
   }
 
   logout(): void {
+    // Dacă backend gestionează sesiunea, ideal e să apelăm /api/auth/logout cu withCredentials;
+    // in acest exemplu păstrăm comportamentul local + recomandare de apel backend.
+    // Exemplu (opțional):
+    // this.http.post(`${API_ENDPOINTS.auth}/logout`, {}, { withCredentials: true }).subscribe();
+
     localStorage.removeItem('token');
     localStorage.removeItem('currentUser');
     this.currentUserSubject.next(null);
@@ -69,7 +105,7 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!this.getToken();
+    return !!this.getToken() || !!this.getCurrentUser();
   }
 
   getCurrentUser(): User | null {
@@ -77,7 +113,7 @@ export class AuthService {
   }
 
   getCurrentUserRole(): UserRole | null {
-    return this.currentUserSubject.value?.role ?? null;
+    return (this.currentUserSubject.value?.role ?? null) as UserRole | null;
   }
 
   isAdmin(): boolean {
