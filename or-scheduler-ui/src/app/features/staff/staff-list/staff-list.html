@@ -23,7 +23,7 @@
   <div class="grid">
     <div class="card" *ngFor="let s of filteredStaff">
       <div class="card-header">
-        <div class="avatar" [style.background]="s.color">{{ s.initials }}</div>
+        <div class="avatar" [style.background]="s.color + '33'" [style.color]="s.color">{{ s.initials }}</div>
         <div class="info">
           <strong>{{ s.name }}</strong>
           <span>{{ s.role }}{{ s.specialty ? ' · ' + s.specialty : '' }}</span>
@@ -45,25 +45,25 @@
         <div class="week-row">
           <span>This week</span>
           <div class="days">
-            <span *ngFor="let active of s.weekDays; let i = index" [class.active]="active">{{ days[i] }}</span>
+            <span *ngFor="let active of s.weekDays; let i = index" [class.active]="active">{{ daysShort[i] }}</span>
           </div>
         </div>
       </div>
       <div class="actions">
-        <button>View Schedule</button>
-        <button>Edit</button>
+        <button (click)="openSchedule(s)">View Schedule</button>
+        <button (click)="openEditModal(s)">Edit</button>
       </div>
     </div>
   </div>
 
+  <!-- ── Add Staff Modal ──────────────────────────────────────────────────── -->
   <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2>Add Staff Member</h2>
         <button class="close-btn" (click)="closeModal()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
         </button>
       </div>
@@ -113,4 +113,139 @@
     </div>
   </div>
 
-</div>  
+  <!-- ── Edit Staff Modal ─────────────────────────────────────────────────── -->
+  <div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Edit Staff Member</h2>
+        <button class="close-btn" (click)="closeEditModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="field">
+            <label>Full Name</label>
+            <input type="text" [(ngModel)]="editStaff.name" />
+          </div>
+          <div class="field">
+            <label>Role</label>
+            <select [(ngModel)]="editStaff.role">
+              <option value="Surgeon">Surgeon</option>
+              <option value="Nurse">Nurse</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Specialty</label>
+            <input type="text" [(ngModel)]="editStaff.specialty" />
+          </div>
+          <div class="field">
+            <label>Department</label>
+            <input type="text" [(ngModel)]="editStaff.department" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Status</label>
+            <select [(ngModel)]="editStaff.status">
+              <option value="On Duty">On Duty</option>
+              <option value="On Leave">On Leave</option>
+              <option value="Off Duty">Off Duty</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Color</label>
+            <input type="color" [(ngModel)]="editStaff.color" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>{{ editStaff.role === 'Surgeon' ? 'Surgeries today' : 'Assigned room' }}</label>
+            <input type="text" [(ngModel)]="editStaff.surgeriesOrRoom" />
+          </div>
+          <div class="field">
+            <label>{{ editStaff.role === 'Surgeon' ? 'Next surgery' : 'Shift' }}</label>
+            <input type="text" [(ngModel)]="editStaff.nextSurgeryOrShift" />
+          </div>
+        </div>
+        <!-- Week days toggle -->
+        <div class="field">
+          <label>Working days</label>
+          <div class="week-toggle">
+            <span
+              *ngFor="let active of editStaff.weekDays; let i = index"
+              class="week-day-btn"
+              [class.active]="active"
+              (click)="editStaff.weekDays![i] = !editStaff.weekDays![i]">
+              {{ days[i] }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="cancel-btn" (click)="closeEditModal()">Cancel</button>
+        <button class="save-btn" (click)="saveEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── View Schedule Modal ──────────────────────────────────────────────── -->
+  <div class="modal-overlay" *ngIf="showScheduleModal && scheduleStaff" (click)="closeSchedule()">
+    <div class="modal modal-schedule" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="schedule-header-info">
+          <div class="avatar avatar-sm" [style.background]="scheduleStaff.color + '33'" [style.color]="scheduleStaff.color">
+            {{ scheduleStaff.initials }}
+          </div>
+          <div>
+            <h2>{{ scheduleStaff.name }}</h2>
+            <span class="schedule-role">{{ scheduleStaff.role }}{{ scheduleStaff.specialty ? ' · ' + scheduleStaff.specialty : '' }}</span>
+          </div>
+        </div>
+        <button class="close-btn" (click)="closeSchedule()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="schedule-week-label">Week of May 5 – 9, 2026</p>
+        <div class="schedule-grid">
+          <div
+            class="schedule-day"
+            *ngFor="let entry of getWeekSchedule(scheduleStaff)"
+            [class.schedule-day--active]="entry.active"
+            [class.schedule-day--off]="!entry.active">
+            <span class="schedule-day-name">{{ entry.day }}</span>
+            <div class="schedule-day-block">
+              <span class="schedule-day-status">{{ entry.active ? (scheduleStaff.role === 'Surgeon' ? 'Surgery' : 'On Shift') : 'Day Off' }}</span>
+              <span class="schedule-day-detail" *ngIf="entry.active">{{ entry.detail }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="schedule-summary">
+          <div class="summary-item">
+            <span class="summary-label">Department</span>
+            <span class="summary-value">{{ scheduleStaff.department }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Status</span>
+            <span class="badge" [ngClass]="scheduleStaff.status === 'On Duty' ? 'green' : scheduleStaff.status === 'On Leave' ? 'orange' : 'red'">
+              {{ scheduleStaff.status }}
+            </span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Days this week</span>
+            <span class="summary-value">{{ getActiveDaysCount() }} / 5</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
