@@ -1,0 +1,126 @@
+<div class="calendar-wrapper" [class.light]="!theme.isDarkMode()">
+
+  <!-- Header -->
+  <div class="calendar-header">
+    <div class="header-left">
+      <h1>Calendar</h1>
+      <span class="date-label">{{ formattedDate }}</span>
+    </div>
+    <div class="header-right">
+      <div class="nav-buttons">
+        <button class="nav-btn" (click)="previousDay()">&#8249;</button>
+        <button class="nav-btn today-btn" (click)="currentDate = today">Today</button>
+        <button class="nav-btn" (click)="nextDay()">&#8250;</button>
+      </div>
+
+      <button class="add-btn">+ Add Surgery</button>
+    </div>
+  </div>
+
+  <!-- OR Utilization Bar -->
+  <div class="utilization-bar">
+    <div class="util-card" *ngFor="let room of orRooms">
+      <div class="util-ring-wrapper">
+        <svg viewBox="0 0 36 36" class="util-ring">
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#1e2a3a" stroke-width="3"/>
+          <circle cx="18" cy="18" r="15.9" fill="none"
+            [attr.stroke]="getUtilizationColor(room.utilizationPercent)"
+            stroke-width="3"
+            [attr.stroke-dasharray]="room.utilizationPercent + ', 100'"
+            stroke-linecap="round"
+            transform="rotate(-90 18 18)"/>
+        </svg>
+        <span class="util-percent">{{ room.utilizationPercent }}%</span>
+      </div>
+      <span class="util-label">{{ room.name }}</span>
+    </div>
+    <div class="util-divider"></div>
+    <div class="util-stat">
+      <span class="util-stat-number">{{ surgeries.length }}</span>
+      <span class="util-stat-label">Surgeries Today</span>
+    </div>
+  </div>
+
+  <!-- Calendar Grid -->
+  <div class="calendar-grid-wrapper">
+    <div class="calendar-grid">
+
+      <div class="time-header"></div>
+      <div class="room-header" *ngFor="let room of orRooms">{{ room.name }}</div>
+
+      <ng-container *ngFor="let time of timeSlots">
+        <div class="time-label">{{ time }}</div>
+        <div class="grid-cell"
+          *ngFor="let room of orRooms"
+          (dragover)="onDragOver($event)"
+          (drop)="onDrop(room.name, time)">
+
+          <div class="surgery-card"
+            *ngFor="let surgery of getSurgeriesForSlot(room.name, time)"
+            [ngClass]="['card-' + surgery.color, 'status-' + surgery.status]"
+            [style.height.px]="getCardHeight(surgery)"
+            draggable="true"
+            (dragstart)="onDragStart(surgery)"
+            (click)="openModal(surgery)">
+
+            <div class="card-top">
+              <span class="card-emergency" *ngIf="surgery.status === 'emergency'">E</span>
+              <span class="card-patient">{{ surgery.patientId }}</span>
+            </div>
+            <span class="card-surgeon">{{ surgery.surgeonName }}</span>
+            <span class="card-type">{{ surgery.type }}</span>
+            <span class="card-time">{{ surgery.startTime }} – {{ surgery.endTime }}</span>
+            <span class="card-sterilization" *ngIf="surgery.status === 'sterilization'">
+              Sterilization Pending
+            </span>
+          </div>
+
+        </div>
+      </ng-container>
+
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" *ngIf="selectedSurgery" (click)="closeModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Surgery Details</h2>
+        <button class="modal-close" (click)="closeModal()">&#x2715;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-row">
+          <span class="modal-label">Patient</span>
+          <span class="modal-value">{{ selectedSurgery.patientId }}</span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Surgeon</span>
+          <span class="modal-value">{{ selectedSurgery.surgeonName }}</span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Procedure</span>
+          <span class="modal-value">{{ selectedSurgery.type }}</span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Room</span>
+          <span class="modal-value">{{ selectedSurgery.orRoom }}</span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Time</span>
+          <span class="modal-value">{{ selectedSurgery.startTime }} – {{ selectedSurgery.endTime }}</span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Duration</span>
+          <span class="modal-value">{{ selectedSurgery.durationMin }} min</span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Status</span>
+          <span class="modal-value status-badge" [ngClass]="'badge-' + selectedSurgery.status">
+            {{ getStatusLabel(selectedSurgery.status) }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,66 @@
+.login-wrapper {
+  /* Centrează perfect pe ecran */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+
+  /* Fundalul tău dark */
+  background: #0a0e17;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 40px 60px;
+
+  /* Efectul de Glassmorphism (sticlă) */
+  background: rgba(17, 24, 39, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+
+  /* Animație fină la intrarea în pagină */
+  animation: fadeIn 0.4s ease-out;
+
+  p {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    color: #e2e8f0; /* Text deschis la culoare, vizibil */
+  }
+}
+
+/* Spinner personalizat */
+.spinner-ring {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(59, 127, 255, 0.15);
+  border-top-color: #3b7fff;
+  border-right-color: #3b7fff; /* Dă o formă de semilună mai vizibilă */
+  border-radius: 50%;
+  animation: spin 0.85s cubic-bezier(0.6, 0.2, 0.4, 0.8) infinite;
+}
+
+/* Animații */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

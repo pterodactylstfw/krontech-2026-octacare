@@ -4,33 +4,35 @@
 -- ============================================================================
 -- 1. Insert Users
 -- ============================================================================
-INSERT INTO users (id, email, full_name, role, specialization, phone, department) VALUES
--- Admini
-('11111111-1111-1111-1111-111111111111', 'm.popescu@spital-brasov.ro', 'Mihai Popescu', 'ADMIN', NULL, '0722111222', 'Administratie'),
-('11111111-1111-1111-1111-111111111112', 'a.ionescu@spital-brasov.ro', 'Andreea Ionescu', 'ADMIN', NULL, '0733222333', 'Administratie'),
+INSERT INTO users (id, email, full_name, password_hash, role, specialization, phone, department) VALUES
+-- Admini (8 valori: id, email, nume, hash, rol, spec, tel, dep)
+('11111111-1111-1111-1111-111111111111', 'm.popescu@spital-brasov.ro', 'Mihai Popescu', '$2a$12$1Avsirc/pqcJOUxgb/VR2.TU7RbKrfPW65quideFhFMV7WoB80Zv.', 'ADMIN', NULL, '0722111222', 'Administratie'),
+('11111111-1111-1111-1111-111111111112', 'a.ionescu@spital-brasov.ro', 'Andreea Ionescu', '$2a$12$1Avsirc/pqcJOUxgb/VR2.TU7RbKrfPW65quideFhFMV7WoB80Zv.', 'ADMIN', NULL, '0733222333', 'Administratie'),
+('11111111-1111-1111-1111-111111111113', 'admin.test@spital-brasov.ro','Admin Test',      '$2a$12$jfRxRfXWnVRSeRos/AI61OPsmDYodpxbIdSBKkmmfo0sVyyWJCWGa','ADMIN',    'IT',    '0733222334',    'Administratie'),
+-- Chirurgi (8 valori per rând)
+('22222222-2222-2222-2222-222222222221', 'v.stoica@spital-brasov.ro', 'Victor Stoica', '$2a$12$1Avsirc/pqcJOUxgb/VR2.TU7RbKrfPW65quideFhFMV7WoB80Zv.', 'SURGEON', 'Cardiologie', '0744111222', 'Chirurgie Cardiovasculara'),
+('22222222-2222-2222-2222-222222222222', 'e.dumitrescu@spital-brasov.ro', 'Elena Dumitrescu', '$2a$12$1Avsirc/pqcJOUxgb/VR2.TU7RbKrfPW65quideFhFMV7WoB80Zv.', 'SURGEON', 'Cardiologie', '0744222333', 'Chirurgie Cardiovasculara'),
+('22222222-2222-2222-2222-222222222223', 'r.stanescu@spital-brasov.ro', 'Radu Stanescu', '$2a$12$1Avsirc/pqcJOUxgb/VR2.TU7RbKrfPW65quideFhFMV7WoB80Zv.', 'SURGEON', 'Neurologie', '0744333444', 'Neurochirurgie'),
+('22222222-2222-2222-2222-222222222224', 'i.marin@spital-brasov.ro', 'Ioana Marin', '$2a$12$1Avsirc/pqcJOUxgb/VR2.TU7RbKrfPW65quideFhFMV7WoB80Zv.', 'SURGEON', 'Neurologie', '0744444555', 'Neurochirurgie'),
+('22222222-2222-2222-2222-222222222225', 'c.vasile@spital-brasov.ro', 'Cristian Vasile', '$2a$12$1Avsirc/pqcJOUxgb/VR2.TU7RbKrfPW65quideFhFMV7WoB80Zv.', 'SURGEON', 'Ortopedie', '0744555666', 'Ortopedie si Traumatologie'),
+('22222222-2222-2222-2222-222222222226', 'm.nistor@spital-brasov.ro', 'Marius Nistor', '$2a$12$1Avsirc/pqcJOUxgb/VR2.TU7RbKrfPW65quideFhFMV7WoB80Zv.', 'SURGEON', 'Ortopedie', '0744666777', 'Ortopedie si Traumatologie'),
+('22222222-2222-2222-2222-222222222227', 's.dragomir@spital-brasov.ro', 'Simona Dragomir', '$2a$12$1Avsirc/pqcJOUxgb/VR2.TU7RbKrfPW65quideFhFMV7WoB80Zv.', 'SURGEON', 'Pediatrie', '0744777888', 'Chirurgie Pediatrica'),
+('22222222-2222-2222-2222-222222222228', 'b.enache@spital-brasov.ro', 'Bogdan Enache', '$2a$12$1Avsirc/pqcJOUxgb/VR2.TU7RbKrfPW65quideFhFMV7WoB80Zv.', 'SURGEON', 'Chirurgie Generala', '0744888999', 'Chirurgie Generala'),
+('22222222-2222-2222-2222-222222222229', 'surgeon.test@spital-brasov.ro', 'Surgeon Test', '$2a$12$jfRxRfXWnVRSeRos/AI61OPsmDYodpxbIdSBKkmmfo0sVyyWJCWGa', 'SURGEON', 'Chirurgie Generala', '0744000001', 'Chirurgie Generala'),
 
--- Chirurgi (8 chirurgi, specializari diferite)
-('22222222-2222-2222-2222-222222222221', 'v.stoica@spital-brasov.ro', 'Victor Stoica', 'SURGEON', 'Cardiologie', '0744111222', 'Chirurgie Cardiovasculara'),
-('22222222-2222-2222-2222-222222222222', 'e.dumitrescu@spital-brasov.ro', 'Elena Dumitrescu', 'SURGEON', 'Cardiologie', '0744222333', 'Chirurgie Cardiovasculara'),
-('22222222-2222-2222-2222-222222222223', 'r.stanescu@spital-brasov.ro', 'Radu Stanescu', 'SURGEON', 'Neurologie', '0744333444', 'Neurochirurgie'),
-('22222222-2222-2222-2222-222222222224', 'i.marin@spital-brasov.ro', 'Ioana Marin', 'SURGEON', 'Neurologie', '0744444555', 'Neurochirurgie'),
-('22222222-2222-2222-2222-222222222225', 'c.vasile@spital-brasov.ro', 'Cristian Vasile', 'SURGEON', 'Ortopedie', '0744555666', 'Ortopedie si Traumatologie'),
-('22222222-2222-2222-2222-222222222226', 'm.nistor@spital-brasov.ro', 'Marius Nistor', 'SURGEON', 'Ortopedie', '0744666777', 'Ortopedie si Traumatologie'),
-('22222222-2222-2222-2222-222222222227', 's.dragomir@spital-brasov.ro', 'Simona Dragomir', 'SURGEON', 'Pediatrie', '0744777888', 'Chirurgie Pediatrica'),
-('22222222-2222-2222-2222-222222222228', 'b.enache@spital-brasov.ro', 'Bogdan Enache', 'SURGEON', 'Chirurgie Generala', '0744888999', 'Chirurgie Generala'),
+-- Asistente (8 valori per rând)
+('33333333-3333-3333-3333-333333333331', 'a.radulescu@spital-brasov.ro', 'Ana Radulescu', '$2a$12$1Avsirc/pqcJOUxgb/VR2.TU7RbKrfPW65quideFhFMV7WoB80Zv.', 'NURSE', NULL, '0755111222', 'ATI'),
+('33333333-3333-3333-3333-333333333332', 'l.constantin@spital-brasov.ro', 'Laura Constantin', '$2a$12$1Avsirc/pqcJOUxgb/VR2.TU7RbKrfPW65quideFhFMV7WoB80Zv.', 'NURSE', NULL, '0755222333', 'Bloc Operator'),
+('33333333-3333-3333-3333-333333333333', 'd.marinescu@spital-brasov.ro', 'Daniel Marinescu', '$2a$12$1Avsirc/pqcJOUxgb/VR2.TU7RbKrfPW65quideFhFMV7WoB80Zv.', 'NURSE', NULL, '0755333444', 'Bloc Operator'),
+('33333333-3333-3333-3333-333333333334', 'nurse.test@spital-brasov.ro', 'Nurse Test', '$2a$12$jfRxRfXWnVRSeRos/AI61OPsmDYodpxbIdSBKkmmfo0sVyyWJCWGa', 'NURSE', NULL, '0755000001', 'ATI'),
 
--- Asistente (3)
-('33333333-3333-3333-3333-333333333331', 'a.radulescu@spital-brasov.ro', 'Ana Radulescu', 'NURSE', NULL, '0755111222', 'ATI'),
-('33333333-3333-3333-3333-333333333332', 'l.constantin@spital-brasov.ro', 'Laura Constantin', 'NURSE', NULL, '0755222333', 'Bloc Operator'),
-('33333333-3333-3333-3333-333333333333', 'd.marinescu@spital-brasov.ro', 'Daniel Marinescu', 'NURSE', NULL, '0755333444', 'Bloc Operator'),
-
--- Pacienti (5) ca si Useri
-('44444444-4444-4444-4444-444444444441', 'i.barbu@gmail.com', 'Ionel Barbu', 'PATIENT', NULL, '0766111222', NULL),
-('44444444-4444-4444-4444-444444444442', 'm.dinu@yahoo.com', 'Maria Dinu', 'PATIENT', NULL, '0766222333', NULL),
-('44444444-4444-4444-4444-444444444443', 'c.toma@gmail.com', 'Cosmin Toma', 'PATIENT', NULL, '0766333444', NULL),
-('44444444-4444-4444-4444-444444444444', 'e.lazar@hotmail.com', 'Elena Lazar', 'PATIENT', NULL, '0766444555', NULL),
-('44444444-4444-4444-4444-444444444445', 'a.georgescu@gmail.com', 'Alexandru Georgescu', 'PATIENT', NULL, '0766555666', NULL);
-
+-- Pacienti (8 valori per rând)
+('44444444-4444-4444-4444-444444444441', 'i.barbu@gmail.com', 'Ionel Barbu', '$2a$12$1Avsirc/pqcJOUxgb/VR2.TU7RbKrfPW65quideFhFMV7WoB80Zv.', 'PATIENT', NULL, '0766111222', NULL),
+('44444444-4444-4444-4444-444444444442', 'm.dinu@yahoo.com', 'Maria Dinu', '$2a$12$1Avsirc/pqcJOUxgb/VR2.TU7RbKrfPW65quideFhFMV7WoB80Zv.', 'PATIENT', NULL, '0766222333', NULL),
+('44444444-4444-4444-4444-444444444443', 'c.toma@gmail.com', 'Cosmin Toma', '$2a$12$1Avsirc/pqcJOUxgb/VR2.TU7RbKrfPW65quideFhFMV7WoB80Zv.', 'PATIENT', NULL, '0766333444', NULL),
+('44444444-4444-4444-4444-444444444444', 'e.lazar@hotmail.com', 'Elena Lazar', '$2a$12$1Avsirc/pqcJOUxgb/VR2.TU7RbKrfPW65quideFhFMV7WoB80Zv.', 'PATIENT', NULL, '0766444555', NULL),
+('44444444-4444-4444-4444-444444444445', 'a.georgescu@gmail.com', 'Alexandru Georgescu', '$2a$12$1Avsirc/pqcJOUxgb/VR2.TU7RbKrfPW65quideFhFMV7WoB80Zv.', 'PATIENT', NULL, '0766555666', NULL),
+('44444444-4444-4444-4444-444444444446', 'patient.test@spital-brasov.ro', 'Patient Test', '$2a$12$jfRxRfXWnVRSeRos/AI61OPsmDYodpxbIdSBKkmmfo0sVyyWJCWGa', 'PATIENT', NULL, '0766000001', NULL);
 -- ============================================================================
 -- 2. Insert Operating Rooms
 -- ============================================================================
