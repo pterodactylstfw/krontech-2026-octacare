@@ -41,10 +41,17 @@ export class LoginComponent implements OnInit {
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
       const code = params['code'];
-      // Procesăm doar dacă avem cod și nu suntem deja în curs de procesare
-      if (code && !this.isProcessingCode) {
-        this.isProcessingCode = true;
-        this.handleAuthenticationCallback(code);
+
+      if (code) {
+        // Dacă avem cod, îl procesăm (Pasul de întoarcere)
+        if (!this.isProcessingCode) {
+          this.isProcessingCode = true;
+          this.handleAuthenticationCallback(code);
+        }
+      } else {
+        // Dacă NU avem cod, înseamnă că userul abia a venit pe pagină.
+        // Îl trimitem imediat la Spring Boot să se logheze (Pasul de plecare)[cite: 18]
+        this.onLogin();
       }
     });
   }

@@ -1,9 +1,26 @@
+/* Folosim același font stack de pe Angular */
+:root {
+    --font-stack: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+    --radius-md: 12px;
+    --text-primary: #1d1d1f;
+    --text-secondary: #6e6e73;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-stack);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
 .login-wrapper {
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    font-family: var(--font-stack), sans-serif;
+    font-family: var(--font-stack);
     position: relative;
     overflow: hidden;
     background: linear-gradient(to bottom, #ffffff 0%, #eff6ff 40%, #a1cbff 90%);
@@ -166,7 +183,7 @@
 .panel-bubble-purple-2,
 .panel-bubble-blue,
 .panel-bubble-blue-2 {
-    display: none;
+    display: block !important;
 }
 
 .login-form-panel::before,
@@ -499,9 +516,9 @@
     }
 }
 
-/* ==========================================================================
+/* =========================================================================
    FIX-URI PENTRU INPUTURI, ICONIȚE ȘI BUTOANE (Adăugate la codul tău)
-   ========================================================================== */
+   ========================================================================= */
 
 .field-group {
     display: flex;
@@ -539,11 +556,13 @@
     border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: 14px;
     font-size: 15px;
+    font-family: var(--font-stack);
     background: rgba(255, 255, 255, 0.8);
     color: #1d1d1f;
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
     transition: all 0.25s ease;
     outline: none;
+    box-sizing: border-box;
 }
 
 .input-wrapper input:focus {
@@ -563,6 +582,7 @@
     padding: 14px;
     border: none;
     border-radius: 14px;
+    font-family: var(--font-stack);
     background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
     color: white;
     font-size: 16px;
@@ -600,4 +620,37 @@
 .form-footer a:hover {
     color: #1e40af;
     text-decoration: underline;
+}
+
+/* Adăugăm stilul pentru butonul de toggle password care lipsea din CSS-ul de bază[cite: 27] */
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    z-index: 2;
+}
+
+.toggle-password svg {
+    width: 20px;
+    height: 20px;
+}
+
+.forgot-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 4px;
+    margin-bottom: 2px;
+}
+
+.forgot-link {
+    font-size: 13px;
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 500;
 }
