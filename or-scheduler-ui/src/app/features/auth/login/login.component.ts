@@ -20,21 +20,28 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    // 1. Verificăm dacă avem erori de login în URL
+    this.route.queryParams.subscribe(params => {
+      if (params['error']) {
+        this.isLoading = false;
+        console.error('Eroare primită de la serverul de identitate:', params['error']);
+        return;
+      }
+    });
+
+    // 2. Monitorizăm utilizatorul
     this.authService.currentUser$.subscribe(user => {
       if (user && user.role) {
-        // Dacă am găsit userul, oprim orice alt proces și plecăm la dashboard-ul lui
-        console.log('Navigare către dashboard pentru rolul:', user.role);
-
-        // setTimeout(..., 0) rezolvă conflictele de animație
-        setTimeout(() => {
-          this.navigateByRole(user.role);
-        }, 0);
+        setTimeout(() => this.navigateByRole(user.role), 0);
       } else {
-        // Doar dacă NU suntem logați verificăm dacă trebuie să inițiem login-ul
-        const hasCode = window.location.href.includes('code=');
-        if (!hasCode && !this.authService.isLoggedIn()) {
-          this.authService.initiateLoginFlow();
-        }
+        // 3. Dacă după 3 secunde spinner-ul tot rulează și nu avem user,
+        // înseamnă că validarea a eșuat sau s-a blocat.
+        setTimeout(() => {
+          if (this.isLoading && !this.authService.isLoggedIn()) {
+            console.warn('Login timeout - redirecționare forțată către flow-ul de login');
+            this.authService.initiateLoginFlow();
+          }
+        }, 3000);
       }
     });
   }

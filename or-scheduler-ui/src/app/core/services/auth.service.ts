@@ -20,15 +20,23 @@ export class AuthService {
 
   private configureOAuth() {
     this.oauthService.configure(authConfig);
+
+    // Setează librăria să curețe automat datele vechi de login dacă apare o eroare
+    this.oauthService.events.subscribe(event => {
+      if (event.type === 'token_validation_error' || event.type === 'invalid_nonce_in_state') {
+        console.error('Eroare critică la validarea token-ului:', event);
+        // Dacă validarea eșuează, ștergem tot pentru a permite o reîncercare curată
+        this.oauthService.logOut();
+      }
+    });
+
     this.oauthService.setupAutomaticSilentRefresh();
 
-    // Aici e magia "ca la carte": descarcă harta mai întâi, Apoi încearcă logarea
+    // Încărcăm documentul și încercăm logarea
     this.oauthService.loadDiscoveryDocumentAndTryLogin().then(() => {
       if (this.oauthService.hasValidAccessToken()) {
         this.loadUserProfile();
       }
-    }).catch(err => {
-      console.error('Eroare la Discovery Document sau Logare:', err);
     });
   }
 
