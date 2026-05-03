@@ -57,18 +57,29 @@ export class AuthService {
   }
 
   private extractRoleFromClaims(claims: any): UserRole {
-    // Dacă Spring pune rolurile într-un array
-    if (claims.roles && claims.roles.length > 0) {
-      const roleString = claims.roles[0].replace('ROLE_', '');
-      return roleString as UserRole;
+    // Căutăm în noul câmp 'user_roles' creat în backend
+    const roles = claims['user_roles'] || claims['roles'] || [];
+
+    if (Array.isArray(roles)) {
+      // Luăm primul rol care începe cu ROLE_ (ex: ROLE_SURGEON)
+      const actualRole = roles.find(r => r.startsWith('ROLE_'));
+      if (actualRole) {
+        return actualRole.replace('ROLE_', '') as UserRole;
+      }
     }
-    return UserRole.ADMIN; // Fallback
+
+    // Dacă tot nu găsim nimic, returnăm un fallback, dar logăm claims pentru debug
+    console.warn('Rol real negăsit în claims:', claims);
+    return UserRole.ADMIN;
   }
 
   public logout(): void {
-    this.oauthService.logOut();
     this.currentUserSubject.next(null);
-    this.router.navigate(['/auth/login']);
+
+    // Această metodă șterge token-urile locale și FACE REDIRECT automat
+    // către http://localhost:8080/connect/logout pentru a ucide cookie-ul.
+    // Spring te va trimite înapoi pe portul 4200 (postLogoutRedirectUri) automat!
+    this.oauthService.logOut();
   }
 
   public getToken(): string {

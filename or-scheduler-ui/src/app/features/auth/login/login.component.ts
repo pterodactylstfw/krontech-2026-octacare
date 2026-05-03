@@ -20,33 +20,47 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.route.queryParams.subscribe(params => {
-      // 1. Dacă avem 'code' în URL, ne-am întors de la Spring cu succes.
-      if (params['code']) {
-        // Nu facem nimic manual! angular-oauth2-oidc schimbă automat codul în fundal.
-        // Noi doar ne abonăm și așteptăm să apară userul ca să știm unde să-l trimitem.
-        this.authService.currentUser$.subscribe(user => {
-          if (user) {
-            this.navigateByRole(user.role);
-          }
-        });
-      }
-      // 2. Dacă suntem deja logați (avem token valid în browser)
-      else if (this.authService.isLoggedIn()) {
-        this.navigateByRole(this.authService.getCurrentUserRole());
-      }
-      // 3. Nu avem cod, nu suntem logați -> Declanșăm logarea sigură (PKCE)
-      else {
-        this.authService.initiateLoginFlow();
+    this.authService.currentUser$.subscribe(user => {
+      if (user && user.role) {
+        // Dacă am găsit userul, oprim orice alt proces și plecăm la dashboard-ul lui
+        console.log('Navigare către dashboard pentru rolul:', user.role);
+
+        // setTimeout(..., 0) rezolvă conflictele de animație
+        setTimeout(() => {
+          this.navigateByRole(user.role);
+        }, 0);
+      } else {
+        // Doar dacă NU suntem logați verificăm dacă trebuie să inițiem login-ul
+        const hasCode = window.location.href.includes('code=');
+        if (!hasCode && !this.authService.isLoggedIn()) {
+          this.authService.initiateLoginFlow();
+        }
       }
     });
   }
 
   private navigateByRole(role: string | null) {
-    if (role === 'PATIENT') {
-      this.router.navigate(['/patients/portal']);
-    } else {
-      this.router.navigate(['/dashboard']);
+    this.isLoading = false;
+
+    // Normalizăm rolul (Spring uneori trimite ROLE_SURGEON, Angular vrea SURGEON)
+    const normalizedRole = role?.replace('ROLE_', '') || '';
+
+    switch (normalizedRole) {
+      case 'PATIENT':
+        this.router.navigate(['/patients/portal']);
+        break;
+      case 'SURGEON':
+        this.router.navigate(['/doctor']); // Verifică dacă ruta e exact 'doctor' în app-routing.module.ts
+        break;
+      case 'NURSE':
+        this.router.navigate(['/nurse']);
+        break;
+      case 'ADMIN':
+        this.router.navigate(['/dashboard']);
+        break;
+      default:
+        this.router.navigate(['/dashboard']);
+        break;
     }
   }
 }

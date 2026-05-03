@@ -1,33 +1,14 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
-  {
-    path: '',
-    redirectTo: 'auth/login',
-    pathMatch: 'full'
-  },
-
+  { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
   {
     path: 'auth/login',
-    loadComponent: () =>
-      import('./features/auth/login/login.component').then((m) => m.LoginComponent)
+    loadComponent: () => import('./features/auth/login/login.component').then((m) => m.LoginComponent)
   },
   {
     path: 'auth/callback',
-    loadComponent: () =>
-      import('./features/auth/login/login.component').then((m) => m.LoginComponent)
-  },
-  {
-    path: 'doctor',
-    loadComponent: () =>
-      import('./features/doctor/dashboard.component')
-        .then(m => m.DoctorDashboardComponent),
-  },
-  {
-    path: 'nurse',
-    loadComponent: () =>
-      import('./features/nurse/dashboard.component')
-        .then(m => m.NurseDashboardComponent),
+    loadComponent: () => import('./features/auth/login/login.component').then((m) => m.LoginComponent)
   },
   {
     path: '',
@@ -38,6 +19,18 @@ export const routes: Routes = [
         path: 'dashboard',
         loadComponent: () =>
           import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent)
+      },
+      {
+        path: 'doctor',
+        loadComponent: () =>
+          import('./features/doctor/dashboard.component')
+            .then(m => m.DoctorDashboardComponent),
+      },
+      {
+        path: 'nurse',
+        loadComponent: () =>
+          import('./features/nurse/dashboard.component')
+            .then(m => m.NurseDashboardComponent),
       },
       {
         path: 'calendar',

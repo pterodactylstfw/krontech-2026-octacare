@@ -7,6 +7,8 @@ export const authConfig: AuthConfig = {
   // URL-ul din Angular unde va fi redirecționat utilizatorul după login
   redirectUri: window.location.origin + '/auth/callback',
 
+  postLogoutRedirectUri: window.location.origin + '/auth/login',
+
   // Client ID-ul configurat în AuthorizationServerConfig
   clientId: 'or-scheduler-ui',
 

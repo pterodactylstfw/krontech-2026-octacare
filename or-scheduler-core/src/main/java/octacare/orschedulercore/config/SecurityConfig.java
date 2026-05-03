@@ -11,13 +11,20 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
+import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
+import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
+import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -78,9 +85,28 @@ public class SecurityConfig {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         // Am șters "/.well-known/**" pentru a lăsa OAuth2AuthorizationServer să genereze ruta
-        return (web) -> web.ignoring().requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico");
+        return (web) -> web.ignoring().requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico", "/.well-known/appspecific/**");
     }
 
+    @Bean
+    public OAuth2TokenCustomizer<JwtEncodingContext> tokenCustomizer() {
+        return context -> {
+            // Verificăm dacă generăm un ID Token sau un Access Token
+            if (OidcParameterNames.ID_TOKEN.equals(context.getTokenType().getValue()) ||
+                    OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())) {
+
+                // Luăm rolurile utilizatorului din baza de date (SecurityContext)
+                Set<String> roles = context.getPrincipal().getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        // Filtrăm metadatele tehnice ca să nu trimitem "FACTOR_PASSWORD"
+                        .filter(auth -> auth.startsWith("ROLE_"))
+                        .collect(Collectors.toSet());
+
+                // Le punem într-un câmp numit explicit "user_roles"
+                context.getClaims().claim("user_roles", roles);
+            }
+        };
+    }
 
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
