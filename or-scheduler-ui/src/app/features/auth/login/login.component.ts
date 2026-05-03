@@ -1,104 +1,49 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http'; // Adăugat HttpClient
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
-import { UserRole } from '../../../core/enums/user-role.enum';
-import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent implements OnInit {
-  // Deoarece login-ul se face pe Spring (8080), aceste câmpuri pot rămâne goale aici
-  email = '';
-  password = '';
-  showPassword = false;
-  isLoading = false;
-  errorMessage = '';
-  showDemoLogin = !environment.production;
-
-
-  private readonly tokenUrl = 'http://localhost:8080/oauth2/token';
-  private readonly clientId = 'or-scheduler-ui';
-  private readonly redirectUri = 'http://localhost:4200/auth/callback';
-  private isProcessingCode = false;
+  isLoading = true; // Afișăm spinner-ul tău în timp ce au loc redirecționările invizibile
 
   constructor(
     private authService: AuthService,
     private router: Router,
-    private route: ActivatedRoute,
-    private http: HttpClient // Injectăm HttpClient pentru a repara eroarea de la exchangeCode
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
-      const code = params['code'];
-
-      if (code) {
-        // Dacă avem cod, îl procesăm (Pasul de întoarcere)
-        if (!this.isProcessingCode) {
-          this.isProcessingCode = true;
-          this.handleAuthenticationCallback(code);
-        }
-      } else {
-        // Dacă NU avem cod, înseamnă că userul abia a venit pe pagină.
-        // Îl trimitem imediat la Spring Boot să se logheze (Pasul de plecare)[cite: 18]
-        this.onLogin();
+      // 1. Dacă avem 'code' în URL, ne-am întors de la Spring cu succes.
+      if (params['code']) {
+        // Nu facem nimic manual! angular-oauth2-oidc schimbă automat codul în fundal.
+        // Noi doar ne abonăm și așteptăm să apară userul ca să știm unde să-l trimitem.
+        this.authService.currentUser$.subscribe(user => {
+          if (user) {
+            this.navigateByRole(user.role);
+          }
+        });
+      }
+      // 2. Dacă suntem deja logați (avem token valid în browser)
+      else if (this.authService.isLoggedIn()) {
+        this.navigateByRole(this.authService.getCurrentUserRole());
+      }
+      // 3. Nu avem cod, nu suntem logați -> Declanșăm logarea sigură (PKCE)
+      else {
+        this.authService.initiateLoginFlow();
       }
     });
   }
 
-  togglePassword() {
-    this.showPassword = !this.showPassword;
-  }
-
-  onLogin() {
-    this.isLoading = true;
-    // Folosește variabila redirectUri pentru a evita greșelile de scriere
-    const authUrl = `http://localhost:8080/oauth2/authorize?response_type=code&client_id=${this.clientId}&scope=openid%20profile&redirect_uri=${encodeURIComponent(this.redirectUri)}`;
-
-    window.location.href = authUrl;
-  }
-
-  onDemoLogin() {
-    const demoUser = this.authService.demoLogin();
-    this.navigateByRole(demoUser.role);
-  }
-
-  private handleAuthenticationCallback(code: string) {
-    this.isLoading = true;
-    // Ne asigurăm că apelăm serviciul care are configurația corectă
-    this.authService.exchangeCodeForToken(code).subscribe({
-      next: (response) => {
-        this.isLoading = false;
-        this.router.navigate(['/dashboard']);
-      },
-      error: (err) => {
-        this.isLoading = false;
-        this.errorMessage = 'Failed to exchange code for token.';
-        console.error('Detalii eroare 400:', err);
-      }
-    });
-  }
-
-
-
-  getCurrentUserRole(): UserRole | null {
-    // În fluxul cu cookie-uri, aici ar trebui să ceri user-ul de la un endpoint /api/user/me
-    // Pentru moment folosim implementarea din serviciu sau fallback la ADMIN
-    return this.authService.getCurrentUserRole() || UserRole.ADMIN;
-  }
-
-  private navigateByRole(role: UserRole | null) {
-    if (role === UserRole.PATIENT) {
+  private navigateByRole(role: string | null) {
+    if (role === 'PATIENT') {
       this.router.navigate(['/patients/portal']);
     } else {
       this.router.navigate(['/dashboard']);

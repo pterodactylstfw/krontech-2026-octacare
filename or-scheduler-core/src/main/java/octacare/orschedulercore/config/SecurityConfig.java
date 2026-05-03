@@ -77,7 +77,8 @@ public class SecurityConfig {
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico", "/.well-known/**");
+        // Am șters "/.well-known/**" pentru a lăsa OAuth2AuthorizationServer să genereze ruta
+        return (web) -> web.ignoring().requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico");
     }
 
 

@@ -14,17 +14,10 @@ export const authConfig: AuthConfig = {
   responseType: 'code',
 
   // Scope-urile configurate în Spring
-  scope: 'openid profile',
+  scope: 'openid profile role',
 
   // Afișează debug info în consolă (opțional, dar util)
   showDebugInformation: true,
 
-  // Oprește verificarea de discovery document, deoarece vom configura rutele manual
-  requireHttps: false,
-  skipIssuerCheck: true,
-  strictDiscoveryDocumentValidation: false,
-
-  // Setăm manual endpoint-urile, deoarece nu avem un document .well-known/openid-configuration expus corect (încă)
-  loginUrl: 'http://localhost:8080/oauth2/authorize',
-  tokenEndpoint: 'http://localhost:8080/oauth2/token'
+  requireHttps: false
 };

@@ -77,17 +77,19 @@ export class ShellLayoutComponent implements OnInit {
   userInitials = '';
 
   ngOnInit(): void {
-    const user = this.authService.getCurrentUser();
-    const role = this.authService.getCurrentUserRole();
+    // Ne abonăm la userul curent din noul AuthService
+    this.authService.currentUser$.subscribe(user => {
+      const role = this.authService.getCurrentUserRole();
 
-    this.navItems = role === UserRole.PATIENT ? this.patientNav : this.staffNav;
+      this.navItems = role === UserRole.PATIENT ? this.patientNav : this.staffNav;
 
-    this.userName = user?.fullName ?? 'User';
-    this.userRole = role === UserRole.PATIENT ? 'Patient'
-      : role === UserRole.ADMIN ? 'Administrator'
-        : role === UserRole.SURGEON ? 'Surgeon'
-          : role === UserRole.NURSE ? 'Nurse'
-            : 'Staff';
-    this.userInitials = this.userName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+      this.userName = user?.fullName ?? 'User';
+      this.userRole = role === UserRole.PATIENT ? 'Patient'
+        : role === UserRole.ADMIN ? 'Administrator'
+          : role === UserRole.SURGEON ? 'Surgeon'
+            : role === UserRole.NURSE ? 'Nurse'
+              : 'Staff';
+      this.userInitials = this.userName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+    });
   }
 }

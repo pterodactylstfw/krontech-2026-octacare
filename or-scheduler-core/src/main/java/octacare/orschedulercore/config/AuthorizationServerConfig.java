@@ -69,22 +69,26 @@ public class AuthorizationServerConfig {
     }
 
     @Bean
-    public RegisteredClientRepository registeredClientRepository(PasswordEncoder passwordEncoder) {
-        // Configurăm clientul pentru Angular. Mai târziu îl vom muta în DB!
-        RegisteredClient registeredClient = RegisteredClient.withId("or-scheduler-client-internal-id") // ID FIX, nu random!
+    public RegisteredClientRepository registeredClientRepository() {
+        RegisteredClient registeredClient = RegisteredClient.withId("or-scheduler-client-internal-id")
                 .clientId("or-scheduler-ui")
-                .clientSecret(passwordEncoder.encode("secret")) // Generat corect cu BCrypt pe loc!
-                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST) // Acceptăm secret în body
-                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                // 1. ELIMINĂM complet clientSecret!
+                // 2. Setăm metoda de autentificare pe NONE (ceea ce îi spune lui Spring că e un Public Client)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
                 .redirectUri("http://localhost:4200/auth/callback")
                 .scope(OidcScopes.OPENID)
                 .scope(OidcScopes.PROFILE)
                 .scope("role")
-                .clientSettings(ClientSettings.builder().requireProofKey(false).requireAuthorizationConsent(false).build())
-                // Am setat validitatea token-ului la 1 oră, fix cum a cerut Raul
-                .tokenSettings(TokenSettings.builder().accessTokenTimeToLive(Duration.ofHours(1)).build())
+                // 3. OBLIGATORIU: requireProofKey(true) forțează clientul să folosească fluxul PKCE
+                .clientSettings(ClientSettings.builder()
+                        .requireProofKey(true)
+                        .requireAuthorizationConsent(false)
+                        .build())
+                .tokenSettings(TokenSettings.builder()
+                        .accessTokenTimeToLive(Duration.ofHours(1))
+                        .build())
                 .build();
 
         return new InMemoryRegisteredClientRepository(registeredClient);
