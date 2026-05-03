@@ -9,7 +9,7 @@ import { ThemeService } from '../../core/theme/theme.service';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, AlertCountPipe],
+  imports: [CommonModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })

@@ -17,6 +17,8 @@ import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -39,41 +41,42 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Order(2)
+    @Order(2) // 1. PASĂREA DE PRADĂ: Verificăm mai întâi dacă cererea e pentru API
+    public SecurityFilterChain resourceServerFilterChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher("/api/**") // Se aplică DOAR pentru rutele care încep cu /api/
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(authorize -> authorize
+                        .anyRequest().authenticated()
+                )
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                        )
+                );
+        return http.build();
+    }
+
+    @Bean
+    @Order(3) // 2. PLASA DE SIGURANȚĂ: Tot ce nu e API intră aici (Login, UI, CSS)
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        // Rutele publice - nu necesită autentificare
                         .requestMatchers(
-                                "/",
-                                "/error",
-                                "/login",
-                                "/css/**",
-                                "/js/**",
-                                "/images/**",
-                                "/favicon.ico",
-                                "/api/auth/login",
-                                "/oauth2/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**",
-                                "/actuator/**"
+                                "/", "/error", "/login", "/css/**", "/js/**",
+                                "/images/**", "/favicon.ico", "/api/auth/login",
+                                "/oauth2/**", "/swagger-ui/**", "/v3/api-docs/**"
                         ).permitAll()
-                        // Tot restul necesită autentificare
                         .anyRequest().authenticated()
                 )
-                // Adăugăm autentificarea prin formular (pagina de login de la Spring)
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/login")
                         .permitAll()
-                )
-                // 2. Setăm aplicația să știe decoda token-uri JWT
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
-
-        // ATENȚIE: Am eliminat intenționat blocul cu SESSION MANAGEMENT STATELESS!
+                );
         return http.build();
     }
 
@@ -106,6 +109,19 @@ public class SecurityConfig {
                 context.getClaims().claim("user_roles", roles);
             }
         };
+    }
+
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        // Spunem converter-ului să caute rolurile în claim-ul "user_roles" pe care l-am creat anterior
+        authoritiesConverter.setAuthoritiesClaimName("user_roles");
+        // Prefixăm cu "ROLE_" pentru ca hasRole('ADMIN') să funcționeze corect în Spring
+        authoritiesConverter.setAuthorityPrefix("ROLE_");
+
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
+        return converter;
     }
 
     @Bean
