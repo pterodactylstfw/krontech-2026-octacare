@@ -20,6 +20,7 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -34,22 +35,28 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
-    private final octacare.orschedulercore.security.CookieBearerTokenFilter cookieBearerTokenFilter;
 
-    public SecurityConfig(CustomUserDetailsService userDetailsService, PasswordEncoder passwordEncoder, octacare.orschedulercore.security.CookieBearerTokenFilter cookieBearerTokenFilter) {
+    public SecurityConfig(CustomUserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
-        this.cookieBearerTokenFilter = cookieBearerTokenFilter;
+    }
+
+    @Bean
+    public octacare.orschedulercore.security.CookieBearerTokenFilter cookieBearerTokenFilter() {
+        return new octacare.orschedulercore.security.CookieBearerTokenFilter();
     }
 
     @Bean
     @Order(2) // 1. PASĂREA DE PRADĂ: Verificăm mai întâi dacă cererea e pentru API
-    public SecurityFilterChain resourceServerFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain resourceServerFilterChain(HttpSecurity http, octacare.orschedulercore.security.CookieBearerTokenFilter cookieBearerTokenFilter) throws Exception {
         http
                 .securityMatcher("/api/**") // Se aplică DOAR pentru rutele care încep cu /api/
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
+                        // Allow unauthenticated access to the exchange & refresh endpoints so SPA or tools
+                        // can perform the authorization_code PKCE exchange and refresh without an auth header.
+                        .requestMatchers("/api/auth/exchange-code", "/api/auth/refresh").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
@@ -57,8 +64,9 @@ public class SecurityConfig {
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter())
                         )
                 );
-        // Adăugăm filtru care mută cookie->Authorization header pentru a permite Resource Server să valideze JWT din cookie
-        http.addFilterBefore(cookieBearerTokenFilter, org.springframework.security.web.authentication.AnonymousAuthenticationFilter.class);
+        // Adăugăm filtru care mută cookie->Authorization header ca PRIMUL filtru în lanț
+         // pentru a extrage tokenul din cookie ÎNAINTE ca Bearer Token Authentication să încerce validarea
+         http.addFilterBefore(cookieBearerTokenFilter, SecurityContextHolderFilter.class);
         return http.build();
     }
 

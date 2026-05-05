@@ -6,6 +6,7 @@ import octacare.orschedulercore.repository.UserRepository;
 import octacare.orschedulercore.security.CustomUserPrincipal;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -22,6 +23,9 @@ public class AuthService {
 
     /**
      * Returnează datele utilizatorului autentificat curent din SecurityContext.
+     * Suportă două tipuri de autentificare:
+     * 1. Form login cu CustomUserPrincipal
+     * 2. JWT-based OAuth2 cu Jwt principal
      */
     public CurrentUserResponse getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -30,13 +34,25 @@ public class AuthService {
             throw new IllegalStateException("User not authenticated");
         }
 
-        // CustomUserPrincipal este implementarea noastră de UserDetails
-        if (!(auth.getPrincipal() instanceof CustomUserPrincipal)) {
-            throw new IllegalStateException("Invalid principal type");
+        String email = null;
+
+        // Case 1: CustomUserPrincipal (form-based login)
+        if (auth.getPrincipal() instanceof CustomUserPrincipal) {
+            CustomUserPrincipal principal = (CustomUserPrincipal) auth.getPrincipal();
+            email = principal.getEmail();
+        }
+        // Case 2: JWT-based authentication (OAuth2 resource server)
+        else if (auth.getPrincipal() instanceof Jwt) {
+            Jwt jwt = (Jwt) auth.getPrincipal();
+            email = jwt.getSubject();  // Subject is usually the email in our setup
+        }
+        else {
+            throw new IllegalStateException("Invalid principal type: " + auth.getPrincipal().getClass().getName());
         }
 
-        CustomUserPrincipal principal = (CustomUserPrincipal) auth.getPrincipal();
-        String email = principal.getEmail();
+        if (email == null || email.isBlank()) {
+            throw new IllegalStateException("Could not extract email from authentication");
+        }
 
         // Luăm datele complete din baza de date
         Optional<User> userOpt = userRepository.findByEmail(email);
