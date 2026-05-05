@@ -155,14 +155,14 @@ export class OperatingRoomsListComponent {
     const base = (seed * 37) % 71;
     const statusBoost =
       room.status === RoomStatus.OCCUPIED ? 25 :
-      room.status === RoomStatus.STERILIZING ? 10 : 0;
+        room.status === RoomStatus.STERILIZING ? 10 : 0;
     return Math.max(0, Math.min(100, base + statusBoost));
   }
 
   getActiveSurgery(roomId: string) {
     const candidates = MOCK_SURGERIES.filter(
       (s) => s.roomId === roomId &&
-      (s.status === SurgeryStatus.IN_PROGRESS || s.status === SurgeryStatus.SCHEDULED)
+        (s.status === SurgeryStatus.IN_PROGRESS || s.status === SurgeryStatus.SCHEDULED)
     );
     const active =
       candidates.find((s) => s.status === SurgeryStatus.IN_PROGRESS) ??
@@ -177,5 +177,58 @@ export class OperatingRoomsListComponent {
       label: active.status === SurgeryStatus.IN_PROGRESS ? 'Current surgery' : 'Next surgery',
       status: active.status
     };
+  }
+  showTimelineModal = false;
+  timelineRoom: OperatingRoom | null = null;
+
+  openTimeline(room: OperatingRoom) {
+    this.timelineRoom = room;
+    this.showTimelineModal = true;
+  }
+
+  closeTimeline() {
+    this.showTimelineModal = false;
+    this.timelineRoom = null;
+  }
+
+  getTimelineSurgeries(roomId: string) {
+    const DAY_START = 360;
+    const DAY_SPAN = 960;
+
+    const items = MOCK_SURGERIES
+      .filter(s => s.roomId === roomId)
+      .sort((a, b) => a.scheduledStart.localeCompare(b.scheduledStart))
+      .map(s => {
+        const start = new Date(s.scheduledStart);
+        const end = new Date(s.scheduledEnd);
+        const surgeon = MOCK_USERS.find(u => u.id === s.surgeonId)?.fullName ?? 'Unknown';
+        const startMin = start.getHours() * 60 + start.getMinutes();
+        const endMin = end.getHours() * 60 + end.getMinutes();
+        const left = Math.max(0, ((startMin - DAY_START) / DAY_SPAN) * 100);
+        const width = Math.min(100 - left, ((endMin - startMin) / DAY_SPAN) * 100);
+        return {
+          id: s.id, surgeon, status: s.status, startMin, endMin,
+          startLabel: isNaN(start.getTime()) ? '' : start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          endLabel: isNaN(end.getTime()) ? '' : end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          left, width: Math.max(width, 3), lane: 0
+        };
+      });
+
+    const laneEnds: number[] = [];
+    for (const item of items) {
+      const freeLane = laneEnds.findIndex(end => end <= item.startMin);
+      if (freeLane === -1) { item.lane = laneEnds.length; laneEnds.push(item.endMin); }
+      else { item.lane = freeLane; laneEnds[freeLane] = item.endMin; }
+    }
+
+    return { items, totalLanes: Math.max(1, laneEnds.length) };
+  }
+
+  timelineHours = ['06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'];
+
+  getNowPercent(): number {
+    const now = new Date();
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    return Math.max(0, Math.min(100, ((nowMin - 360) / 960) * 100));
   }
 }

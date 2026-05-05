@@ -4,13 +4,30 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { ThemeService } from '../../core/theme/theme.service';
 import { AuthService } from '../../core/services/auth.service';
 import { UserRole } from '../../core/enums/user-role.enum';
+import { trigger, transition, style, animate, query } from '@angular/animations';
+import { Router } from '@angular/router';
+
+
+
+
+
+
+export const routeFadeAnimation = trigger('routeFade', [
+  transition('* <=> *', [
+    query(':enter', [
+      style({ opacity: 0, transform: 'translateY(4px)' }),
+      animate('250ms ease', style({ opacity: 1, transform: 'translateY(0)' }))
+    ], { optional: true }),
+  ])
+]);
 
 @Component({
   selector: 'app-shell-layout',
   standalone: true,
   imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './shell-layout.html',
-  styleUrls: ['./shell-layout.scss']
+  styleUrls: ['./shell-layout.scss'],
+  animations: [routeFadeAnimation]
 })
 export class ShellLayoutComponent implements OnInit {
   theme = inject(ThemeService);
@@ -28,10 +45,32 @@ export class ShellLayoutComponent implements OnInit {
     { label: 'Reports', icon: 'file', route: '/reports' },
   ];
 
+  private router = inject(Router);
+
+  navigateToSettings(): void {
+    this.router.navigate(['/settings']);
+  }
+
+  logout(): void {
+    this.router.navigate(['/auth/login']);
+  }
+
   private patientNav = [
     { label: 'My Portal', icon: 'grid', route: '/patients/portal' },
     { label: 'Settings', icon: 'settings', route: '/settings' },
   ];
+
+  getRouteState(outlet: RouterOutlet): string {
+    try {
+      return outlet?.isActivated
+        ? (outlet.activatedRouteData?.['animation']
+          ?? outlet.activatedRoute?.snapshot?.url?.[0]?.path
+          ?? 'default')
+        : 'default';
+    } catch {
+      return 'default';
+    }
+  }
 
   userName = '';
   userRole = '';
@@ -46,9 +85,9 @@ export class ShellLayoutComponent implements OnInit {
     this.userName = user?.fullName ?? 'User';
     this.userRole = role === UserRole.PATIENT ? 'Patient'
       : role === UserRole.ADMIN ? 'Administrator'
-      : role === UserRole.SURGEON ? 'Surgeon'
-      : role === UserRole.NURSE ? 'Nurse'
-      : 'Staff';
+        : role === UserRole.SURGEON ? 'Surgeon'
+          : role === UserRole.NURSE ? 'Nurse'
+            : 'Staff';
     this.userInitials = this.userName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
   }
 }

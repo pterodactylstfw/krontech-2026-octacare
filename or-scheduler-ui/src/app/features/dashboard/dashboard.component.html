@@ -5,15 +5,9 @@
   <!-- TOP BAR -->
   <div class="topbar">
     <div class="topbar-left">
-      <div class="logo-dot"></div>
-      <span class="topbar-title">OR Scheduler</span>
-      <span class="topbar-sub">— Administrator Overview</span>
+      <span class="topbar-sub">Administrator Overview</span>
     </div>
     <div class="topbar-right">
-      <div class="badge-live">
-        <div class="live-dot"></div>
-        Live
-      </div>
       <div class="topbar-time">{{ currentTime() }} · {{ currentDate() }}</div>
     </div>
   </div>
@@ -92,29 +86,6 @@
               </div>
               <div class="surg-count" [ngClass]="surgeon.status !== 'on-leave' ? 'count-' + surgeon.colorClass : 'count-muted'">
                 {{ surgeon.surgeriesToday > 0 ? surgeon.surgeriesToday + ' ops' : '—' }}
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-
-      <!-- ALERTS -->
-      <div class="panel">
-        <div class="panel-header">
-          <span class="panel-title">Alerts</span>
-          <span class="critical-badge">
-            {{ data().alerts | alertCount : 'critical' }} critical
-          </span>
-        </div>
-        <div class="alert-list">
-          @for (alert of data().alerts; track alert.id) {
-            <div class="alert-row" [ngClass]="'alert-' + alert.severity">
-              <div class="alert-icon" [ngClass]="'icon-' + alert.severity">
-                {{ getAlertIcon(alert.severity) }}
-              </div>
-              <div class="alert-body">
-                <div class="alert-msg">{{ alert.message }}</div>
-                <div class="alert-time">{{ alert.detail }}</div>
               </div>
             </div>
           }

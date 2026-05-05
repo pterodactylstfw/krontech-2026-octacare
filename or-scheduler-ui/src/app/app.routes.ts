@@ -12,6 +12,18 @@ export const routes: Routes = [
       import('./features/auth/login/login.component').then((m) => m.LoginComponent)
   },
   {
+    path: 'doctor',
+    loadComponent: () =>
+      import('./features/doctor/dashboard.component')
+        .then(m => m.DoctorDashboardComponent),
+  },
+  {
+    path: 'nurse',
+    loadComponent: () =>
+      import('./features/nurse/dashboard.component')
+        .then(m => m.NurseDashboardComponent),
+  },
+  {
     path: '',
     loadComponent: () =>
       import('./shared/shell-layout/shell-layout').then((m) => m.ShellLayoutComponent),
@@ -53,10 +65,24 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/settings/settings.component').then((m) => m.SettingsComponent)
       },
+    ]
+  },
+  {
+    path: 'patients',
+    children: [
       {
-        path: 'patients/portal',
+        path: '',
+        redirectTo: 'portal',
+        pathMatch: 'full'
+      },
+      {
+        path: 'portal',
         loadComponent: () =>
           import('./features/patients/patient-portal/patient-portal.component').then((m) => m.PatientPortalComponent)
+      },
+      {
+        path: '**',
+        redirectTo: 'portal'
       }
     ]
   },

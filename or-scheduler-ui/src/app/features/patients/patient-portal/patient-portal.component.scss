@@ -37,6 +37,21 @@
   padding: 32px 36px 48px;
   color: var(--pp-text);
   overflow: hidden;
+  background: #0a0e17;
+
+  &.light {
+    background: #f0f4ff;
+    --pp-bg:              #f0f4fa;
+    --pp-surface:         rgba(255,255,255,0.65);
+    --pp-surface-border:  rgba(255,255,255,0.55);
+    --pp-surface-shadow:  0 2px 16px rgba(0,0,0,0.06);
+    --pp-text:            #1e293b;
+    --pp-text-secondary:  #64748b;
+    --pp-accent:          #2563eb;
+    --pp-accent-soft:     rgba(37,99,235,0.10);
+    --pp-divider:         rgba(0,0,0,0.06);
+    --pp-row-hover:       rgba(0,0,0,0.02);
+  }
 }
 
 // ─── Floating bubbles (light mode only) ───────────────────────────────────────
@@ -152,6 +167,37 @@
   margin: 2px 0 0;
   font-size: 13px;
   color: var(--pp-text-secondary);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid var(--pp-surface-border);
+  border-radius: 10px;
+  background: var(--pp-surface);
+  backdrop-filter: blur(12px);
+  color: var(--pp-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: var(--pp-text);
+    border-color: var(--pp-text-secondary);
+    background: var(--pp-surface);
+    transform: translateY(-1px);
+  }
+
+  svg { flex-shrink: 0; }
 }
 
 .logout-btn {
