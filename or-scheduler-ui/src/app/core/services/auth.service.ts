@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { User } from '../../shared/models/user.model';
 import { UserRole } from '../enums/user-role.enum';
 import { authConfig } from '../config/auth.config';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -51,26 +52,35 @@ export class AuthService {
   private loadUserProfile() {
     // Luăm profilul strict din backend (/api/auth/me) – NU folosim fallback pe claims
     // Conform cerinței: folosim DOAR datele expuse de auth controller și ce avem pe branch.
-    this.http.get<any>('/api/auth/me', { withCredentials: true }).subscribe({
+    console.log('📥 Fetching user profile from /api/auth/me...');
+    // Make sure we hit the correct backend URL by prepending the base URL
+    const authUrl = environment.apiUrl ? environment.apiUrl.replace('/api', '') + '/api/auth/me' : '/api/auth/me';
+
+    this.http.get<any>(authUrl, { withCredentials: true }).subscribe({
       next: (resp) => {
+        console.log('✅ User profile received:', resp);
         if (resp && resp.email) {
           const user: User = {
             id: resp.id,
             email: resp.email,
             fullName: resp.fullName || resp.email,
-            role: resp.role as UserRole
+            role: resp.role as UserRole,
+            specialization: resp.specialization,
+            phone: resp.phone,
+            department: resp.department
           };
+          console.log('👤 Setting current user:', user);
           this.currentUserSubject.next(user);
           return;
         }
 
         // Dacă răspunsul nu conține email (sau e incomplet), nu facem niciun fallback automat.
-        console.warn('/api/auth/me returned unexpected payload, keeping current user null', resp);
+        console.warn('⚠️ /api/auth/me returned unexpected payload, keeping current user null', resp);
         this.currentUserSubject.next(null);
       },
       error: (err) => {
         // Dacă apelul către auth controller eșuează, nu folosim claims – doar curățăm starea.
-        console.error('Failed to load /api/auth/me:', err);
+        console.error('❌ Failed to load /api/auth/me:', err);
         this.currentUserSubject.next(null);
       }
     });
