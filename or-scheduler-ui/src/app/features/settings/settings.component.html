@@ -1,104 +1,133 @@
 <div class="settings-wrapper">
 
-  <!-- Floating decorative bubbles -->
-  <div class="bubble bubble-blue"></div>
-  <div class="bubble bubble-purple"></div>
-  <div class="bubble bubble-blue-2"></div>
+  <!-- Ambient glow orbs (visible both themes) -->
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
 
   <!-- Header -->
   <div class="settings-header">
+    <div class="header-eyebrow">
+      <span class="eyebrow-dot"></span>
+      <span class="eyebrow-text">Account</span>
+    </div>
     <h1 class="page-title">Settings</h1>
-    <p class="page-subtitle">Manage your account, preferences &amp; system configuration</p>
+    <p class="page-subtitle">Manage your profile, preferences &amp; system</p>
   </div>
 
   <!-- Content Grid -->
   <div class="settings-content">
 
     <!-- Profile Card -->
-    <div class="glass-card profile-card">
-      <h2 class="card-title">Profile</h2>
+    <div class="glass-card profile-card" style="--card-delay: 0ms">
+      <div class="card-header">
+        <div class="card-icon-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <h2 class="card-title">Profile</h2>
+      </div>
       <div class="form-group">
         <label class="form-label">Full Name</label>
-        <input class="form-input" type="text" [(ngModel)]="profile.fullName" />
+        <div class="input-wrap">
+          <input class="form-input" type="text" [(ngModel)]="profile.fullName" />
+          <span class="input-focus-line"></span>
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">Email</label>
-        <input class="form-input" type="email" [(ngModel)]="profile.email" />
+        <div class="input-wrap">
+          <input class="form-input" type="email" [(ngModel)]="profile.email" />
+          <span class="input-focus-line"></span>
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Role</label>
-          <input class="form-input" type="text" [(ngModel)]="profile.role" readonly />
+          <div class="input-wrap">
+            <input class="form-input" type="text" [(ngModel)]="profile.role" readonly />
+            <span class="input-focus-line"></span>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">Department</label>
-          <input class="form-input" type="text" [(ngModel)]="profile.department" readonly />
+          <div class="input-wrap">
+            <input class="form-input" type="text" [(ngModel)]="profile.department" readonly />
+            <span class="input-focus-line"></span>
+          </div>
         </div>
       </div>
       <div class="form-group">
         <label class="form-label">Phone</label>
-        <input class="form-input" type="tel" [(ngModel)]="profile.phone" />
+        <div class="input-wrap">
+          <input class="form-input" type="tel" [(ngModel)]="profile.phone" />
+          <span class="input-focus-line"></span>
+        </div>
       </div>
     </div>
 
     <!-- Notifications Card -->
-    <div class="glass-card notifications-card">
-      <h2 class="card-title">Notifications</h2>
+    <div class="glass-card notifications-card" style="--card-delay: 60ms">
+      <div class="card-header">
+        <div class="card-icon-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </div>
+        <h2 class="card-title">Notifications</h2>
+      </div>
       <div class="toggle-group">
-        <label class="toggle-row">
-          <span class="toggle-label">Email alerts</span>
-          <span class="toggle-switch" [class.active]="notifications.emailAlerts" (click)="notifications.emailAlerts = !notifications.emailAlerts">
+        <div class="toggle-row" *ngFor="let item of notificationItems; let i = index" [style.--row-delay]="i * 40 + 'ms'">
+          <span class="toggle-label">{{ item.label }}</span>
+          <button
+            class="toggle-switch"
+            [class.active]="notifications[item.key]"
+            (click)="notifications[item.key] = !notifications[item.key]"
+            [attr.aria-checked]="notifications[item.key]"
+            role="switch">
+            <span class="toggle-track"></span>
             <span class="toggle-knob"></span>
-          </span>
-        </label>
-        <label class="toggle-row">
-          <span class="toggle-label">SMS alerts</span>
-          <span class="toggle-switch" [class.active]="notifications.smsAlerts" (click)="notifications.smsAlerts = !notifications.smsAlerts">
-            <span class="toggle-knob"></span>
-          </span>
-        </label>
-        <label class="toggle-row">
-          <span class="toggle-label">Schedule reminders</span>
-          <span class="toggle-switch" [class.active]="notifications.scheduleReminders" (click)="notifications.scheduleReminders = !notifications.scheduleReminders">
-            <span class="toggle-knob"></span>
-          </span>
-        </label>
-        <label class="toggle-row">
-          <span class="toggle-label">Report ready</span>
-          <span class="toggle-switch" [class.active]="notifications.reportReady" (click)="notifications.reportReady = !notifications.reportReady">
-            <span class="toggle-knob"></span>
-          </span>
-        </label>
-        <label class="toggle-row">
-          <span class="toggle-label">System updates</span>
-          <span class="toggle-switch" [class.active]="notifications.systemUpdates" (click)="notifications.systemUpdates = !notifications.systemUpdates">
-            <span class="toggle-knob"></span>
-          </span>
-        </label>
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- Appearance Card -->
-    <div class="glass-card appearance-card">
-      <h2 class="card-title">Appearance</h2>
+    <div class="glass-card appearance-card" style="--card-delay: 120ms">
+      <div class="card-header">
+        <div class="card-icon-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        </div>
+        <h2 class="card-title">Appearance</h2>
+      </div>
       <div class="form-group">
         <label class="form-label">Theme</label>
-        <div class="radio-group">
-          <label class="radio-option" *ngFor="let opt of ['dark','light','system']">
+        <div class="theme-segmented">
+          <label
+            class="theme-option"
+            *ngFor="let opt of ['dark','light','system']"
+            [class.selected]="appearance.theme === opt">
             <input type="radio" name="theme" [value]="opt" [(ngModel)]="appearance.theme" />
-            <span class="radio-dot"></span>
-            <span class="radio-text">{{ opt | titlecase }}</span>
+            <span class="theme-icon">
+              <ng-container [ngSwitch]="opt">
+                <svg *ngSwitchCase="'dark'" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg *ngSwitchCase="'light'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg *ngSwitchCase="'system'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+              </ng-container>
+            </span>
+            <span class="theme-label">{{ opt | titlecase }}</span>
           </label>
         </div>
       </div>
     </div>
 
     <!-- System Info Card -->
-    <div class="glass-card system-card">
-      <h2 class="card-title">System</h2>
+    <div class="glass-card system-card" style="--card-delay: 180ms">
+      <div class="card-header">
+        <div class="card-icon-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        </div>
+        <h2 class="card-title">System</h2>
+      </div>
       <div class="info-row">
         <span class="info-label">App Version</span>
-        <span class="info-value">v{{ system.version }}</span>
+        <span class="info-value version-badge">v{{ system.version }}</span>
       </div>
       <div class="info-row">
         <span class="info-label">Last Backup</span>
@@ -106,17 +135,27 @@
       </div>
       <div class="info-row">
         <span class="info-label">Environment</span>
-        <span class="info-value env-badge">{{ system.environment }}</span>
+        <span class="info-value env-badge">
+          <span class="env-pulse"></span>
+          {{ system.environment }}
+        </span>
       </div>
     </div>
 
   </div>
 
-  <!-- Save Button -->
+  <!-- Save Bar -->
   <div class="save-bar">
-    <button class="save-btn" (click)="onSave()">
-      <span *ngIf="!saved">Save Changes</span>
-      <span *ngIf="saved" class="saved-label">✓ Saved</span>
+    <button class="save-btn" [class.saving]="saving" [class.saved]="saved" (click)="onSave()">
+      <span class="save-btn-inner">
+        <span class="save-label" [class.hidden]="saving || saved">Save Changes</span>
+        <span class="save-spinner" [class.visible]="saving">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+        </span>
+        <span class="save-check" [class.visible]="saved">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </span>
+      </span>
     </button>
   </div>
 

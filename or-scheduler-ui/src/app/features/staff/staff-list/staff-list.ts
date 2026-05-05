@@ -12,17 +12,27 @@ import { ThemeService } from '../../../core/theme/theme.service';
   styleUrl: './staff-list.scss'
 })
 export class StaffList implements OnInit {
-   theme = inject(ThemeService);
+  theme = inject(ThemeService);
   activeFilter: string = 'All';
   searchQuery: string = '';
   filters = ['All', 'Surgeons', 'Nurses', 'On Duty', 'On Leave'];
-  days = ['M', 'T', 'W', 'T', 'F'];
+  days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+  daysShort = ['M', 'T', 'W', 'T', 'F'];
+
+  // ── Add modal ────────────────────────────────────────────────────────────────
   showModal = false;
   newStaff: Partial<Staff> = this.emptyStaff();
 
-  ngOnInit() {
-  }
+  // ── Edit modal ───────────────────────────────────────────────────────────────
+  showEditModal = false;
+  editStaff: Partial<Staff> = {};
+  editingId: number | null = null;
 
+  // ── View Schedule modal ──────────────────────────────────────────────────────
+  showScheduleModal = false;
+  scheduleStaff: Staff | null = null;
+
+  ngOnInit() {}
 
   emptyStaff(): Partial<Staff> {
     return {
@@ -33,6 +43,7 @@ export class StaffList implements OnInit {
     };
   }
 
+  // ── Add ──────────────────────────────────────────────────────────────────────
   openModal() { this.showModal = true; }
   closeModal() { this.showModal = false; this.newStaff = this.emptyStaff(); }
 
@@ -56,6 +67,66 @@ export class StaffList implements OnInit {
     this.closeModal();
   }
 
+  // ── Edit ─────────────────────────────────────────────────────────────────────
+  openEditModal(staff: Staff) {
+    // Deep copy so edits don't mutate the list until Save
+    this.editStaff = { ...staff, weekDays: [...staff.weekDays] };
+    this.editingId = staff.id;
+    this.showEditModal = true;
+  }
+
+  closeEditModal() {
+    this.showEditModal = false;
+    this.editStaff = {};
+    this.editingId = null;
+  }
+
+  saveEdit() {
+    if (!this.editStaff.name) return;
+    const idx = this.staffList.findIndex(s => s.id === this.editingId);
+    if (idx === -1) return;
+
+    const initials = this.editStaff.name.split(' ')
+      .map(w => w[0]).join('').substring(0, 2).toUpperCase();
+
+    this.staffList[idx] = {
+      ...this.staffList[idx],
+      ...this.editStaff,
+      initials
+    } as Staff;
+
+    this.closeEditModal();
+  }
+
+  // ── View Schedule ─────────────────────────────────────────────────────────────
+  openSchedule(staff: Staff) {
+    this.scheduleStaff = staff;
+    this.showScheduleModal = true;
+  }
+
+  getActiveDaysCount(): number {
+    return this.scheduleStaff?.weekDays.filter(d => d).length ?? 0;
+  }
+
+  closeSchedule() {
+    this.showScheduleModal = false;
+    this.scheduleStaff = null;
+  }
+
+  // Returns a dummy schedule for the week — replace with real API data later
+  getWeekSchedule(staff: Staff): { day: string; active: boolean; detail: string }[] {
+    return this.days.map((day, i) => ({
+      day,
+      active: staff.weekDays[i],
+      detail: staff.weekDays[i]
+        ? (staff.role === 'Surgeon'
+            ? `Surgery · ${staff.nextSurgeryOrShift || 'TBD'}`
+            : `Shift · ${staff.nextSurgeryOrShift || 'TBD'}`)
+        : 'Day off'
+    }));
+  }
+
+  // ── Staff data ────────────────────────────────────────────────────────────────
   staffList: Staff[] = [
     { id: 1, name: 'Dr. Ionescu Alexandru', role: 'Surgeon', specialty: 'Cardiac',
       department: 'Cardiology', status: 'On Duty', initials: 'IA', color: '#4CAF50',

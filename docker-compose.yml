@@ -26,9 +26,15 @@ services:
     ports:
       - "8080:8080"
     environment:
+<<<<<<< backend
       DB_URL: ${DB_URL:-jdbc:postgresql://database:5432/orscheduler}
       DB_USER: ${DB_USER:-postgres}
       DB_PASS: ${DB_PASS}
+=======
+      SPRING_DATASOURCE_URL: ${DB_URL}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASS}
+>>>>>>> main
 
   or-scheduler-ui:
     build:
@@ -40,4 +46,8 @@ services:
       - or-scheduler-core
 
 volumes:
+<<<<<<< backend
   postgres_data:
+=======
+  postgres_data:
+>>>>>>> main

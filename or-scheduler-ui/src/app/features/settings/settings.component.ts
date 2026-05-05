@@ -23,13 +23,22 @@ export class SettingsComponent implements OnInit {
   };
 
   // ── Notifications ────────────────────────────────────────────────────────────
-  notifications = {
+  notifications: Record<string, boolean> = {
     emailAlerts: true,
     smsAlerts: false,
     scheduleReminders: true,
     reportReady: true,
     systemUpdates: false
   };
+
+  // Used by *ngFor in template — avoids keyvalue pipe ordering issues
+  notificationItems: { key: string; label: string }[] = [
+    { key: 'emailAlerts',       label: 'Email alerts' },
+    { key: 'smsAlerts',         label: 'SMS alerts' },
+    { key: 'scheduleReminders', label: 'Schedule reminders' },
+    { key: 'reportReady',       label: 'Report ready' },
+    { key: 'systemUpdates',     label: 'System updates' },
+  ];
 
   // ── Appearance ───────────────────────────────────────────────────────────────
   appearance = {
@@ -43,10 +52,11 @@ export class SettingsComponent implements OnInit {
     environment: 'Production'
   };
 
+  // ── Save state ───────────────────────────────────────────────────────────────
+  saving = false;
   saved = false;
 
   ngOnInit(): void {
-    // Sync appearance state from ThemeService
     this.appearance.theme = this.theme.isDarkMode() ? 'dark' : 'light';
     const savedTheme = localStorage.getItem('octacare-theme');
     if (savedTheme === 'system') {
@@ -55,10 +65,16 @@ export class SettingsComponent implements OnInit {
   }
 
   onSave(): void {
-    // Apply theme globally
-    this.theme.setTheme(this.appearance.theme);
+    if (this.saving || this.saved) return;
 
-    this.saved = true;
-    setTimeout(() => (this.saved = false), 2500);
+    this.saving = true;
+
+    // Simulate async save (replace with your actual service call)
+    setTimeout(() => {
+      this.theme.setTheme(this.appearance.theme);
+      this.saving = false;
+      this.saved = true;
+      setTimeout(() => (this.saved = false), 2200);
+    }, 900);
   }
 }

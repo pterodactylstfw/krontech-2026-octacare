@@ -498,3 +498,291 @@
   .grid { grid-template-columns: 1fr; }
   .modal .form-row { grid-template-columns: 1fr; }
 }
+
+// ─── Timeline Modal ──────────────────────────────────────────────────────────
+.modal-timeline {
+  width: 680px;
+  max-width: 96vw;
+}
+
+.timeline-header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  h2 { margin: 0; font-size: 15px; font-weight: 500; color: var(--text); }
+}
+
+.timeline-room-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &.green  { background: var(--green-bg);  color: var(--green); }
+  &.red    { background: var(--red-bg);    color: var(--red); }
+  &.yellow { background: var(--orange-bg); color: var(--orange); }
+  &.orange { background: var(--orange-bg); color: var(--orange); }
+}
+
+.timeline-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+// ─── Ruler ───────────────────────────────────────────────────────────────────
+.tl-ruler {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  padding: 0 2px;
+}
+
+.tl-hour {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+// ─── Track ───────────────────────────────────────────────────────────────────
+.tl-track {
+  position: relative;
+  height: 100px; // enough for 2 lanes comfortably; scales via inline style
+  min-height: 72px;
+  background: var(--surface2);
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.tl-grid-lines {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.tl-grid-line {
+  width: 0.5px;
+  height: 100%;
+  background: var(--border);
+  opacity: 0.6;
+}
+
+// ─── Now indicator ────────────────────────────────────────────────────────────
+.tl-now {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+  background: var(--accent);
+  z-index: 3;
+  opacity: 0.8;
+}
+
+.tl-now-label {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+}
+
+// ─── Surgery blocks ───────────────────────────────────────────────────────────
+.tl-block {
+  position: absolute;
+  // top and height set via inline [style] binding based on lane
+  border-radius: 7px;
+  padding: 4px 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: default;
+  z-index: 2;
+  box-sizing: border-box;
+
+  &:hover {
+    transform: scaleY(1.04);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 4;
+  }
+
+  &--inprogress {
+    background: rgba(239, 68, 68, 0.18);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+
+    .tl-block-surgeon { color: #ef4444; }
+    .tl-block-time    { color: rgba(239,68,68,0.7); }
+  }
+
+  &--scheduled {
+    background: rgba(59, 127, 255, 0.15);
+    border: 1px solid rgba(59, 127, 255, 0.35);
+
+    .tl-block-surgeon { color: var(--accent); }
+    .tl-block-time    { color: rgba(59,127,255,0.7); }
+  }
+
+  &--done {
+    background: rgba(107, 122, 153, 0.12);
+    border: 1px solid rgba(107, 122, 153, 0.2);
+
+    .tl-block-surgeon { color: var(--text-muted); }
+    .tl-block-time    { color: var(--text-muted); }
+  }
+}
+
+.tl-block-surgeon {
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tl-block-time {
+  font-size: 10px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.tl-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+// ─── Surgery list (legend) ────────────────────────────────────────────────────
+.tl-legend {
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.tl-legend-header {
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  background: var(--surface2);
+  border-bottom: 0.5px solid var(--border);
+}
+
+.tl-legend-empty {
+  padding: 14px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.tl-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 0.5px solid var(--border);
+  font-size: 13px;
+
+  &:last-child { border-bottom: none; }
+}
+
+.tl-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &--inprogress { background: #ef4444; }
+  &--scheduled  { background: var(--accent); }
+  &--done       { background: var(--text-muted); }
+}
+
+.tl-legend-surgeon {
+  flex: 1;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.tl-legend-time {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+}
+
+.tl-status-pill {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 999px;
+
+  &.tl-dot--inprogress { background: var(--red-bg);    color: var(--red); }
+  &.tl-dot--scheduled  { background: rgba(59,127,255,0.1); color: var(--accent); }
+  &.tl-dot--done       { background: var(--surface2);  color: var(--text-muted); }
+}
+
+// ─── Summary (reuse din staff) ────────────────────────────────────────────────
+.schedule-summary {
+  display: flex;
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.summary-item {
+  flex: 1;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-right: 0.5px solid var(--border);
+
+  &:last-child { border-right: none; }
+}
+
+.summary-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.summary-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.timeline-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.timeline-header-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  h2 { margin: 0; }
+}
