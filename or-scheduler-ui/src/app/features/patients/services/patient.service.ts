@@ -28,7 +28,12 @@ export class PatientService {
   constructor(private authService: AuthService) {}
 
   private resolvePatientUser() {
-    const current = this.authService.getCurrentUser();
+    let current: any = null;
+    // Ne abonăm la noul stream pentru a lua valoarea curentă sincron
+    this.authService.currentUser$.subscribe(user => {
+      current = user;
+    }).unsubscribe();
+
     if (current && current.role === 'PATIENT') {
       return current;
     }

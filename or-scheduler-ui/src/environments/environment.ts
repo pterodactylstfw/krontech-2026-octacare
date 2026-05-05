@@ -1,5 +1,7 @@
 export const environment = {
   production: false,
-  useMocks: true,
+
+  // Disable mocks to use real backend during integration testing
+  useMocks: false,
   apiUrl: 'http://localhost:8080/api'
 };

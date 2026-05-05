@@ -1,16 +1,10 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { ThemeService } from '../../core/theme/theme.service';
 import { AuthService } from '../../core/services/auth.service';
 import { UserRole } from '../../core/enums/user-role.enum';
-import { trigger, transition, style, animate, query } from '@angular/animations';
-import { Router } from '@angular/router';
-
-
-
-
-
+import { animate, query, style, transition, trigger } from '@angular/animations';
 
 export const routeFadeAnimation = trigger('routeFade', [
   transition('* <=> *', [
@@ -30,10 +24,15 @@ export const routeFadeAnimation = trigger('routeFade', [
   animations: [routeFadeAnimation]
 })
 export class ShellLayoutComponent implements OnInit {
+  // Injectări folosind pattern-ul modern Angular
   theme = inject(ThemeService);
   private authService = inject(AuthService);
+  private router = inject(Router);
 
   navItems: { label: string; icon: string; route: string }[] = [];
+  userName = '';
+  userRole = '';
+  userInitials = '';
 
   private staffNav = [
     { label: 'Dashboard', icon: 'grid', route: '/dashboard' },
@@ -45,49 +44,64 @@ export class ShellLayoutComponent implements OnInit {
     { label: 'Reports', icon: 'file', route: '/reports' },
   ];
 
-  private router = inject(Router);
+  private patientNav = [
+    { label: 'My Portal', icon: 'grid', route: '/patients/portal' },
+    { label: 'Settings', icon: 'settings', route: '/settings' },
+  ];
+
+  constructor(private cdr: ChangeDetectorRef) {}
+
+  ngOnInit(): void {
+    // Ne abonăm la userul curent și actualizăm interfața
+    this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        const role = user.role; // Folosim rolul direct din obiectul user
+
+        // Configurăm meniul în funcție de rol
+        this.navItems = role === UserRole.PATIENT ? this.patientNav : this.staffNav;
+
+        // Date de profil
+        this.userName = user.fullName ?? 'User';
+        this.userRole = this.formatRoleDisplayName(role);
+        this.userInitials = this.userName
+          .split(' ')
+          .map(w => w[0])
+          .join('')
+          .substring(0, 2)
+          .toUpperCase();
+
+        // Forțăm o singură verificare aici, unde este sigur, pentru a evita ExpressionChanged error
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  /**
+   * Metodă simplificată pentru animație.
+   * Am eliminat detectChanges() de aici pentru a opri bucla infinită.
+   */
+  getRouteState(outlet: RouterOutlet): string {
+    if (!outlet || !outlet.isActivated) return 'default';
+    return outlet.activatedRouteData?.['animation'] ||
+      outlet.activatedRoute.snapshot.url[0]?.path ||
+      'default';
+  }
+
+  private formatRoleDisplayName(role: UserRole | null): string {
+    switch (role) {
+      case UserRole.PATIENT: return 'Patient';
+      case UserRole.ADMIN: return 'Administrator';
+      case UserRole.SURGEON: return 'Surgeon';
+      case UserRole.NURSE: return 'Nurse';
+      default: return 'Staff';
+    }
+  }
 
   navigateToSettings(): void {
     this.router.navigate(['/settings']);
   }
 
   logout(): void {
-    this.router.navigate(['/auth/login']);
-  }
-
-  private patientNav = [
-    { label: 'My Portal', icon: 'grid', route: '/patients/portal' },
-    { label: 'Settings', icon: 'settings', route: '/settings' },
-  ];
-
-  getRouteState(outlet: RouterOutlet): string {
-    try {
-      return outlet?.isActivated
-        ? (outlet.activatedRouteData?.['animation']
-          ?? outlet.activatedRoute?.snapshot?.url?.[0]?.path
-          ?? 'default')
-        : 'default';
-    } catch {
-      return 'default';
-    }
-  }
-
-  userName = '';
-  userRole = '';
-  userInitials = '';
-
-  ngOnInit(): void {
-    const user = this.authService.getCurrentUser();
-    const role = this.authService.getCurrentUserRole();
-
-    this.navItems = role === UserRole.PATIENT ? this.patientNav : this.staffNav;
-
-    this.userName = user?.fullName ?? 'User';
-    this.userRole = role === UserRole.PATIENT ? 'Patient'
-      : role === UserRole.ADMIN ? 'Administrator'
-        : role === UserRole.SURGEON ? 'Surgeon'
-          : role === UserRole.NURSE ? 'Nurse'
-            : 'Staff';
-    this.userInitials = this.userName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+    this.authService.logout(); // Apelează fluxul complet de logout[cite: 6]
   }
 }

@@ -1,74 +1,73 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { UserRole } from '../../../core/enums/user-role.enum';
-import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
-export class LoginComponent {
-  email = '';
-  password = '';
-  showPassword = false;
-  isLoading = false;
-  errorMessage = '';
-  showDemoLogin = !environment.production;
+export class LoginComponent implements OnInit {
+  isLoading = true; // Afișăm spinner-ul tău în timp ce au loc redirecționările invizibile
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private route: ActivatedRoute
+  ) {}
 
-  togglePassword() {
-    this.showPassword = !this.showPassword;
-  }
-
-  onLogin() {
-    if (!this.email || !this.password) {
-      this.errorMessage = 'Please fill in all fields.';
-      return;
-    }
-
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.authService.login(this.email, this.password).subscribe({
-      next: (response) => {
+  ngOnInit() {
+    // 1. Verificăm dacă avem erori de login în URL
+    this.route.queryParams.subscribe(params => {
+      if (params['error']) {
         this.isLoading = false;
-        if (!response) {
-          this.errorMessage = 'Incorrect email or password.';
-          return;
-        }
-        this.navigateByRole(this.authService.getCurrentUserRole());
-      },
-      error: () => {
-        this.isLoading = false;
-        this.errorMessage = 'An error occurred. Please try again.';
+        console.error('Eroare primită de la serverul de identitate:', params['error']);
+        return;
+      }
+    });
+
+    // 2. Monitorizăm utilizatorul
+    this.authService.currentUser$.subscribe(user => {
+      if (user && user.role) {
+        setTimeout(() => this.navigateByRole(user.role), 0);
+      } else {
+        // 3. Dacă după 3 secunde spinner-ul tot rulează și nu avem user,
+        // înseamnă că validarea a eșuat sau s-a blocat.
+        setTimeout(() => {
+          if (this.isLoading && !this.authService.isLoggedIn()) {
+            console.warn('Login timeout - redirecționare forțată către flow-ul de login');
+            this.authService.initiateLoginFlow();
+          }
+        }, 3000);
       }
     });
   }
 
-  onDemoLogin() {
-    const demoUser = this.authService.demoLogin();
-    this.navigateByRole(demoUser.role);
-  }
+  private navigateByRole(role: string | null) {
+    this.isLoading = false;
 
-  private navigateByRole(role: UserRole | null) {
-    switch (role) {
-      case UserRole.ADMIN:
-      case UserRole.SURGEON:
-      case UserRole.NURSE:
-        this.router.navigate(['/dashboard']);
-        break;
-      case UserRole.PATIENT:
+    // Normalizăm rolul (Spring uneori trimite ROLE_SURGEON, Angular vrea SURGEON)
+    const normalizedRole = role?.replace('ROLE_', '') || '';
+
+    switch (normalizedRole) {
+      case 'PATIENT':
         this.router.navigate(['/patients/portal']);
+        break;
+      case 'SURGEON':
+        this.router.navigate(['/doctor']); // Verifică dacă ruta e exact 'doctor' în app-routing.module.ts
+        break;
+      case 'NURSE':
+        this.router.navigate(['/nurse']);
+        break;
+      case 'ADMIN':
+        this.router.navigate(['/dashboard']);
         break;
       default:
         this.router.navigate(['/dashboard']);
+        break;
     }
   }
 }

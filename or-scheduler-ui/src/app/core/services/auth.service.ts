@@ -1,98 +1,109 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { OAuthService } from 'angular-oauth2-oidc';
+import { BehaviorSubject, Observable, from, of } from 'rxjs';
 import { User } from '../../shared/models/user.model';
 import { UserRole } from '../enums/user-role.enum';
-import { environment } from '../../../environments/environment';
-import { MOCK_USERS } from '../mock/mock-data';
-import { API_ENDPOINTS } from '../constants/api.constants';
+import { authConfig } from '../config/auth.config';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient, private router: Router) {
-    const saved = localStorage.getItem('currentUser');
-    if (saved) {
-      this.currentUserSubject.next(JSON.parse(saved));
-    }
+  private oauthService = inject(OAuthService);
+  private router = inject(Router);
+
+  constructor() {
+    this.configureOAuth();
   }
 
-  login(email: string, password: string): Observable<any> {
-    if (environment.useMocks) {
-      const user = MOCK_USERS.find(u => u.email === email);
-      if (user) {
-        this.setSession('mock-jwt-token', user);
-        return of({ token: 'mock-jwt-token', user });
+  private configureOAuth() {
+    this.oauthService.configure(authConfig);
+
+    // Setează librăria să curețe automat datele vechi de login dacă apare o eroare
+    this.oauthService.events.subscribe(event => {
+      if (event.type === 'token_validation_error' || event.type === 'invalid_nonce_in_state') {
+        console.error('Eroare critică la validarea token-ului:', event);
+        // Dacă validarea eșuează, ștergem tot pentru a permite o reîncercare curată
+        this.oauthService.logOut();
       }
-      return of(null);
+    });
+
+    this.oauthService.setupAutomaticSilentRefresh();
+
+    // Încărcăm documentul și încercăm logarea
+    this.oauthService.loadDiscoveryDocumentAndTryLogin().then(() => {
+      if (this.oauthService.hasValidAccessToken()) {
+        this.loadUserProfile();
+      }
+    });
+  }
+
+  /**
+   * DECLANȘEAZĂ FLOW-UL DE LOGIN CĂTRE SPRING
+   */
+  public initiateLoginFlow() {
+    // Metoda asta va genera code_challenge și va face redirectul la 8080 corect
+    this.oauthService.initCodeFlow();
+  }
+
+  private loadUserProfile() {
+    // În mod ideal, Spring ar trebui să expună un endpoint /userinfo
+    // pe care să-l apelăm cu this.oauthService.loadUserProfile()
+    // Pentru moment, vom extrage datele direct din JWT (dacă există)
+    const claims: any = this.oauthService.getIdentityClaims();
+    if (claims) {
+      const user: User = {
+        id: claims.sub,
+        email: claims.sub,
+        fullName: claims.name || claims.sub,
+        role: this.extractRoleFromClaims(claims)
+      };
+      this.currentUserSubject.next(user);
+    }
+  }
+
+  private extractRoleFromClaims(claims: any): UserRole {
+    // Căutăm în noul câmp 'user_roles' creat în backend
+    const roles = claims['user_roles'] || claims['roles'] || [];
+
+    if (Array.isArray(roles)) {
+      // Luăm primul rol care începe cu ROLE_ (ex: ROLE_SURGEON)
+      const actualRole = roles.find(r => r.startsWith('ROLE_'));
+      if (actualRole) {
+        return actualRole.replace('ROLE_', '') as UserRole;
+      }
     }
 
-    return this.http.post<any>(`${API_ENDPOINTS.auth}/login`, { email, password }).pipe(
-      tap(response => {
-        this.setSession(response.token, response.user);
-      })
-    );
+    // Dacă tot nu găsim nimic, returnăm un fallback, dar logăm claims pentru debug
+    console.warn('Rol real negăsit în claims:', claims);
+    return UserRole.ADMIN;
   }
 
-  demoLogin(): User {
-    const demoUser = MOCK_USERS.find(u => u.role === UserRole.ADMIN) ?? MOCK_USERS[0] ?? {
-      id: 'demo-admin',
-      email: 'demo@hospital.com',
-      fullName: 'Demo Administrator',
-      role: UserRole.ADMIN,
-      department: 'Management'
-    };
-
-    this.setSession('demo-jwt-token', demoUser);
-    return demoUser;
-  }
-
-  private setSession(token: string, user: User): void {
-    localStorage.setItem('token', token);
-    localStorage.setItem('currentUser', JSON.stringify(user));
-    this.currentUserSubject.next(user);
-  }
-
-  logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('currentUser');
+  public logout(): void {
     this.currentUserSubject.next(null);
-    this.router.navigate(['/auth/login']);
+
+    // Această metodă șterge token-urile locale și FACE REDIRECT automat
+    // către http://localhost:8080/connect/logout pentru a ucide cookie-ul.
+    // Spring te va trimite înapoi pe portul 4200 (postLogoutRedirectUri) automat!
+    this.oauthService.logOut();
   }
 
-  getToken(): string | null {
-    return localStorage.getItem('token');
+  public getToken(): string {
+    return this.oauthService.getAccessToken();
   }
 
-  isLoggedIn(): boolean {
-    return !!this.getToken();
+  public isLoggedIn(): boolean {
+    return this.oauthService.hasValidAccessToken();
   }
 
-  getCurrentUser(): User | null {
-    return this.currentUserSubject.value;
-  }
-
+  // --- Metodele de roluri (Păstrate din varianta veche) ---
   getCurrentUserRole(): UserRole | null {
-    return this.currentUserSubject.value?.role ?? null;
+    return this.currentUserSubject.value?.role || null;
   }
-
-  isAdmin(): boolean {
-    return this.getCurrentUserRole() === UserRole.ADMIN;
-  }
-
-  isSurgeon(): boolean {
-    return this.getCurrentUserRole() === UserRole.SURGEON;
-  }
-
-  isNurse(): boolean {
-    return this.getCurrentUserRole() === UserRole.NURSE;
-  }
-
-  isPatient(): boolean {
-    return this.getCurrentUserRole() === UserRole.PATIENT;
-  }
+  isAdmin(): boolean { return this.getCurrentUserRole() === UserRole.ADMIN; }
+  isSurgeon(): boolean { return this.getCurrentUserRole() === UserRole.SURGEON; }
+  isNurse(): boolean { return this.getCurrentUserRole() === UserRole.NURSE; }
+  isPatient(): boolean { return this.getCurrentUserRole() === UserRole.PATIENT; }
 }
