@@ -34,10 +34,12 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
+    private final octacare.orschedulercore.security.CookieBearerTokenFilter cookieBearerTokenFilter;
 
-    public SecurityConfig(CustomUserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+    public SecurityConfig(CustomUserDetailsService userDetailsService, PasswordEncoder passwordEncoder, octacare.orschedulercore.security.CookieBearerTokenFilter cookieBearerTokenFilter) {
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
+        this.cookieBearerTokenFilter = cookieBearerTokenFilter;
     }
 
     @Bean
@@ -55,6 +57,8 @@ public class SecurityConfig {
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter())
                         )
                 );
+        // Adăugăm filtru care mută cookie->Authorization header pentru a permite Resource Server să valideze JWT din cookie
+        http.addFilterBefore(cookieBearerTokenFilter, org.springframework.security.web.authentication.AnonymousAuthenticationFilter.class);
         return http.build();
     }
 
