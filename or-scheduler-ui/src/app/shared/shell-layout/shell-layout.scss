@@ -258,7 +258,7 @@
   }
 
   &.active {
-    background: var(--sb-active-bg);
+    background: transparent;
     color: var(--sb-active-text);
 
     &::before {
