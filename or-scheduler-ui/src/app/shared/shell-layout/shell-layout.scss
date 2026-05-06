@@ -110,11 +110,12 @@
     .sidebar {
       position: fixed;
       top: 0;
-      left: -260px;
+      left: 0;
       bottom: 0;
       width: 260px;
       min-width: 260px;
       z-index: 1001;
+      transform: translateX(-100%);
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 20px 0 50px rgba(0,0,0,0.2);
       order: unset;
@@ -129,7 +130,7 @@
 
       .sidebar-nav {
         flex-direction: column;
-        padding: 8px;
+        padding: 10px 12px;
         gap: 4px;
 
         .nav-item {
@@ -154,7 +155,7 @@
 
     &.sidebar-mobile-open {
       .sidebar {
-        transform: translateX(260px);
+        transform: translateX(0);
       }
     }
 
@@ -234,7 +235,7 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
-  padding: 4px 8px;
+  padding: 6px 12px;
   flex: 1;
 }
 
@@ -263,12 +264,12 @@
     &::before {
       content: '';
       position: absolute;
-      left: 0;
+      left: 4px;
       top: 22%;
       height: 56%;
       width: 2px;
       background: var(--sb-active-border);
-      border-radius: 0 2px 2px 0;
+      border-radius: 2px;
     }
 
     .nav-icon svg { stroke: var(--sb-active-text); }

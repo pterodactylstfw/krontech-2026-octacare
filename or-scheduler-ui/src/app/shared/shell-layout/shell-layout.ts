@@ -46,6 +46,18 @@ export class ShellLayoutComponent implements OnInit {
     { label: 'Reports', icon: 'file', route: '/reports' },
   ];
 
+  private surgeonNav = [
+    { label: 'Dashboard', icon: 'grid', route: '/doctor' },
+    { label: 'Calendar', icon: 'calendar', route: '/calendar' },
+    { label: 'Settings', icon: 'settings', route: '/settings' },
+  ];
+
+  private nurseNav = [
+    { label: 'Dashboard', icon: 'grid', route: '/nurse' },
+    { label: 'Calendar', icon: 'calendar', route: '/calendar' },
+    { label: 'Settings', icon: 'settings', route: '/settings' },
+  ];
+
   private patientNav = [
     { label: 'My Portal', icon: 'grid', route: '/patients/portal' },
     { label: 'Settings', icon: 'settings', route: '/settings' },
@@ -61,7 +73,20 @@ export class ShellLayoutComponent implements OnInit {
         this.isAdmin = role === UserRole.ADMIN;
 
         // Configurăm meniul în funcție de rol
-        this.navItems = role === UserRole.PATIENT ? this.patientNav : this.staffNav;
+        switch (role) {
+          case UserRole.PATIENT:
+            this.navItems = this.patientNav;
+            break;
+          case UserRole.SURGEON:
+            this.navItems = this.surgeonNav;
+            break;
+          case UserRole.NURSE:
+            this.navItems = this.nurseNav;
+            break;
+          default:
+            this.navItems = this.staffNav;
+            break;
+        }
 
         // Date de profil
         this.userName = user.fullName ?? 'User';
