@@ -705,3 +705,90 @@ h1 {
     box-shadow: 0 0 0 5px rgba(59, 127, 255, 0.12), 0 0 16px rgba(59, 127, 255, 0.5);
   }
 }
+
+// ─── Responsive for non-admins ────────────────────────────────────────────────
+@media (max-width: 768px) {
+  :host-context(.not-admin) {
+    .doctor-container {
+      padding: 16px;
+
+      .topbar {
+        display: none; // Using shell mobile topbar
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 20px;
+
+        .notif-btn {
+          position: absolute;
+          top: 16px;
+          right: 16px;
+        }
+      }
+
+      .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .stat-card {
+        padding: 14px 16px;
+      }
+
+      .stat-label {
+        font-size: 10px;
+        letter-spacing: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .stat-value {
+        font-size: 24px;
+      }
+
+      .main-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .timeline-item {
+        grid-template-columns: 48px 24px 1fr;
+      }
+
+      .or-meta-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  :host-context(.not-admin) {
+    .doctor-container {
+      .stats-row {
+        grid-template-columns: repeat(2, 1fr); // Keep 2 columns but with smaller text
+      }
+
+      .stat-card {
+        padding: 12px;
+      }
+
+      .stat-label {
+        font-size: 9px;
+      }
+
+      .stat-value {
+        font-size: 20px;
+      }
+
+      .header {
+        h1 { font-size: 22px; }
+      }
+    }
+  }
+}

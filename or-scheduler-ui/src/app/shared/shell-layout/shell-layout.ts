@@ -33,6 +33,8 @@ export class ShellLayoutComponent implements OnInit {
   userName = '';
   userRole = '';
   userInitials = '';
+  isAdmin = false;
+  isSidebarMobileOpen = false;
 
   private staffNav = [
     { label: 'Dashboard', icon: 'grid', route: '/dashboard' },
@@ -56,6 +58,7 @@ export class ShellLayoutComponent implements OnInit {
     this.authService.currentUser$.subscribe(user => {
       if (user) {
         const role = user.role; // Folosim rolul direct din obiectul user
+        this.isAdmin = role === UserRole.ADMIN;
 
         // Configurăm meniul în funcție de rol
         this.navItems = role === UserRole.PATIENT ? this.patientNav : this.staffNav;
@@ -103,5 +106,13 @@ export class ShellLayoutComponent implements OnInit {
 
   logout(): void {
     this.authService.logout(); // Apelează fluxul complet de logout[cite: 6]
+  }
+
+  toggleSidebar(): void {
+    this.isSidebarMobileOpen = !this.isSidebarMobileOpen;
+  }
+
+  closeSidebar(): void {
+    this.isSidebarMobileOpen = false;
   }
 }

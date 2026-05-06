@@ -768,3 +768,101 @@ h1 {
     box-shadow: 0 0 0 5px rgba(59, 127, 255, 0.12), 0 0 16px rgba(59, 127, 255, 0.5);
   }
 }
+
+// ─── Responsive for non-admins ────────────────────────────────────────────────
+@media (max-width: 768px) {
+  :host-context(.not-admin) {
+    .nurse-container {
+      padding: 16px;
+
+      .topbar {
+        display: none;
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 20px;
+
+        .header-right {
+          width: 100%;
+          justify-content: space-between;
+        }
+      }
+
+      .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .stat-card {
+        padding: 14px 16px;
+      }
+
+      .stat-label {
+        font-size: 10px;
+        letter-spacing: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .stat-value {
+        font-size: 24px;
+      }
+
+      .main-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .room-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 12px;
+        background: var(--nc-surface2);
+        border-radius: 10px;
+        border: 1px solid var(--nc-border);
+
+        .room-right {
+          width: 100%;
+          align-items: flex-start;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  :host-context(.not-admin) {
+    .nurse-container {
+      .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .stat-card {
+        padding: 12px;
+      }
+
+      .stat-label {
+        font-size: 9px;
+      }
+
+      .stat-value {
+        font-size: 20px;
+      }
+
+      .header {
+        h1 { font-size: 22px; }
+      }
+
+      .task-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+    }
+  }
+}

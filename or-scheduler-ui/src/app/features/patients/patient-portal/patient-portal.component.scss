@@ -536,3 +536,56 @@
   color: var(--pp-red);
   margin-right: 6px;
 }
+
+@media (max-width: 768px) {
+  :host-context(.not-admin) {
+    .portal-wrapper {
+      padding: 16px 16px 80px;
+
+      .portal-header {
+        margin-bottom: 20px;
+        .welcome-title { font-size: 18px; }
+        .logout-btn { padding: 8px 12px; span { display: none; } }
+      }
+
+      .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      .action-card {
+        padding: 16px;
+      }
+
+      .glass-card {
+        padding: 16px;
+      }
+
+      .surgery-item {
+        gap: 12px;
+        .surgery-date-block { min-width: auto; }
+        .surgery-badges { width: 100%; justify-content: flex-start; }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  :host-context(.not-admin) {
+    .portal-wrapper {
+      .quick-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .header-left {
+        gap: 10px;
+      }
+
+      .avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
+      }
+    }
+  }
+}
