@@ -201,7 +201,7 @@
                 </div>
                 <div class="patients-list">
                     @for (patient of recentPatients(); track patient.id) {
-                    <div class="patient-row">
+                    <div class="patient-row" (click)="openChat(patient)">
                         <div class="patient-avatar">{{ patient.initials }}</div>
                         <div class="patient-info">
                             <span class="patient-name">{{ patient.name }}</span>
@@ -218,5 +218,13 @@
 
         </div>
     </div>
+    <app-chat [isOpen]="chatOpen" mode="doctor" (closed)="chatOpen = false" />
+
+    <!-- FAB button -->
+    <button class="chat-fab" (click)="chatOpen = true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+    </button>
 
 </div>

@@ -9,7 +9,7 @@ import { ThemeService } from '../../../core/theme/theme.service';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './calendar-view.html',
-styleUrls: ['./calendar-view.scss']
+  styleUrls: ['./calendar-view.scss']
 })
 export class CalendarViewComponent implements OnInit {
   theme = inject(ThemeService);
@@ -27,9 +27,9 @@ export class CalendarViewComponent implements OnInit {
   ];
 
   timeSlots: string[] = [
-    '07:00','08:00','09:00','10:00','11:00',
-    '12:00','13:00','14:00','15:00','16:00',
-    '17:00','18:00','19:00'
+    '07:00', '08:00', '09:00', '10:00', '11:00',
+    '12:00', '13:00', '14:00', '15:00', '16:00',
+    '17:00', '18:00', '19:00'
   ];
 
   surgeries: Surgery[] = [
@@ -89,7 +89,7 @@ export class CalendarViewComponent implements OnInit {
     },
   ];
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   get formattedDate(): string {
     return this.currentDate.toLocaleDateString('en-US', {
@@ -108,6 +108,22 @@ export class CalendarViewComponent implements OnInit {
     d.setDate(d.getDate() + 1);
     this.currentDate = d;
   }
+
+  goToToday(): void {
+    this.currentDate = new Date();
+  }
+
+  get isToday(): boolean {
+    const t = new Date();
+    return this.currentDate.toDateString() === t.toDateString();
+  }
+
+  get formattedShortDate(): string {
+    return this.currentDate.toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric'
+    });
+  }
+
 
   getSurgeriesForSlot(orRoom: string, time: string): Surgery[] {
     return this.surgeries.filter(s => s.orRoom === orRoom && s.startTime === time);

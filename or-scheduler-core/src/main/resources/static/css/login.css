@@ -203,7 +203,7 @@ body {
     background: linear-gradient(to bottom, #ffffff 10%, #dae7f9 70%, #a8d0ff 100%);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    box-shadow: -15px 10px 10px rgb(8 10 23 / 0.14);
+    box-shadow: 0 8px 24px rgba(8, 10, 23, 0.14);
 }
 
 .form-header {

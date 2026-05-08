@@ -121,13 +121,13 @@
 
 .util-ring-wrapper {
   position: relative;
-  width: 40px;
-  height: 40px;
+  width: 56px;
+  height: 56px;
 }
 
 .util-ring {
-  width: 40px;
-  height: 40px;
+  width: 56px;
+  height: 56px;
 }
 
 .util-percent {
@@ -135,9 +135,21 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 9px;
+   font-size: 12px;
   font-weight: 600;
   color: #fff;
+}
+.current-date-label {
+  font-size: 13px;
+  color: #e2e8f0;
+  padding: 0 8px;
+  min-width: 60px;
+  text-align: center;
+}
+
+.today-btn.active {
+  background: #1a2535;
+  color: #3b7fff;
 }
 
 .util-label {

@@ -4,11 +4,12 @@ import { Router } from '@angular/router';
 import { PatientService, PatientSurgeryView, PatientProfile } from '../services/patient.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ThemeService } from '../../../core/theme/theme.service';
+import { ChatComponent } from '../../chat/chat.component';
 
 @Component({
   selector: 'app-patient-portal',
   standalone: true,
-  imports: [CommonModule],
+ imports: [CommonModule, ChatComponent],
   templateUrl: './patient-portal.component.html',
   styleUrls: ['./patient-portal.component.scss']
 })
@@ -22,6 +23,7 @@ export class PatientPortalComponent implements OnInit {
   upcomingSurgeries: PatientSurgeryView[] = [];
   allSurgeries: PatientSurgeryView[] = [];
   isLoading = true;
+  chatOpen = false;
 
   ngOnInit(): void {
     this.patientService.getMyProfile().subscribe(p => this.profile = p);
