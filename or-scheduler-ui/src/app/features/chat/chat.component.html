@@ -13,7 +13,7 @@
       </div>
 
       <div class="contacts-list">
-        @for (contact of contacts(); track contact.id) {
+        @for (contact of displayContacts(); track contact.id) {
           <div class="contact-row" (click)="openContact(contact)">
             <div class="contact-avatar">{{ contact.initials }}</div>
             <div class="contact-info">

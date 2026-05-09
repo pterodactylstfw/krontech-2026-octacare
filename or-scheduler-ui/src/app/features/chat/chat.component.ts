@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatContact, ChatService } from './chat.service';
@@ -20,6 +20,10 @@ export class ChatComponent implements OnChanges {
 
     selectedContact = this.chatService.selectedContact;
     contacts = this.chatService.contacts;
+
+    // Filtrem doctorul din lista de contacte, sa apara doar pacientii
+    displayContacts = computed(() => this.contacts().filter(c => !c.name.startsWith('Dr.') && c.id !== 1001));
+
     newMessage = '';
 
     openContact(contact: ChatContact): void {

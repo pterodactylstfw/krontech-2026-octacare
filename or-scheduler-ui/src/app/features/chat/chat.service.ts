@@ -131,11 +131,6 @@ export class ChatService {
     this.persistContacts();
 
     const updated = this.contactsSignal().find(c => c.id === contact.id) ?? contact;
-    this.selectedContactSignal.set({
-      ...updated,
-      messages: [...updated.messages, newMsg],
-      lastMessage: trimmed,
-      lastTime: newMsg.time,
-    });
+    this.selectedContactSignal.set(updated);
   }
 }
