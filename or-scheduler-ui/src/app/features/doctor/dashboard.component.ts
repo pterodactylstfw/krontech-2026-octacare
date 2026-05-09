@@ -9,8 +9,8 @@ import {
   DoctorAlert,
   RecentPatient,
 } from './doctor.models';
-
 import { ChatComponent } from '../chat/chat.component';
+import { ChatService } from '../chat/chat.service';
 
 
 @Component({
@@ -22,6 +22,7 @@ import { ChatComponent } from '../chat/chat.component';
 })
 export class DoctorDashboardComponent implements OnInit {
   readonly theme = inject(ThemeService);
+  private chatService = inject(ChatService);
 
   readonly today = new Date().toLocaleDateString('en-GB', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
@@ -51,6 +52,7 @@ export class DoctorDashboardComponent implements OnInit {
 
   openChat(patient: RecentPatient): void {
     this.selectedPatient = { name: patient.name, initials: patient.initials };
+    this.chatService.openContactById(patient.id);
     this.chatOpen = true;
   }
 
