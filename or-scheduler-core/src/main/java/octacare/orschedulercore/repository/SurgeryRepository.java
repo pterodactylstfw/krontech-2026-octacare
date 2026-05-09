@@ -20,6 +20,7 @@ public interface SurgeryRepository extends JpaRepository<Surgery, UUID> {
 
     List<Surgery> findByRoomId(UUID roomId);
 
+    @EntityGraph(attributePaths = {"surgeon", "surgeryType"})
     List<Surgery> findByStatus(SurgeryStatus status);
 
     List<Surgery> findByPriority(SurgeryPriority priority);

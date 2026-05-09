@@ -68,16 +68,28 @@ public class ScheduleService {
         // 3. Obtinem interventiile neprogramate (PENDING)
         List<Surgery> pendingSurgeries = surgeryRepository.findByStatus(SurgeryStatus.PENDING);
         log.info("Found {} pending surgeries", pendingSurgeries.size());
-        List<SurgeryDto> surgeryDtos = pendingSurgeries.stream()
-                .filter(s -> s.getSurgeon() != null && s.getSurgeryType() != null)
-                .map(s -> new SurgeryDto(
+        
+        List<SurgeryDto> surgeryDtos = new java.util.ArrayList<>();
+        for (Surgery s : pendingSurgeries) {
+            try {
+                if (s.getId() == null || s.getSurgeon() == null || s.getSurgeryType() == null) {
+                    log.warn("⚠️ Skipping inconsistent surgery record: id={}, surgeon={}, type={}", 
+                        s.getId(), s.getSurgeon() != null ? "exists" : "NULL", s.getSurgeryType() != null ? "exists" : "NULL");
+                    continue;
+                }
+                
+                surgeryDtos.add(new SurgeryDto(
                         s.getId(),
                         s.getSurgeon().getId(),
                         s.getSurgeryType().getId(),
                         s.getPriority() != null ? s.getPriority().name() : "ELECTIVE",
                         (s.getSurgeryType().getAvgDurationMinutes() != null && s.getSurgeryType().getAvgDurationMinutes() > 0) ? s.getSurgeryType().getAvgDurationMinutes() : 60,
                         "GENERAL" // Default required room type
-                )).toList();
+                ));
+            } catch (Exception e) {
+                log.error("❌ Error mapping pending surgery {}: {}", s.getId(), e.getMessage());
+            }
+        }
 
         // Construim payload-ul catre algoritm
         ScheduleGenerationRequest request = new ScheduleGenerationRequest(
@@ -109,18 +121,40 @@ public class ScheduleService {
                 response.schedule().size(), response.status(), response.score());
             
             for (ScheduledSurgeryDto dto : response.schedule()) {
-                surgeryRepository.findById(dto.surgeryId()).ifPresent(s -> {
-                    s.setScheduledStart(dto.startTime());
-                    s.setScheduledEnd(dto.endTime());
-                    
-                    if (dto.roomId() != null) {
-                        roomRepository.findById(dto.roomId()).ifPresent(s::setRoom);
-                    }
-                    
-                    s.setStatus(SurgeryStatus.SCHEDULED);
-                    surgeryRepository.save(s);
-                    log.info("Successfully scheduled surgery {} in room {} at {}", s.getId(), dto.roomId(), dto.startTime());
-                });
+                log.debug("Processing scheduled surgery DTO: {}", dto);
+                
+                if (dto.surgeryId() == null) {
+                    log.error("❌ CRITICAL: Received surgery with NULL id from algorithm. DTO: {}", dto);
+                    continue;
+                }
+                
+                try {
+                    surgeryRepository.findById(dto.surgeryId()).ifPresentOrElse(s -> {
+                        log.info("Updating surgery {} with start {} and end {}", s.getId(), dto.startTime(), dto.endTime());
+                        s.setScheduledStart(dto.startTime());
+                        s.setScheduledEnd(dto.endTime());
+                        
+                        if (dto.roomId() != null) {
+                            roomRepository.findById(dto.roomId()).ifPresentOrElse(
+                                room -> {
+                                    log.debug("Assigning room {} ({}) to surgery {}", room.getName(), room.getId(), s.getId());
+                                    s.setRoom(room);
+                                },
+                                () -> log.warn("⚠️ Room {} not found in database for surgery {}", dto.roomId(), s.getId())
+                            );
+                        } else {
+                            log.warn("⚠️ No room_id provided for surgery {}", s.getId());
+                        }
+                        
+                        s.setStatus(SurgeryStatus.SCHEDULED);
+                        surgeryRepository.save(s);
+                        log.info("✅ Successfully saved surgery {}", s.getId());
+                    }, () -> {
+                        log.warn("⚠️ Surgery {} not found in database, skipping.", dto.surgeryId());
+                    });
+                } catch (Exception innerEx) {
+                    log.error("❌ Error processing surgery {}: {}", dto.surgeryId(), innerEx.getMessage(), innerEx);
+                }
             }
         } else {
             log.warn("Algorithm returned null or empty response");
