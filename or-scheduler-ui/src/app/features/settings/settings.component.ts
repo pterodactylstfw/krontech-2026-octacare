@@ -2,7 +2,8 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ThemeService } from '../../core/theme/theme.service';
-
+import { AuthService } from '../../core/services/auth.service';
+import { User } from '../../shared/models/user.model';
 @Component({
   selector: 'app-settings',
   standalone: true,
@@ -12,14 +13,16 @@ import { ThemeService } from '../../core/theme/theme.service';
 })
 export class SettingsComponent implements OnInit {
   private theme = inject(ThemeService);
+  private authService = inject(AuthService);
 
-  // ── Profile ──────────────────────────────────────────────────────────────────
+  // ── Profile (cu datele reale din AuthService) ────────────────────────────────
+  currentUser: User | null = null;
   profile = {
-    fullName: 'Dr. Elena Popescu',
-    email: 'elena.popescu@octacare.ro',
-    role: 'Chief Surgeon',
-    department: 'Orthopedics',
-    phone: '+40 721 000 111'
+    fullName: '',
+    email: '',
+    role: '',
+    department: '',
+    phone: ''
   };
 
   // ── Notifications ────────────────────────────────────────────────────────────
@@ -57,6 +60,23 @@ export class SettingsComponent implements OnInit {
   saved = false;
 
   ngOnInit(): void {
+    // Aboneaza-te la datele utilizatorului curent
+    this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        this.currentUser = user;
+        this.profile = {
+          fullName: user.fullName,
+          email: user.email,
+          role: user.role,
+          department: user.department || '',
+          phone: user.phone || ''
+        };
+        console.log('✅ Profile data updated from AuthService:', this.profile);
+      } else {
+        console.warn('⚠️ No user loaded. Remaining with empty profile.');
+      }
+    });
+
     this.appearance.theme = this.theme.isDarkMode() ? 'dark' : 'light';
     const savedTheme = localStorage.getItem('octacare-theme');
     if (savedTheme === 'system') {

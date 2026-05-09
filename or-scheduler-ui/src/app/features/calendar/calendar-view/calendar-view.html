@@ -13,7 +13,13 @@
         <button class="nav-btn" (click)="nextDay()">&#8250;</button>
       </div>
 
-      <button class="add-btn">+ Add Surgery</button>
+      <div class="action-buttons" style="display: flex; gap: 10px;">
+        <button class="add-btn auto-schedule-btn" (click)="generateSchedule()" [disabled]="isGenerating" style="background: linear-gradient(135deg, #8b5cf6, #3b82f6);">
+          <span *ngIf="!isGenerating">✨ Auto-Schedule</span>
+          <span *ngIf="isGenerating">⏳ Generating...</span>
+        </button>
+        <button class="add-btn">+ Add Surgery</button>
+      </div>
     </div>
   </div>
 

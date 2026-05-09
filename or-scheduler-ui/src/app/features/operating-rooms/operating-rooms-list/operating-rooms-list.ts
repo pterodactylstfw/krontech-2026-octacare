@@ -1,11 +1,13 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OperatingRoom, RoomType } from '../../../shared/models/room.model';
 import { RoomStatus } from '../../../core/enums/room-status.enum';
-import { MOCK_ROOMS, MOCK_SURGERIES, MOCK_USERS } from '../../../core/mock/mock-data';
+import { MOCK_ROOMS } from '../../../core/mock/mock-data';
 import { SurgeryStatus } from '../../../core/enums/surgery-status.enum';
 import { ThemeService } from '../../../core/theme/theme.service';
+import { SurgeryService } from '../../../core/services/surgery.service';
+import { type Surgery } from '../../../shared/models/surgery.model';
 
 type RoomFilter = 'ALL' | RoomStatus;
 
@@ -16,9 +18,12 @@ type RoomFilter = 'ALL' | RoomStatus;
   templateUrl: './operating-rooms-list.html',
   styleUrl: './operating-rooms-list.scss'
 })
-export class OperatingRoomsListComponent {
+export class OperatingRoomsListComponent implements OnInit {
   theme = inject(ThemeService);
+  private surgeryService = inject(SurgeryService);
   readonly RoomStatus = RoomStatus;
+
+  surgeries: Surgery[] = [];
 
   activeFilter: RoomFilter = 'ALL';
   searchQuery = '';
@@ -51,6 +56,25 @@ export class OperatingRoomsListComponent {
     { label: 'Sterilizing', value: RoomStatus.STERILIZING },
     { label: 'Maintenance', value: RoomStatus.MAINTENANCE }
   ];
+
+  ngOnInit() {
+    console.log('🔧 OperatingRoomsListComponent ngOnInit started');
+    this.loadSurgeries();
+  }
+
+  private loadSurgeries() {
+    console.log('🔧 loadSurgeries called - about to call surgeryService.getAll()');
+    this.surgeryService.getAll().subscribe({
+      next: (data: Surgery[]) => {
+        console.log('✅ Surgeries loaded from backend:', data);
+        this.surgeries = data;
+      },
+      error: (err) => {
+        console.error('❌ Failed to load surgeries:', err);
+        this.surgeries = [];
+      }
+    });
+  }
 
   setFilter(filter: RoomFilter) { this.activeFilter = filter; }
 
@@ -160,7 +184,7 @@ export class OperatingRoomsListComponent {
   }
 
   getActiveSurgery(roomId: string) {
-    const candidates = MOCK_SURGERIES.filter(
+    const candidates = this.surgeries.filter(
       (s) => s.roomId === roomId &&
         (s.status === SurgeryStatus.IN_PROGRESS || s.status === SurgeryStatus.SCHEDULED)
     );
@@ -169,7 +193,7 @@ export class OperatingRoomsListComponent {
       candidates.sort((a, b) => a.scheduledStart.localeCompare(b.scheduledStart))[0];
     if (!active) return null;
 
-    const surgeon = MOCK_USERS.find((u) => u.id === active.surgeonId)?.fullName ?? 'Unknown surgeon';
+    const surgeon = active.surgeonName ?? 'Unknown surgeon';
     const end = new Date(active.scheduledEnd);
     return {
       surgeon,
@@ -195,13 +219,13 @@ export class OperatingRoomsListComponent {
     const DAY_START = 360;
     const DAY_SPAN = 960;
 
-    const items = MOCK_SURGERIES
+    const items = this.surgeries
       .filter(s => s.roomId === roomId)
       .sort((a, b) => a.scheduledStart.localeCompare(b.scheduledStart))
       .map(s => {
         const start = new Date(s.scheduledStart);
         const end = new Date(s.scheduledEnd);
-        const surgeon = MOCK_USERS.find(u => u.id === s.surgeonId)?.fullName ?? 'Unknown';
+        const surgeon = s.surgeonName ?? 'Unknown';
         const startMin = start.getHours() * 60 + start.getMinutes();
         const endMin = end.getHours() * 60 + end.getMinutes();
         const left = Math.max(0, ((startMin - DAY_START) / DAY_SPAN) * 100);

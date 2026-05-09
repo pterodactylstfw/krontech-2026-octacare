@@ -75,6 +75,11 @@ h1 {
   color: var(--sg-muted);
 }
 
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
 // ─── Buton primar unificat ───────────────────────────────
 .add-btn {
   background: var(--sg-accent);
@@ -88,6 +93,21 @@ h1 {
   transition: opacity 0.2s, transform 0.15s;
 
   &:hover { opacity: 0.88; transform: translateY(-1px); }
+  &:active { transform: scale(0.98); }
+}
+
+.ghost-btn {
+  background: transparent;
+  color: var(--sg-text);
+  border: 0.5px solid var(--sg-border);
+  padding: 9px 16px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+
+  &:hover { background: var(--sg-surface2); }
   &:active { transform: scale(0.98); }
 }
 
@@ -181,6 +201,44 @@ h1 {
   align-items: center;
 }
 
+.filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+
+  @media (max-width: 980px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.filter-left,
+.filter-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.date-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--sg-muted);
+
+  input {
+    background: var(--sg-surface);
+    border: 0.5px solid var(--sg-border);
+    color: var(--sg-text);
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+  }
+}
+
 .dept-select,
 .search-input {
   background: var(--sg-surface);
@@ -198,6 +256,28 @@ h1 {
 
 .dept-select  { min-width: 150px; }
 .search-input { width: 220px; }
+
+.banner {
+  background: var(--sg-surface);
+  border: 0.5px solid var(--sg-border);
+  color: var(--sg-text);
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+.banner.error {
+  border-color: rgba(239,68,68,0.4);
+  color: #ef4444;
+  background: rgba(239,68,68,0.08);
+}
+
+.banner.info {
+  border-color: rgba(59,127,255,0.35);
+  color: #6da8ff;
+  background: rgba(59,127,255,0.08);
+}
 
 // ─── Grid ───────────────────────────────────────────────
 .grid {

@@ -9,9 +9,8 @@ import {OAuthModule} from 'angular-oauth2-oidc';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
-     provideAnimations(),
-    // provideHttpClient(withInterceptors([jwtInterceptor])),
-    provideHttpClient(),
+    provideAnimations(),
+    provideHttpClient(withInterceptors([jwtInterceptor])),
     importProvidersFrom(OAuthModule.forRoot())
   ]
 };
