@@ -32,7 +32,8 @@
 
   <div class="filters">
     <div class="filter-left">
-      <input class="search-input" type="text" placeholder="Search surgeon..." (input)="onSearch($event)" />
+      <input class="search-input" type="text" placeholder="Search surgeon..." [value]="search()"
+        (input)="onSearch($event)" />
       <select class="dept-select" [value]="selectedSurgeonId()"
         (change)="selectedSurgeonId.set($any($event.target).value)">
         <option value="">All Surgeons</option>

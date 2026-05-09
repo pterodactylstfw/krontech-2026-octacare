@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { SurgeonsService } from './services/surgeons.service';
+import { SurgeonAvailabilityService } from './services/surgeon-availability.service';
 import {
   AvailabilityReason,
   SurgeonAvailability,
@@ -18,7 +18,7 @@ import { ThemeService } from '../../core/theme/theme.service';
   styleUrl: './surgeons.component.scss'
 })
 export class SurgeonsComponent {
-  private svc = inject(SurgeonsService);
+  private svc = inject(SurgeonAvailabilityService);
   readonly theme = inject(ThemeService);
   availability = signal<SurgeonAvailability[]>([]);
   search = signal('');
@@ -87,7 +87,7 @@ export class SurgeonsComponent {
         this.loading.set(false);
       },
       error: (err: HttpErrorResponse) => {
-        this.error.set(err?.message || 'Nu am putut incarca disponibilitatea.');
+        this.error.set(err?.error?.message || err?.message || 'Nu am putut incarca disponibilitatea.');
         this.loading.set(false);
       }
     });
