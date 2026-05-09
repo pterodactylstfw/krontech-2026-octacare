@@ -12,14 +12,22 @@
     </div>
   </div>
 
+  <!-- LOADING STATE -->
+  @if (!data()) {
+    <div class="loading-container" style="display: flex; justify-content: center; align-items: center; height: 400px; color: #94a3b8;">
+      <p>🔄 Loading dashboard data...</p>
+    </div>
+  }
+
   <!-- MAIN CONTENT -->
+  @if (data(); as dashboard) {
   <div class="content">
 
     <!-- KPI CARDS -->
     <div class="section">
       <div class="section-label">Today's overview</div>
       <div class="kpi-row">
-        @for (kpi of data().kpis; track kpi.label) {
+        @for (kpi of dashboard.kpis; track kpi.label) {
           <div class="kpi-card" [ngClass]="kpi.accent">
             <div class="kpi-label">{{ kpi.label }}</div>
             <div class="kpi-value">{{ kpi.value }}</div>
@@ -38,7 +46,7 @@
           <span class="panel-title">Operating Rooms</span>
           <button class="panel-action" (click)="navigateTo('/operating-rooms')">View all ↗</button>
         </div>
-        @for (or of data().operatingRooms; track or.id) {
+        @for (or of dashboard.operatingRooms; track or.id) {
           <div class="or-bar">
             <div class="or-bar-top">
               <span class="or-name">{{ or.name }} · {{ or.specialty }} · {{ or.floor }}</span>
@@ -70,7 +78,7 @@
           <button class="panel-action" (click)="navigateTo('/staff')">View staff ↗</button>
         </div>
         <div class="surg-list">
-          @for (surgeon of data().surgeons; track surgeon.name) {
+          @for (surgeon of dashboard.surgeons; track surgeon.name) {
             <div class="surg-row">
               <div class="surg-avatar" [ngClass]="'avatar-' + surgeon.colorClass">
                 {{ surgeon.initials }}
@@ -111,7 +119,7 @@
             <div class="tl-room-label">OR 3</div>
             <div class="tl-room-label">OR 4</div>
           </div>
-          @for (row of data().timeline; track trackByIndex($index)) {
+          @for (row of dashboard.timeline; track trackByIndex($index)) {
             <div class="tl-row">
               <div class="tl-hour">{{ row.hour }}</div>
               <div class="tl-cell">
@@ -149,7 +157,7 @@
 
       <!-- MINI STATS + AI INSIGHT -->
       <div class="stat-col">
-        @for (stat of data().miniStats; track stat.label) {
+        @for (stat of dashboard.miniStats; track stat.label) {
           <div class="stat-mini">
             <div class="stat-label">{{ stat.label }}</div>
             <div class="stat-value" [ngClass]="'stat-val-' + stat.colorClass">{{ stat.value }}</div>
@@ -161,7 +169,7 @@
         }
         <div class="ai-insight">
           <div class="ai-label">AI Insights</div>
-          <div class="ai-text">{{ data().aiInsight }}</div>
+          <div class="ai-text">{{ dashboard.aiInsight }}</div>
           <button class="ai-action" (click)="navigateTo('/reports')">Generate full report ↗</button>
         </div>
       </div>
@@ -169,4 +177,5 @@
     </div>
 
   </div>
+  }
 </div>

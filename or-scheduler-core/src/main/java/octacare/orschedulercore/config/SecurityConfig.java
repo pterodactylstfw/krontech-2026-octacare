@@ -7,6 +7,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -20,6 +21,7 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
@@ -41,13 +44,21 @@ public class SecurityConfig {
     }
 
     @Bean
+    public octacare.orschedulercore.security.CookieBearerTokenFilter cookieBearerTokenFilter() {
+        return new octacare.orschedulercore.security.CookieBearerTokenFilter();
+    }
+
+    @Bean
     @Order(2) // 1. PASĂREA DE PRADĂ: Verificăm mai întâi dacă cererea e pentru API
-    public SecurityFilterChain resourceServerFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain resourceServerFilterChain(HttpSecurity http, octacare.orschedulercore.security.CookieBearerTokenFilter cookieBearerTokenFilter) throws Exception {
         http
                 .securityMatcher("/api/**") // Se aplică DOAR pentru rutele care încep cu /api/
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
+                        // Allow unauthenticated access to the exchange & refresh endpoints so SPA or tools
+                        // can perform the authorization_code PKCE exchange and refresh without an auth header.
+                        .requestMatchers("/api/auth/exchange-code", "/api/auth/refresh").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
@@ -55,6 +66,9 @@ public class SecurityConfig {
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter())
                         )
                 );
+        // Adăugăm filtru care mută cookie->Authorization header ca PRIMUL filtru în lanț
+         // pentru a extrage tokenul din cookie ÎNAINTE ca Bearer Token Authentication să încerce validarea
+         http.addFilterBefore(cookieBearerTokenFilter, SecurityContextHolderFilter.class);
         return http.build();
     }
 
@@ -103,6 +117,7 @@ public class SecurityConfig {
                         .map(GrantedAuthority::getAuthority)
                         // Filtrăm metadatele tehnice ca să nu trimitem "FACTOR_PASSWORD"
                         .filter(auth -> auth.startsWith("ROLE_"))
+                        .map(auth -> auth.substring(5)) // Ștergem "ROLE_" pentru a nu dubla prefixul mai târziu
                         .collect(Collectors.toSet());
 
                 // Le punem într-un câmp numit explicit "user_roles"

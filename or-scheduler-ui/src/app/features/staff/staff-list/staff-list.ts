@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Staff } from '../models/staff';
 import { ThemeService } from '../../../core/theme/theme.service';
+import { UserService, UserRole } from '../../../core/services/user.service';
 
 @Component({
   selector: 'app-staff-list',
@@ -13,11 +14,16 @@ import { ThemeService } from '../../../core/theme/theme.service';
 })
 export class StaffList implements OnInit {
   theme = inject(ThemeService);
+  userService = inject(UserService);
+
   activeFilter: string = 'All';
   searchQuery: string = '';
   filters = ['All', 'Surgeons', 'Nurses', 'On Duty', 'On Leave'];
   days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
   daysShort = ['M', 'T', 'W', 'T', 'F'];
+
+  staffList: Staff[] = [];
+  loading = false;
 
   // ── Add modal ────────────────────────────────────────────────────────────────
   showModal = false;
@@ -26,13 +32,53 @@ export class StaffList implements OnInit {
   // ── Edit modal ───────────────────────────────────────────────────────────────
   showEditModal = false;
   editStaff: Partial<Staff> = {};
-  editingId: number | null = null;
+  editingId: string | null = null;
 
   // ── View Schedule modal ──────────────────────────────────────────────────────
   showScheduleModal = false;
   scheduleStaff: Staff | null = null;
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.loadStaff();
+  }
+
+  loadStaff() {
+    this.loading = true;
+    this.userService.getAll().subscribe({
+      next: (users) => {
+        this.staffList = users
+          .filter(u => u.role === UserRole.SURGEON || u.role === UserRole.NURSE)
+          .map(u => ({
+            id: u.id,
+            name: u.fullName,
+            role: u.role === UserRole.SURGEON ? 'Surgeon' : 'Nurse',
+            specialty: u.specialization || '',
+            department: u.department || '',
+            status: 'On Duty', // Mock status
+            initials: this.getInitials(u.fullName),
+            color: this.getRandomColor(),
+            surgeriesOrRoom: '',
+            nextSurgeryOrShift: '',
+            weekDays: [true, true, true, true, true] // Default full availability
+          }));
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Failed to load staff', err);
+        this.loading = false;
+      }
+    });
+  }
+
+  getInitials(name: string): string {
+    return name.split(' ')
+      .map(w => w[0]).join('').substring(0, 2).toUpperCase();
+  }
+
+  getRandomColor(): string {
+    const colors = ['#4CAF50', '#9C27B0', '#FF9800', '#2196F3', '#F44336', '#3F51B5'];
+    return colors[Math.floor(Math.random() * colors.length)];
+  }
 
   emptyStaff(): Partial<Staff> {
     return {
@@ -49,10 +95,13 @@ export class StaffList implements OnInit {
 
   addStaff() {
     if (!this.newStaff.name) return;
-    const initials = this.newStaff.name.split(' ')
-      .map(w => w[0]).join('').substring(0, 2).toUpperCase();
-    this.staffList.push({
-      id: this.staffList.length + 1,
+
+    // In a real scenario, we would call userService.create here
+    // For now, we update local list to show UI feedback
+    const initials = this.getInitials(this.newStaff.name!);
+
+    const newEntry: Staff = {
+      id: crypto.randomUUID(),
       name: this.newStaff.name!,
       role: this.newStaff.role as 'Surgeon' | 'Nurse',
       specialty: this.newStaff.specialty || '',
@@ -63,13 +112,14 @@ export class StaffList implements OnInit {
       surgeriesOrRoom: '',
       nextSurgeryOrShift: '',
       weekDays: [false, false, false, false, false]
-    });
+    };
+
+    this.staffList.push(newEntry);
     this.closeModal();
   }
 
   // ── Edit ─────────────────────────────────────────────────────────────────────
   openEditModal(staff: Staff) {
-    // Deep copy so edits don't mutate the list until Save
     this.editStaff = { ...staff, weekDays: [...staff.weekDays] };
     this.editingId = staff.id;
     this.showEditModal = true;
@@ -86,8 +136,7 @@ export class StaffList implements OnInit {
     const idx = this.staffList.findIndex(s => s.id === this.editingId);
     if (idx === -1) return;
 
-    const initials = this.editStaff.name.split(' ')
-      .map(w => w[0]).join('').substring(0, 2).toUpperCase();
+    const initials = this.getInitials(this.editStaff.name!);
 
     this.staffList[idx] = {
       ...this.staffList[idx],
@@ -113,7 +162,6 @@ export class StaffList implements OnInit {
     this.scheduleStaff = null;
   }
 
-  // Returns a dummy schedule for the week — replace with real API data later
   getWeekSchedule(staff: Staff): { day: string; active: boolean; detail: string }[] {
     return this.days.map((day, i) => ({
       day,
@@ -125,34 +173,6 @@ export class StaffList implements OnInit {
         : 'Day off'
     }));
   }
-
-  // ── Staff data ────────────────────────────────────────────────────────────────
-  staffList: Staff[] = [
-    { id: 1, name: 'Dr. Ionescu Alexandru', role: 'Surgeon', specialty: 'Cardiac',
-      department: 'Cardiology', status: 'On Duty', initials: 'IA', color: '#4CAF50',
-      surgeriesOrRoom: '2', nextSurgeryOrShift: '14:00 · Room 1',
-      weekDays: [true, true, true, true, true] },
-    { id: 2, name: 'Dr. Popescu Maria', role: 'Surgeon', specialty: 'Neurology',
-      department: 'Neurology', status: 'On Duty', initials: 'PM', color: '#9C27B0',
-      surgeriesOrRoom: '1', nextSurgeryOrShift: '09:00 · Room 3',
-      weekDays: [true, false, true, true, false] },
-    { id: 3, name: 'Dr. Dumitru Constantin', role: 'Surgeon', specialty: 'Orthopedic',
-      department: 'Orthopedics', status: 'On Leave', initials: 'DC', color: '#FF9800',
-      surgeriesOrRoom: 'Apr 28', nextSurgeryOrShift: 'Medical',
-      weekDays: [false, false, false, false, false] },
-    { id: 4, name: 'Ionescu Elena', role: 'Nurse', specialty: '',
-      department: 'Cardiology', status: 'On Duty', initials: 'IE', color: '#4CAF50',
-      surgeriesOrRoom: 'Room 1', nextSurgeryOrShift: '07:00 – 19:00',
-      weekDays: [true, true, true, false, true] },
-    { id: 5, name: 'Mihai Radu', role: 'Nurse', specialty: '',
-      department: 'Neurology', status: 'On Duty', initials: 'MR', color: '#2196F3',
-      surgeriesOrRoom: 'Room 3', nextSurgeryOrShift: '07:00 – 19:00',
-      weekDays: [true, true, false, true, true] },
-    { id: 6, name: 'Georgescu Ana', role: 'Nurse', specialty: '',
-      department: 'Pediatrics', status: 'Off Duty', initials: 'GA', color: '#F44336',
-      surgeriesOrRoom: 'Thu 07:00', nextSurgeryOrShift: '19:00 – 07:00',
-      weekDays: [true, false, false, true, false] },
-  ];
 
   get filteredStaff(): Staff[] {
     return this.staffList.filter(s => {

@@ -1,5 +1,5 @@
 export interface Staff {
-  id: number;
+  id: string;
   name: string;
   role: 'Surgeon' | 'Nurse';
   specialty: string;

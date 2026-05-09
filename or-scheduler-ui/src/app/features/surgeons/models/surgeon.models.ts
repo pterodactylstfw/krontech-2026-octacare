@@ -1,27 +1,28 @@
-export interface Surgeon {
-  id: number;
-  initials: string;
-  name: string;
-  specialty: string;
-  department: string;
-  status: 'on-duty' | 'on-leave' | 'off-duty';
-  color: string;
-  surgeriesToday: number;
-  surgeriesWeek: number;
-  successRate: number;
-  nextSurgery?: string;
-  nextRoom?: string;
-  weekDays: boolean[]; // [M, T, W, T, F]
-  yearsExperience: number;
-  certifications: string[];
+export type AvailabilityReason = 'LEAVE' | 'ON_CALL' | 'TRAINING' | null;
+
+export interface SurgeonAvailability {
+  id: string;
+  surgeonId: string;
+  surgeonName: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  isAvailable: boolean;
+  reason: AvailabilityReason;
 }
 
-export interface SurgeonStats {
-  total: number;
-  onDuty: number;
-  onLeave: number;
-  surgeriesToday: number;
+export interface SurgeonAvailabilityRequest {
+  surgeonId: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  isAvailable: boolean;
+  reason: AvailabilityReason;
 }
 
-export type SurgeonFilter = 'All' | 'On Duty' | 'On Leave' | 'Off Duty';
-export type SurgeonDepartment = 'All' | 'Cardiology' | 'Neurology' | 'Orthopedics' | 'General' | 'Pediatrics';
+export interface AvailabilityStats {
+  totalEntries: number;
+  available: number;
+  unavailable: number;
+  uniqueSurgeons: number;
+}
