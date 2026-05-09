@@ -52,7 +52,7 @@ export class DoctorDashboardComponent implements OnInit {
 
   openChat(patient: RecentPatient): void {
     this.selectedPatient = { name: patient.name, initials: patient.initials };
-    this.chatService.openContactById(patient.id);
+    this.chatService.openConversation(patient.id, patient.name, patient.initials);
     this.chatOpen = true;
   }
 

@@ -42,9 +42,9 @@
               <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
           </button>
-          <div class="contact-avatar small">{{ selectedContact()!.initials }}</div>
+          <div class="contact-avatar small">{{ mode === 'patient' ? 'IA' : selectedContact()!.initials }}</div>
           <div>
-            <div class="chat-name">{{ selectedContact()!.name }}</div>
+            <div class="chat-name">{{ mode === 'patient' ? 'Dr. Ionescu Alexandru' : selectedContact()!.name }}</div>
             <div class="chat-status"><span class="status-dot"></span> Online</div>
           </div>
         </div>

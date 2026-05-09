@@ -20,15 +20,13 @@ export interface ChatContact {
   messages: ChatMessage[];
 }
 
-const DEFAULT_PATIENT_THREAD_ID = 1;
-
 const DEFAULT_CONTACTS: ChatContact[] = [
   {
     id: 1,
     name: 'Gheorghe Mihai',
     initials: 'GM',
-    lastMessage: 'Thank you, doctor!',
-    lastTime: '10:15',
+    lastMessage: 'Good morning!',
+    lastTime: '09:12',
     unread: 0,
     messages: [
       {
@@ -38,53 +36,8 @@ const DEFAULT_CONTACTS: ChatContact[] = [
         time: '09:12',
         read: true,
       },
-      {
-        id: 2,
-        text: 'Good morning. Yes, please make sure to fast from midnight and arrive at 07:30.',
-        sender: 'doctor',
-        time: '09:45',
-        read: true,
-      },
-      { id: 3, text: 'Thank you, doctor!', sender: 'patient', time: '10:15', read: true },
     ],
-  },
-  {
-    id: 2,
-    name: 'Nicolae Radu',
-    initials: 'NR',
-    lastMessage: 'Should I bring the blood work?',
-    lastTime: '09:30',
-    unread: 2,
-    messages: [
-      {
-        id: 1,
-        text: 'Doctor, should I bring the previous blood work results?',
-        sender: 'patient',
-        time: '09:28',
-        read: true,
-      },
-      { id: 2, text: 'Should I bring the blood work?', sender: 'patient', time: '09:30', read: false },
-    ],
-  },
-  {
-    id: 3,
-    name: 'Stan Diana',
-    initials: 'SD',
-    lastMessage: 'I understand, see you then.',
-    lastTime: 'Yesterday',
-    unread: 0,
-    messages: [
-      { id: 1, text: 'When is my next check-up scheduled?', sender: 'patient', time: '14:00', read: true },
-      {
-        id: 2,
-        text: 'Your next visit is on Monday at 10:00.',
-        sender: 'doctor',
-        time: '14:10',
-        read: true,
-      },
-      { id: 3, text: 'I understand, see you then.', sender: 'patient', time: '14:12', read: true },
-    ],
-  },
+  }
 ];
 
 const STORAGE_KEY = 'chat_state_v1';
@@ -102,7 +55,7 @@ export class ChatService {
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
           this.contactsSignal.set(parsed as ChatContact[]);
         }
       } catch {
@@ -115,29 +68,35 @@ export class ChatService {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.contactsSignal()));
     } catch {
-      // Ignore storage write errors (private mode or quota).
+      // Ignore storage write errors.
     }
   }
 
-  openContact(contact: ChatContact): void {
+  openConversation(patientId: number, patientName: string, patientInitials: string): void {
+    let threads = this.contactsSignal();
+    let thread = threads.find(t => t.id === patientId);
+
+    if (!thread) {
+      thread = {
+        id: patientId,
+        name: patientName,
+        initials: patientInitials,
+        lastMessage: '',
+        lastTime: '',
+        unread: 0,
+        messages: [],
+      };
+      this.contactsSignal.set([...threads, thread]);
+    }
+
+    // Clear unread for opened thread
     this.contactsSignal.update(list =>
-      list.map(c => (c.id === contact.id ? { ...c, unread: 0 } : c))
+      list.map(c => (c.id === patientId ? { ...c, unread: 0 } : c))
     );
     this.persistContacts();
-    const updated = this.contactsSignal().find(c => c.id === contact.id) ?? contact;
+
+    const updated = this.contactsSignal().find(c => c.id === patientId) ?? thread;
     this.selectedContactSignal.set(updated);
-  }
-
-  openContactById(id: number): void {
-    const contact = this.contactsSignal().find(c => c.id === id);
-    if (contact) this.openContact(contact);
-  }
-
-  openPatientThread(): void {
-    const contact =
-      this.contactsSignal().find(c => c.id === DEFAULT_PATIENT_THREAD_ID) ??
-      this.contactsSignal()[0];
-    if (contact) this.openContact(contact);
   }
 
   closeThread(): void {

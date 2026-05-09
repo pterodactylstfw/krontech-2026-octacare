@@ -23,7 +23,7 @@ export class ChatComponent implements OnChanges {
     newMessage = '';
 
     openContact(contact: ChatContact): void {
-        this.chatService.openContact(contact);
+        this.chatService.openConversation(contact.id, contact.name, contact.initials);
     }
 
     back(): void {
@@ -47,7 +47,8 @@ export class ChatComponent implements OnChanges {
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes['isOpen']?.currentValue === true && this.mode === 'patient') {
-            this.chatService.openPatientThread();
+            // Deschide conversatia pentru pacientul cu ID 1 (Gheorghe Mihai)
+            this.chatService.openConversation(1, 'Gheorghe Mihai', 'GM');
         }
 
         if (changes['isOpen']?.currentValue === false) {
