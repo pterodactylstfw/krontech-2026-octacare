@@ -1,6 +1,7 @@
 package octacare.orschedulercore.repository;
 
 import octacare.orschedulercore.entity.SurgeonAvailability;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,18 +13,28 @@ import java.util.UUID;
 
 public interface SurgeonAvailabilityRepository extends JpaRepository<SurgeonAvailability, UUID> {
 
+    @EntityGraph(attributePaths = "surgeon")
     List<SurgeonAvailability> findBySurgeon_IdOrderByDateAscStartTimeAsc(UUID surgeonId);
 
+    @EntityGraph(attributePaths = "surgeon")
     List<SurgeonAvailability> findBySurgeon_IdAndDateBetweenOrderByDateAscStartTimeAsc(
             UUID surgeonId,
             LocalDate startDate,
             LocalDate endDate);
 
+    @EntityGraph(attributePaths = "surgeon")
     List<SurgeonAvailability> findByDateOrderByStartTimeAsc(LocalDate date);
 
+    @EntityGraph(attributePaths = "surgeon")
     List<SurgeonAvailability> findByDateBetweenOrderByDateAscStartTimeAsc(
             LocalDate startDate,
             LocalDate endDate);
+
+    @EntityGraph(attributePaths = "surgeon")
+    List<SurgeonAvailability> findAllByOrderByDateAscStartTimeAsc();
+
+    @EntityGraph(attributePaths = "surgeon")
+    java.util.Optional<SurgeonAvailability> findWithSurgeonById(UUID id);
 
     @Query("""
             select count(sa) > 0

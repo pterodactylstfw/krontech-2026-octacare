@@ -30,13 +30,13 @@ public class SurgeonAvailability {
     @Column(nullable = false)
     private LocalDate date;
 
-    @Column(name = "start_time", nullable = false)
+    @Column(name = "start_time")
     private LocalTime startTime;
 
-    @Column(name = "end_time", nullable = false)
+    @Column(name = "end_time")
     private LocalTime endTime;
 
-    @Column(name = "is_available", nullable = false)
+    @Column(name = "is_available")
     private Boolean isAvailable;
 
     @Enumerated(EnumType.STRING)
