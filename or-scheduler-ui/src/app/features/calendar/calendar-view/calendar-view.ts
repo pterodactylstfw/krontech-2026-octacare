@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Surgery, ORRoom } from '../models/surgery.model';
 import { ThemeService } from '../../../core/theme/theme.service';
+import { ScheduleService } from '../../../core/services/schedule.service';
 
 
 @Component({
@@ -13,11 +14,13 @@ styleUrls: ['./calendar-view.scss']
 })
 export class CalendarViewComponent implements OnInit {
   theme = inject(ThemeService);
+  scheduleService = inject(ScheduleService);
 
   currentDate = new Date();
   today = new Date();
   selectedSurgery: Surgery | null = null;
   draggedSurgery: Surgery | null = null;
+  isGenerating = false;
 
   orRooms: ORRoom[] = [
     { id: 'or1', name: 'OR 1', utilizationPercent: 75 },
@@ -32,64 +35,82 @@ export class CalendarViewComponent implements OnInit {
     '17:00','18:00','19:00'
   ];
 
-  surgeries: Surgery[] = [
-    {
-      id: 's1', patientId: 'Patient ID1', surgeonName: 'Dr. Smith',
-      surgeonInitials: 'DS', type: 'Appendectomy', orRoom: 'OR 1',
-      startTime: '08:00', endTime: '09:30', durationMin: 90,
-      status: 'scheduled', color: 'blue'
-    },
-    {
-      id: 's2', patientId: 'Patient ID1', surgeonName: 'Dr. Patel',
-      surgeonInitials: 'DP', type: 'Knee Replacement', orRoom: 'OR 2',
-      startTime: '08:00', endTime: '09:30', durationMin: 90,
-      status: 'scheduled', color: 'green'
-    },
-    {
-      id: 's3', patientId: 'Patient ID1', surgeonName: 'Dr. Patel',
-      surgeonInitials: 'DP', type: 'Knee Replacement', orRoom: 'OR 3',
-      startTime: '08:00', endTime: '09:30', durationMin: 90,
-      status: 'scheduled', color: 'green'
-    },
-    {
-      id: 's4', patientId: 'Patient ID3', surgeonName: 'Dr. Smith',
-      surgeonInitials: 'DS', type: 'Appendectomy', orRoom: 'OR 1',
-      startTime: '10:00', endTime: '11:30', durationMin: 90,
-      status: 'in-progress', color: 'blue'
-    },
-    {
-      id: 's5', patientId: 'Patient ID5', surgeonName: 'Dr. Ionescu',
-      surgeonInitials: 'DI', type: 'Heart Bypass', orRoom: 'OR 4',
-      startTime: '10:00', endTime: '11:30', durationMin: 90,
-      status: 'emergency', color: 'amber'
-    },
-    {
-      id: 's6', patientId: 'Patient ID5', surgeonName: 'Dr. Smith',
-      surgeonInitials: 'DS', type: 'Appendectomy', orRoom: 'OR 1',
-      startTime: '14:00', endTime: '15:30', durationMin: 90,
-      status: 'scheduled', color: 'blue'
-    },
-    {
-      id: 's7', patientId: 'Patient D3', surgeonName: 'Dr. Patel',
-      surgeonInitials: 'DP', type: 'Knee Replacement', orRoom: 'OR 3',
-      startTime: '14:00', endTime: '15:00', durationMin: 60,
-      status: 'sterilization', color: 'orange'
-    },
-    {
-      id: 's8', patientId: 'Patient ID7', surgeonName: 'Dr. Ionescu',
-      surgeonInitials: 'DI', type: 'Heart Bypass', orRoom: 'OR 2',
-      startTime: '15:00', endTime: '16:30', durationMin: 90,
-      status: 'sterilization', color: 'orange'
-    },
-    {
-      id: 's9', patientId: 'Patient ID8', surgeonName: 'Dr. Ionescu',
-      surgeonInitials: 'DI', type: 'Heart Bypass', orRoom: 'OR 4',
-      startTime: '16:00', endTime: '17:30', durationMin: 90,
-      status: 'emergency', color: 'amber'
-    },
-  ];
+  surgeries: Surgery[] = [];
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.loadSchedule();
+  }
+
+  loadSchedule(): void {
+    // Luam inceputul si sfarsitul saptamanii/zilei curente (hardcoded temporar pt demo)
+    const start = '2026-05-10T00:00:00';
+    const end = '2026-05-17T23:59:59';
+    
+    this.scheduleService.getSchedule(start, end).subscribe({
+      next: (data: any[]) => {
+        this.surgeries = data.map(item => ({
+          id: item.id,
+          patientId: item.patientName || 'Unknown Patient',
+          surgeonName: item.surgeonName || 'Unknown Surgeon',
+          surgeonInitials: this.getInitials(item.surgeonName || 'US'),
+          type: item.surgeryTypeName || 'Procedure',
+          orRoom: item.roomName as any || 'OR 1',
+          startTime: this.formatTime(item.scheduledStart),
+          endTime: this.formatTime(item.scheduledEnd),
+          durationMin: this.diffInMinutes(item.scheduledStart, item.scheduledEnd),
+          status: item.status.toLowerCase() as any,
+          color: this.getColorForStatus(item.status)
+        }));
+      },
+      error: (err) => console.error('Failed to load schedule', err)
+    });
+  }
+
+  generateSchedule(): void {
+    if (this.isGenerating) return;
+    this.isGenerating = true;
+    
+    const startDate = '2026-05-10'; // Start date pentru algoritm
+    const endDate = '2026-05-17';
+    
+    this.scheduleService.generateSchedule(startDate, endDate).subscribe({
+      next: () => {
+        this.loadSchedule();
+        this.isGenerating = false;
+      },
+      error: () => {
+        this.isGenerating = false;
+      }
+    });
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '';
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  }
+
+  formatTime(dateStr: string): string {
+    if (!dateStr) return '00:00';
+    const d = new Date(dateStr);
+    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+  }
+
+  diffInMinutes(start: string, end: string): number {
+    if (!start || !end) return 60;
+    const s = new Date(start).getTime();
+    const e = new Date(end).getTime();
+    return Math.max(15, (e - s) / 60000);
+  }
+
+  getColorForStatus(status: string): string {
+    switch(status) {
+      case 'SCHEDULED': return 'blue';
+      case 'IN_PROGRESS': return 'green';
+      case 'EMERGENCY': return 'amber';
+      case 'STERILIZATION': return 'orange';
+      default: return 'blue';
+    }
+  }
 
   get formattedDate(): string {
     return this.currentDate.toLocaleDateString('en-US', {
