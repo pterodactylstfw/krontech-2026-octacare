@@ -62,6 +62,15 @@ public class SurgeryService {
                                 .collect(Collectors.toList());
         }
 
+        public List<SurgeryResponse> getByUserIdForPatient(UUID userId) {
+                // Find patient by user ID, then get their surgeries
+                Patient patient = patientRepository.findByUserId(userId)
+                                .orElseThrow(() -> new RuntimeException("Patient not found for user ID: " + userId));
+                return surgeryRepository.findByPatient_Id(patient.getId()).stream()
+                                .map(SurgeryResponse::from)
+                                .collect(Collectors.toList());
+        }
+
         @Transactional
         public SurgeryResponse create(SurgeryRequest request) {
                 Patient patient = patientRepository.findById(request.patientId())

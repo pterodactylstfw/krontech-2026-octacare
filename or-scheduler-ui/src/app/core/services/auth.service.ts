@@ -49,42 +49,42 @@ export class AuthService {
     this.oauthService.initCodeFlow();
   }
 
-  private loadUserProfile() {
-    // Luăm profilul strict din backend (/api/auth/me) – NU folosim fallback pe claims
-    // Conform cerinței: folosim DOAR datele expuse de auth controller și ce avem pe branch.
-    console.log('📥 Fetching user profile from /api/auth/me...');
-    // Make sure we hit the correct backend URL by prepending the base URL
-    const authUrl = environment.apiUrl ? environment.apiUrl.replace('/api', '') + '/api/auth/me' : '/api/auth/me';
+   private loadUserProfile() {
+     // Luăm profilul strict din backend (/api/auth/me) – NU folosim fallback pe claims
+     // Conform cerinței: folosim DOAR datele expuse de auth controller și ce avem pe branch.
+     console.log('📥 Fetching user profile from /api/auth/me...');
+     // Make sure we hit the correct backend URL by prepending the base URL
+     const authUrl = environment.apiUrl ? environment.apiUrl.replace('/api', '') + '/api/auth/me' : '/api/auth/me';
 
-    this.http.get<any>(authUrl, { withCredentials: true }).subscribe({
-      next: (resp) => {
-        console.log('✅ User profile received:', resp);
-        if (resp && resp.email) {
-          const user: User = {
-            id: resp.id,
-            email: resp.email,
-            fullName: resp.fullName || resp.email,
-            role: resp.role as UserRole,
-            specialization: resp.specialization,
-            phone: resp.phone,
-            department: resp.department
-          };
-          console.log('👤 Setting current user:', user);
-          this.currentUserSubject.next(user);
-          return;
-        }
+     this.http.get<any>(authUrl).subscribe({
+       next: (resp) => {
+         console.log('✅ User profile received:', resp);
+         if (resp && resp.email) {
+           const user: User = {
+             id: resp.id,
+             email: resp.email,
+             fullName: resp.fullName || resp.email,
+             role: resp.role as UserRole,
+             specialization: resp.specialization,
+             phone: resp.phone,
+             department: resp.department
+           };
+           console.log('👤 Setting current user:', user);
+           this.currentUserSubject.next(user);
+           return;
+         }
 
-        // Dacă răspunsul nu conține email (sau e incomplet), nu facem niciun fallback automat.
-        console.warn('⚠️ /api/auth/me returned unexpected payload, keeping current user null', resp);
-        this.currentUserSubject.next(null);
-      },
-      error: (err) => {
-        // Dacă apelul către auth controller eșuează, nu folosim claims – doar curățăm starea.
-        console.error('❌ Failed to load /api/auth/me:', err);
-        this.currentUserSubject.next(null);
-      }
-    });
-  }
+         // Dacă răspunsul nu conține email (sau e incomplet), nu facem niciun fallback automat.
+         console.warn('⚠️ /api/auth/me returned unexpected payload, keeping current user null', resp);
+         this.currentUserSubject.next(null);
+       },
+       error: (err) => {
+         // Dacă apelul către auth controller eșuează, nu folosim claims – doar curățăm starea.
+         console.error('❌ Failed to load /api/auth/me:', err);
+         this.currentUserSubject.next(null);
+       }
+     });
+   }
 
   // NOTE: We intentionally do NOT read roles from identity claims here. All user data
   // must come from the backend auth controller (/api/auth/me) as requested.
