@@ -17,7 +17,9 @@
   justify-content: center;
   gap: 20px;
   padding: 40px 60px;
-
+.login-wrapper{
+  background-image: linear-gradient(to right, #b0ccff, #ffffff);
+}
   /* Efectul de Glassmorphism (sticlă) */
   background: rgba(17, 24, 39, 0.6);
   backdrop-filter: blur(16px);
