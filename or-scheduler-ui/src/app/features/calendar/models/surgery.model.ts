@@ -6,7 +6,7 @@ export interface Surgery {
   surgeonName: string;
   surgeonInitials: string;
   type: string;
-  orRoom: 'OR 1' | 'OR 2' | 'OR 3' | 'OR 4';
+  orRoom: string;
   startTime: string;   // "08:00"
   endTime: string;     // "09:30"
   durationMin: number;
@@ -17,5 +17,5 @@ export interface Surgery {
 export interface ORRoom {
   id: string;
   name: string;
-  utilizationPercent: number;
+  utilizationPercent?: number;
 }

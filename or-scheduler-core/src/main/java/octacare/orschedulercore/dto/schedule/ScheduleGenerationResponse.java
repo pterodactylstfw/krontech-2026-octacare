@@ -7,8 +7,8 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record ScheduleGenerationResponse (
         List<ScheduledSurgeryDto> schedule,
-        Integer score,
+        Double score,
         List<String> conflicts,
-        Integer generationTimeMs,
+        Long generationTimeMs,
         String status
 ) {}
