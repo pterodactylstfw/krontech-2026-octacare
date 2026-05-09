@@ -17,7 +17,7 @@ public class CustomUserPrincipal implements UserDetails {
         this.user = user;
     }
 
-    public UUID getId() {
+    public Long getId() {
         return user.getId();
     }
 

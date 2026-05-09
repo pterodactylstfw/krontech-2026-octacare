@@ -46,7 +46,7 @@ public class UsersController {
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Returnează detaliile unui utilizator după ID")
-    public ResponseEntity<UserResponse> getById(@PathVariable UUID id) {
+    public ResponseEntity<UserResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getById(id));
     }
 
@@ -61,7 +61,7 @@ public class UsersController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Actualizează complet un utilizator (doar Admin)")
     public ResponseEntity<UserResponse> update(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @Valid @RequestBody UserUpsertRequest request) {
         return ResponseEntity.ok(userService.update(id, request));
     }
@@ -69,7 +69,7 @@ public class UsersController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Șterge un utilizator (doar Admin)")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         userService.delete(id);
         return ResponseEntity.noContent().build();
     }
@@ -78,7 +78,7 @@ public class UsersController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Actualizează parțial un utilizator (doar Admin)")
     public ResponseEntity<UserResponse> patch(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @RequestBody UserPatchRequest request) {
         return ResponseEntity.ok(userService.patch(id, request));
     }
