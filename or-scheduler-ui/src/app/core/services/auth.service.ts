@@ -1,10 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { OAuthService } from 'angular-oauth2-oidc';
-import { BehaviorSubject, Observable, from, of } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 import { User } from '../../shared/models/user.model';
 import { UserRole } from '../enums/user-role.enum';
 import { authConfig } from '../config/auth.config';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -12,7 +13,7 @@ export class AuthService {
   currentUser$ = this.currentUserSubject.asObservable();
 
   private oauthService = inject(OAuthService);
-  private router = inject(Router);
+  private http = inject(HttpClient);
 
   constructor() {
     this.configureOAuth();
@@ -48,38 +49,45 @@ export class AuthService {
     this.oauthService.initCodeFlow();
   }
 
-  private loadUserProfile() {
-    // În mod ideal, Spring ar trebui să expună un endpoint /userinfo
-    // pe care să-l apelăm cu this.oauthService.loadUserProfile()
-    // Pentru moment, vom extrage datele direct din JWT (dacă există)
-    const claims: any = this.oauthService.getIdentityClaims();
-    if (claims) {
-      const user: User = {
-        id: claims.sub,
-        email: claims.sub,
-        fullName: claims.name || claims.sub,
-        role: this.extractRoleFromClaims(claims)
-      };
-      this.currentUserSubject.next(user);
-    }
-  }
+   private loadUserProfile() {
+     // Luăm profilul strict din backend (/api/auth/me) – NU folosim fallback pe claims
+     // Conform cerinței: folosim DOAR datele expuse de auth controller și ce avem pe branch.
+     console.log('📥 Fetching user profile from /api/auth/me...');
+     // Make sure we hit the correct backend URL by prepending the base URL
+     const authUrl = environment.apiUrl ? environment.apiUrl.replace('/api', '') + '/api/auth/me' : '/api/auth/me';
 
-  private extractRoleFromClaims(claims: any): UserRole {
-    // Căutăm în noul câmp 'user_roles' creat în backend
-    const roles = claims['user_roles'] || claims['roles'] || [];
+     this.http.get<any>(authUrl).subscribe({
+       next: (resp) => {
+         console.log('✅ User profile received:', resp);
+         if (resp && resp.email) {
+           const user: User = {
+             id: resp.id,
+             email: resp.email,
+             fullName: resp.fullName || resp.email,
+             role: resp.role as UserRole,
+             specialization: resp.specialization,
+             phone: resp.phone,
+             department: resp.department
+           };
+           console.log('👤 Setting current user:', user);
+           this.currentUserSubject.next(user);
+           return;
+         }
 
-    if (Array.isArray(roles)) {
-      // Luăm primul rol care începe cu ROLE_ (ex: ROLE_SURGEON)
-      const actualRole = roles.find(r => r.startsWith('ROLE_'));
-      if (actualRole) {
-        return actualRole.replace('ROLE_', '') as UserRole;
-      }
-    }
+         // Dacă răspunsul nu conține email (sau e incomplet), nu facem niciun fallback automat.
+         console.warn('⚠️ /api/auth/me returned unexpected payload, keeping current user null', resp);
+         this.currentUserSubject.next(null);
+       },
+       error: (err) => {
+         // Dacă apelul către auth controller eșuează, nu folosim claims – doar curățăm starea.
+         console.error('❌ Failed to load /api/auth/me:', err);
+         this.currentUserSubject.next(null);
+       }
+     });
+   }
 
-    // Dacă tot nu găsim nimic, returnăm un fallback, dar logăm claims pentru debug
-    console.warn('Rol real negăsit în claims:', claims);
-    return UserRole.ADMIN;
-  }
+  // NOTE: We intentionally do NOT read roles from identity claims here. All user data
+  // must come from the backend auth controller (/api/auth/me) as requested.
 
   public logout(): void {
     this.currentUserSubject.next(null);

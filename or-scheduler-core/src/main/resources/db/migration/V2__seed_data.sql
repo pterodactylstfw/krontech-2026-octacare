@@ -62,7 +62,9 @@ INSERT INTO patients (id, user_id, medical_record_number, date_of_birth, blood_t
 ('77777777-7777-7777-7777-777777777772', '44444444-4444-4444-4444-444444444442', 'MRN-2026-0002', '1990-08-25', 'O+'),
 ('77777777-7777-7777-7777-777777777773', '44444444-4444-4444-4444-444444444443', 'MRN-2026-0003', '1975-11-03', 'B-'),
 ('77777777-7777-7777-7777-777777777774', '44444444-4444-4444-4444-444444444444', 'MRN-2026-0004', '2010-02-18', 'AB+'),
-('77777777-7777-7777-7777-777777777775', '44444444-4444-4444-4444-444444444445', 'MRN-2026-0005', '1968-07-09', 'A-');
+('77777777-7777-7777-7777-777777777775', '44444444-4444-4444-4444-444444444445', 'MRN-2026-0005', '1968-07-09', 'A-'),
+-- Test patient
+('77777777-7777-7777-7777-777777777776', '44444444-4444-4444-4444-444444444446', 'MRN-2026-TEST', '1980-06-15', 'O+');
 
 -- ============================================================================
 -- 5. Insert Surgeries
@@ -85,7 +87,11 @@ INSERT INTO surgeries (id, patient_id, surgeon_id, room_id, surgery_type_id, sch
 -- CANCELLED
 ('88888888-8888-8888-8888-888888888889', '77777777-7777-7777-7777-777777777774', '22222222-2222-2222-2222-222222222227', '55555555-5555-5555-5555-555555555555', '66666666-6666-6666-6666-666666666665', CURRENT_TIMESTAMP + INTERVAL '1 day 08:00', CURRENT_TIMESTAMP + INTERVAL '1 day 08:45', NULL, NULL, 'CANCELLED', 'ELECTIVE', 'Pacientul a prezentat stare febrila. Operatia reprogramata.'),
 -- EMERGENCY
-('88888888-8888-8888-8888-888888888810', '77777777-7777-7777-7777-777777777775', '22222222-2222-2222-2222-222222222228', '55555555-5555-5555-5555-555555555551', '66666666-6666-6666-6666-666666666664', CURRENT_TIMESTAMP + INTERVAL '1 hour', CURRENT_TIMESTAMP + INTERVAL '2 hours', NULL, NULL, 'SCHEDULED', 'EMERGENCY', 'Apendicita acuta.');
+('88888888-8888-8888-8888-888888888810', '77777777-7777-7777-7777-777777777775', '22222222-2222-2222-2222-222222222228', '55555555-5555-5555-5555-555555555551', '66666666-6666-6666-6666-666666666664', CURRENT_TIMESTAMP + INTERVAL '1 hour', CURRENT_TIMESTAMP + INTERVAL '2 hours', NULL, NULL, 'SCHEDULED', 'EMERGENCY', 'Apendicita acuta.'),
+-- Test surgeries for patient.test@spital-brasov.ro
+('88888888-8888-8888-8888-888888888891', '77777777-7777-7777-7777-777777777776', '22222222-2222-2222-2222-222222222229', '55555555-5555-5555-5555-555555555551', '66666666-6666-6666-6666-666666666664', CURRENT_TIMESTAMP + INTERVAL '3 hours', CURRENT_TIMESTAMP + INTERVAL '4 hours 30 minutes', NULL, NULL, 'SCHEDULED', 'URGENT', 'Test surgery - urgent case'),
+('88888888-8888-8888-8888-888888888892', '77777777-7777-7777-7777-777777777776', '22222222-2222-2222-2222-222222222228', '55555555-5555-5555-5555-555555555552', '66666666-6666-6666-6666-666666666661', CURRENT_TIMESTAMP + INTERVAL '1 day 10:00', CURRENT_TIMESTAMP + INTERVAL '1 day 14:00', NULL, NULL, 'SCHEDULED', 'ELECTIVE', 'Test surgery - elective case'),
+('88888888-8888-8888-8888-888888888893', '77777777-7777-7777-7777-777777777776', '22222222-2222-2222-2222-222222222223', '55555555-5555-5555-5555-555555555553', '66666666-6666-6666-6666-666666666662', CURRENT_TIMESTAMP - INTERVAL '2 days', CURRENT_TIMESTAMP - INTERVAL '2 days 5 hours', CURRENT_TIMESTAMP - INTERVAL '2 days', CURRENT_TIMESTAMP - INTERVAL '2 days 5 hours', 'COMPLETED', 'ELECTIVE', 'Test surgery - already completed');
 
 -- ============================================================================
 -- 6. Insert Surgeon Availability
@@ -110,7 +116,14 @@ INSERT INTO surgeon_availability (id, surgeon_id, date, start_time, end_time, is
 ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb12', '22222222-2222-2222-2222-222222222228', CURRENT_DATE + INTERVAL '1 day', '08:00', '16:00', true, NULL),
 ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb13', '22222222-2222-2222-2222-222222222228', CURRENT_DATE + INTERVAL '2 days', '08:00', '16:00', true, NULL),
 ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb14', '22222222-2222-2222-2222-222222222228', CURRENT_DATE + INTERVAL '3 days', '08:00', '16:00', true, NULL),
-('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb15', '22222222-2222-2222-2222-222222222228', CURRENT_DATE + INTERVAL '4 days', '08:00', '16:00', true, NULL);
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb15', '22222222-2222-2222-2222-222222222228', CURRENT_DATE + INTERVAL '4 days', '08:00', '16:00', true, NULL),
+
+-- Test surgeon (Generala)
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb16', '22222222-2222-2222-2222-222222222229', CURRENT_DATE, '08:00', '16:00', true, NULL),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb17', '22222222-2222-2222-2222-222222222229', CURRENT_DATE + INTERVAL '1 day', '08:00', '16:00', true, NULL),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb18', '22222222-2222-2222-2222-222222222229', CURRENT_DATE + INTERVAL '2 days', '08:00', '16:00', true, NULL),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb19', '22222222-2222-2222-2222-222222222229', CURRENT_DATE + INTERVAL '3 days', '08:00', '16:00', true, NULL),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb20', '22222222-2222-2222-2222-222222222229', CURRENT_DATE + INTERVAL '4 days', '08:00', '16:00', true, NULL);
 
 -- ============================================================================
 -- 7. Insert Sterilization Logs
@@ -128,4 +141,8 @@ INSERT INTO notifications (id, user_id, type, message, is_read, surgery_id) VALU
 ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2', '22222222-2222-2222-2222-222222222228', 'EMERGENCY', 'Apendicita acuta programata de urgenta in Sala 1.', false, '88888888-8888-8888-8888-888888888810'),
 ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3', '11111111-1111-1111-1111-111111111111', 'WARNING', 'Sala 5 (Pediatrie) este in mentenanta.', true, NULL),
 ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4', '22222222-2222-2222-2222-222222222227', 'INFO', 'Operatia a fost anulata din cauza starii pacientului.', true, '88888888-8888-8888-8888-888888888889'),
-('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa5', '33333333-3333-3333-3333-333333333333', 'REMINDER', 'Sterilizarea in Sala 3 este in curs.', false, NULL);
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa5', '33333333-3333-3333-3333-333333333333', 'REMINDER', 'Sterilizarea in Sala 3 este in curs.', false, NULL),
+-- Test notifications
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa6', '22222222-2222-2222-2222-222222222229', 'REMINDER', 'Test surgery scheduled in 3 hours.', false, '88888888-8888-8888-8888-888888888891'),
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa7', '44444444-4444-4444-4444-444444444446', 'REMINDER', 'Your surgery is scheduled for tomorrow at 10:00.', false, '88888888-8888-8888-8888-888888888892'),
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa8', '33333333-3333-3333-3333-333333333334', 'INFO', 'Test nurse has shifts today.', true, NULL);
