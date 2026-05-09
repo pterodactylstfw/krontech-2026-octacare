@@ -1,7 +1,8 @@
-import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, of, switchMap, catchError } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
-import { MOCK_SURGERIES, MOCK_USERS, MOCK_ROOMS } from '../../../core/mock/mock-data';
+import { environment } from '../../../../environments/environment';
 
 export interface PatientSurgeryView {
   id: string;
@@ -9,8 +10,8 @@ export interface PatientSurgeryView {
   roomName: string;
   scheduledStart: string;
   scheduledEnd: string;
-  status: string;
-  priority: string;
+  status: string | any;
+  priority: string | any;
 }
 
 export interface PatientProfile {
@@ -25,71 +26,71 @@ export interface PatientProfile {
 
 @Injectable({ providedIn: 'root' })
 export class PatientService {
-  constructor(private authService: AuthService) {}
+  private authService = inject(AuthService);
+  private http = inject(HttpClient);
 
-  private resolvePatientUser() {
+  private resolvePatientUser(): any {
     let current: any = null;
-    // Ne abonăm la noul stream pentru a lua valoarea curentă sincron
     this.authService.currentUser$.subscribe(user => {
       current = user;
     }).unsubscribe();
-
-    if (current && current.role === 'PATIENT') {
-      return current;
-    }
-    return MOCK_USERS.find(u => u.role === 'PATIENT' as any) ?? current;
+    return current;
   }
 
   getMyProfile(): Observable<PatientProfile> {
     const user = this.resolvePatientUser();
+    if (!user) return of({
+      id: '',
+      fullName: 'Unknown',
+      email: '',
+      phone: '+40 000 000 000'
+    });
+
     const profile: PatientProfile = {
       id: user?.id ?? '',
-      fullName: user?.fullName ?? '',
+      fullName: user?.fullName ?? 'Unknown',
       email: user?.email ?? '',
-      phone: (user as any)?.phone ?? '+40 722 123 456',
-      bloodType: 'A+',
-      allergies: ['Penicillin'],
-      emergencyContact: 'Maria Ion — +40 733 456 789'
+      phone: user?.phone ?? '+40 000 000 000',
+      bloodType: 'Unknown',
+      allergies: [],
+      emergencyContact: 'Not provided'
     };
     return of(profile);
   }
 
-  getMySurgeries(): Observable<PatientSurgeryView[]> {
-    const user = this.resolvePatientUser();
-    if (!user) return of([]);
+   getMySurgeries(): Observable<PatientSurgeryView[]> {
+     const user = this.resolvePatientUser();
+     if (!user?.id) {
+       console.warn('PatientService: No patient user found');
+       return of([]);
+     }
 
-    const surgeries = MOCK_SURGERIES.filter(s => s.patientId === user.id);
-    const views: PatientSurgeryView[] = surgeries.map(s => {
-      const surgeon = MOCK_USERS.find(u => u.id === s.surgeonId);
-      const room = MOCK_ROOMS.find(r => r.id === s.roomId);
-      return {
-        id: s.id,
-        surgeonName: surgeon?.fullName ?? 'Unknown',
-        roomName: room?.name ?? 'Unknown',
-        scheduledStart: s.scheduledStart,
-        scheduledEnd: s.scheduledEnd,
-        status: s.status,
-        priority: s.priority
-      };
-    });
-    return of(views);
-  }
-
-  getUpcomingSurgeries(): Observable<PatientSurgeryView[]> {
-    return new Observable(observer => {
-      this.getMySurgeries().subscribe(all => {
-        observer.next(all.filter(s => s.status === 'SCHEDULED' || s.status === 'IN_PROGRESS'));
-        observer.complete();
-      });
-    });
-  }
-
-  getPastSurgeries(): Observable<PatientSurgeryView[]> {
-    return new Observable(observer => {
-      this.getMySurgeries().subscribe(all => {
-        observer.next(all.filter(s => s.status === 'COMPLETED' || s.status === 'CANCELLED'));
-        observer.complete();
-      });
-    });
-  }
+     console.log('🔧 PatientService.getMySurgeries() - calling /api/surgeries/my');
+     // Call the new /my endpoint that handles current user context
+     // environment.apiUrl is http://localhost:8080/api, so we append surgeries/my to it
+     const apiUrl = `${environment.apiUrl || 'http://localhost:8080/api'}/surgeries/my`;
+     // The jwtInterceptor will automatically add the Authorization header with the bearer token
+     return this.http.get<any[]>(apiUrl).pipe(
+       switchMap((surgeries: any[]) => {
+         console.log('✅ PatientService.getMySurgeries() received:', surgeries);
+         const views: PatientSurgeryView[] = surgeries.map((s: any) => ({
+           id: s.id,
+           surgeonName: s.surgeonName ?? 'Unknown',
+           roomName: s.roomName ?? 'Unknown',
+           scheduledStart: s.scheduledStart,
+           scheduledEnd: s.scheduledEnd,
+           status: s.status,
+           priority: s.priority
+         }));
+         return of(views);
+       }),
+       catchError((error) => {
+         console.error('❌ PatientService.getMySurgeries() error:', error);
+         if (error.status === 401) {
+           console.error('❌ Unauthorized - user may not be authenticated properly');
+         }
+         return of([]);
+       })
+     );
+   }
 }
