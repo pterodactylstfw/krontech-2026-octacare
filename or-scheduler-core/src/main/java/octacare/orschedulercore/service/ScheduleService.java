@@ -49,7 +49,7 @@ public class ScheduleService {
                         r.getId(), 
                         r.getName(), 
                         r.getRoomType().name(), 
-                        r.getSterilizationTimeMinutes()
+                        r.getSterilizationTimeMinutes() != null ? r.getSterilizationTimeMinutes() : 45
                 ))
                 .toList();
 
@@ -70,9 +70,9 @@ public class ScheduleService {
                         s.getId(),
                         s.getSurgeon().getId(),
                         s.getSurgeryType().getId(),
-                        s.getPriority() != null ? s.getPriority().name() : "ROUTINE",
-                        s.getSurgeryType().getAvgDurationMinutes(),
-                        null // Aici s-ar putea trimite tipul salii necesar
+                        s.getPriority() != null ? s.getPriority().name() : "ELECTIVE",
+                        s.getSurgeryType().getAvgDurationMinutes() != null && s.getSurgeryType().getAvgDurationMinutes() > 0 ? s.getSurgeryType().getAvgDurationMinutes() : 60,
+                        "GENERAL" // Default required room type
                 )).toList();
 
         // Construim payload-ul catre algoritm
