@@ -97,7 +97,7 @@ public class SurgeonAvailabilityService {
         availability.setDate(request.date());
         availability.setStartTime(request.startTime());
         availability.setEndTime(request.endTime());
-        availability.setIsAvailable(request.isAvailable());
+        availability.setAvailable(request.isAvailable());
         availability.setReason(request.reason());
 
         return SurgeonAvailabilityResponse.from(availabilityRepository.save(availability));

@@ -14,7 +14,7 @@ public record SurgeonAvailabilityResponse(
         LocalDate date,
         LocalTime startTime,
         LocalTime endTime,
-        Boolean isAvailable,
+        boolean isAvailable,
         AvailabilityReason reason) {
     public static SurgeonAvailabilityResponse from(SurgeonAvailability entity) {
         return new SurgeonAvailabilityResponse(
@@ -24,7 +24,7 @@ public record SurgeonAvailabilityResponse(
                 entity.getDate(),
                 entity.getStartTime(),
                 entity.getEndTime(),
-                entity.getIsAvailable(),
+                entity.isAvailable(),
                 entity.getReason());
     }
 }
