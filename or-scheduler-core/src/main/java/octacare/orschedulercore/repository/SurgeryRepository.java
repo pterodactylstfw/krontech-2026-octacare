@@ -13,7 +13,7 @@ import java.util.UUID;
 @Repository
 public interface SurgeryRepository extends JpaRepository<Surgery, UUID> {
 
-    List<Surgery> findBySurgeon_Id(String surgeonId);
+    List<Surgery> findBySurgeon_Id(UUID surgeonId);
 
     List<Surgery> findByPatient_Id(UUID patientId);
 
