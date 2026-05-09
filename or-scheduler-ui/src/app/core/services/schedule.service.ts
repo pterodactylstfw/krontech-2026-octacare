@@ -18,8 +18,8 @@ export class ScheduleService {
   generateSchedule(startDate: string, endDate: string): Observable<any> {
     let params = new HttpParams().set('startDate', startDate).set('endDate', endDate);
     return this.http.post<any>(`${this.apiUrl}/generate`, null, { params }).pipe(
-      tap(data => console.log('✅ ScheduleService.generateSchedule() received:', data)),
-      catchError(err => {
+      tap((data: any) => console.log('✅ ScheduleService.generateSchedule() received:', data)),
+      catchError((err: any) => {
         console.error('❌ ScheduleService.generateSchedule() error:', err);
         throw err;
       })
@@ -29,8 +29,8 @@ export class ScheduleService {
   getSchedule(start: string, end: string): Observable<Surgery[]> {
     let params = new HttpParams().set('start', start).set('end', end);
     return this.http.get<Surgery[]>(this.apiUrl, { params }).pipe(
-      tap(data => console.log('✅ ScheduleService.getSchedule() received:', data)),
-      catchError(err => {
+      tap((data: Surgery[]) => console.log('✅ ScheduleService.getSchedule() received:', data)),
+      catchError((err: any) => {
         console.error('❌ ScheduleService.getSchedule() error:', err);
         throw err;
       })
