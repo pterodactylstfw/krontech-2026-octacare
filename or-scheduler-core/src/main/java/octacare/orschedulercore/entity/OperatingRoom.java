@@ -9,6 +9,7 @@ import octacare.orschedulercore.entity.enums.RoomStatus;
 import octacare.orschedulercore.entity.enums.RoomType;
 
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "operating_rooms")
@@ -19,8 +20,8 @@ import java.util.List;
 public class OperatingRoom {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(nullable = false, unique = true)
     private String name;
