@@ -1,8 +1,13 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { SurgeonsService } from './services/surgeons.service';
-import { Surgeon, SurgeonFilter } from './models/surgeon.models';
+import {
+  AvailabilityReason,
+  SurgeonAvailability,
+  SurgeonAvailabilityRequest
+} from './models/surgeon.models';
 import { ThemeService } from '../../core/theme/theme.service';
 
 @Component({
@@ -15,120 +20,174 @@ import { ThemeService } from '../../core/theme/theme.service';
 export class SurgeonsComponent {
   private svc = inject(SurgeonsService);
   readonly theme = inject(ThemeService);
+  availability = signal<SurgeonAvailability[]>([]);
+  search = signal('');
+  from = signal('');
+  to = signal('');
+  selectedSurgeonId = signal('');
 
-  stats = this.svc.stats;
-  filtered = this.svc.filtered;
-  activeFilter = this.svc.activeFilter;
-  departmentFilter = this.svc.departmentFilter;
-
-  readonly filters: SurgeonFilter[] = ['All', 'On Duty', 'On Leave', 'Off Duty'];
-  readonly departments = ['All', 'Cardiology', 'Neurology', 'Orthopedics', 'General', 'Pediatrics'];
-  readonly days = ['M', 'T', 'W', 'T', 'F'];
+  loading = signal(false);
+  error = signal<string | null>(null);
 
   showModal = signal(false);
-  editingSurgeon = signal<Surgeon | null>(null);
+  editingId = signal<string | null>(null);
 
-  newSurgeon = signal({
-    name: '',
-    specialty: '',
-    department: 'Cardiology',
-    status: 'on-duty' as Surgeon['status'],
-    color: '#3b7fff',
-    yearsExperience: 0,
+  form = signal<SurgeonAvailabilityRequest>({
+    surgeonId: '',
+    date: '',
+    startTime: '',
+    endTime: '',
+    isAvailable: true,
+    reason: null
   });
 
-  setFilter(f: SurgeonFilter): void {
-    this.svc.setFilter(f);
+  readonly stats = computed(() => {
+    const all = this.availability();
+    const unique = new Set(all.map(item => item.surgeonId));
+    const available = all.filter(item => item.isAvailable).length;
+    return {
+      totalEntries: all.length,
+      available,
+      unavailable: all.length - available,
+      uniqueSurgeons: unique.size
+    };
+  });
+
+  readonly surgeonOptions = computed(() => {
+    const map = new Map<string, string>();
+    for (const item of this.availability()) {
+      if (!map.has(item.surgeonId)) map.set(item.surgeonId, item.surgeonName);
+    }
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  });
+
+  readonly filtered = computed(() => {
+    const query = this.search().trim().toLowerCase();
+    const selectedId = this.selectedSurgeonId();
+
+    return this.availability().filter((item: SurgeonAvailability) => {
+      const matchesSearch = !query || item.surgeonName.toLowerCase().includes(query);
+      const matchesSurgeon = !selectedId || item.surgeonId === selectedId;
+      return matchesSearch && matchesSurgeon;
+    });
+  });
+
+  constructor() {
+    this.loadAvailability();
   }
 
-  setDepartment(d: string): void {
-    this.svc.setDepartment(d);
+  loadAvailability(): void {
+    this.loading.set(true);
+    this.error.set(null);
+
+    const params = this.buildQueryParams();
+    this.svc.getAll(params).subscribe({
+      next: (data: SurgeonAvailability[]) => {
+        this.availability.set(data);
+        this.loading.set(false);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.error.set(err?.message || 'Nu am putut incarca disponibilitatea.');
+        this.loading.set(false);
+      }
+    });
+  }
+
+  applyFilters(): void {
+    this.loadAvailability();
+  }
+
+  resetFilters(): void {
+    this.search.set('');
+    this.from.set('');
+    this.to.set('');
+    this.selectedSurgeonId.set('');
+    this.loadAvailability();
   }
 
   onSearch(event: Event): void {
-    this.svc.setSearch((event.target as HTMLInputElement).value);
+    this.search.set((event.target as HTMLInputElement).value);
   }
 
   openAddModal(): void {
-    this.editingSurgeon.set(null);
+    this.editingId.set(null);
+    this.form.set({
+      surgeonId: this.selectedSurgeonId() || '',
+      date: '',
+      startTime: '',
+      endTime: '',
+      isAvailable: true,
+      reason: null
+    });
     this.showModal.set(true);
   }
 
-  openEditModal(surgeon: Surgeon): void {
-    this.editingSurgeon.set(surgeon);
-    this.newSurgeon.set({
-      name: surgeon.name,
-      specialty: surgeon.specialty,
-      department: surgeon.department,
-      status: surgeon.status,
-      color: surgeon.color,
-      yearsExperience: surgeon.yearsExperience,
+  openEditModal(item: SurgeonAvailability): void {
+    this.editingId.set(item.id);
+    this.form.set({
+      surgeonId: item.surgeonId,
+      date: item.date,
+      startTime: item.startTime,
+      endTime: item.endTime,
+      isAvailable: item.isAvailable,
+      reason: item.reason
     });
     this.showModal.set(true);
   }
 
   closeModal(): void {
     this.showModal.set(false);
-    this.editingSurgeon.set(null);
-    this.resetForm();
+    this.editingId.set(null);
   }
 
-  saveSurgeon(): void {
-    const form = this.newSurgeon();
-    if (!form.name.trim()) return;
+  saveAvailability(): void {
+    const payload = this.normalizePayload(this.form());
+    if (!payload.surgeonId || !payload.date || !payload.startTime || !payload.endTime) return;
 
-    const nameParts = form.name.trim().split(' ');
-    const initials = nameParts.length >= 2
-      ? (nameParts[nameParts.length - 2][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
-      : form.name.substring(0, 2).toUpperCase();
+    const request = this.editingId()
+      ? this.svc.update(this.editingId() as string, payload)
+      : this.svc.create(payload);
 
-    const editing = this.editingSurgeon();
-    if (editing) {
-      this.svc.updateSurgeon(editing.id, { ...form, initials });
-    } else {
-      this.svc.addSurgeon({
-        ...form,
-        initials,
-        surgeriesToday: 0,
-        surgeriesWeek: 0,
-        successRate: 0,
-        weekDays: [false, false, false, false, false],
-        certifications: [],
-      });
-    }
-    this.closeModal();
-  }
-
-  deleteSurgeon(id: number): void {
-    this.svc.deleteSurgeon(id);
-  }
-
-  updateField(field: string, value: string | number): void {
-    this.newSurgeon.update(s => ({ ...s, [field]: value }));
-  }
-
-  getStatusClass(status: string): string {
-    if (status === 'on-duty') return 'badge-duty';
-    if (status === 'on-leave') return 'badge-leave';
-    return 'badge-off';
-  }
-
-  getStatusLabel(status: string): string {
-    if (status === 'on-duty') return 'On Duty';
-    if (status === 'on-leave') return 'On Leave';
-    return 'Off Duty';
-  }
-
-  getSuccessColor(rate: number): string {
-    if (rate >= 98) return 'rate-excellent';
-    if (rate >= 95) return 'rate-good';
-    return 'rate-avg';
-  }
-
-  private resetForm(): void {
-    this.newSurgeon.set({
-      name: '', specialty: '', department: 'Cardiology',
-      status: 'on-duty', color: '#3b7fff', yearsExperience: 0,
+    request.subscribe({
+      next: () => {
+        this.closeModal();
+        this.loadAvailability();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.error.set(err?.error?.message || err?.message || 'Operatia a esuat.');
+      }
     });
+  }
+
+  deleteAvailability(id: string): void {
+    this.svc.delete(id).subscribe({
+      next: () => this.loadAvailability(),
+      error: (err: HttpErrorResponse) => {
+        this.error.set(err?.error?.message || err?.message || 'Stergerea a esuat.');
+      }
+    });
+  }
+
+  updateField(field: keyof SurgeonAvailabilityRequest, value: string | boolean | AvailabilityReason): void {
+    this.form.update((current: SurgeonAvailabilityRequest) => ({ ...current, [field]: value }));
+  }
+
+  getAvailabilityLabel(isAvailable: boolean): string {
+    return isAvailable ? 'Available' : 'Unavailable';
+  }
+
+  private buildQueryParams(): { surgeonId?: string; from?: string; to?: string } {
+    const params: { surgeonId?: string; from?: string; to?: string } = {};
+    if (this.selectedSurgeonId()) params.surgeonId = this.selectedSurgeonId();
+    if (this.from()) params.from = this.from();
+    if (this.to()) params.to = this.to();
+    return params;
+  }
+
+  private normalizePayload(payload: SurgeonAvailabilityRequest): SurgeonAvailabilityRequest {
+    if (payload.isAvailable) {
+      return { ...payload, reason: null };
+    }
+    return payload;
   }
 }

@@ -10,8 +10,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
      provideAnimations(),
-    // provideHttpClient(withInterceptors([jwtInterceptor])),
-    provideHttpClient(),
+    provideHttpClient(withInterceptors([jwtInterceptor])),
     importProvidersFrom(OAuthModule.forRoot())
   ]
 };
