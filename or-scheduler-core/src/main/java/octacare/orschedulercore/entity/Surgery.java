@@ -33,7 +33,7 @@ public class Surgery {
     private User surgeon;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "room_id", nullable = false)
+    @JoinColumn(name = "room_id", nullable = true)
     private OperatingRoom room;
 
     @ManyToOne(fetch = FetchType.LAZY)

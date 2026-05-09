@@ -20,20 +20,23 @@ def generate_optimal_schedule(request: ScheduleGenerationRequest) -> Dict[str, A
 
     for surgery in request.surgeries:
         duration = surgery.duration_minutes
+        # Sanitizăm ID-ul pentru a fi un nume de variabilă valid (fără cratime)
+        s_safe_id = surgery.id.replace("-", "_")
 
-        start_var = model.NewIntVar(0, horizon_minutes, f'start_{surgery.id}')
-        end_var = model.NewIntVar(0, horizon_minutes, f'end_{surgery.id}')
+        start_var = model.NewIntVar(0, horizon_minutes, f'start_{s_safe_id}')
+        end_var = model.NewIntVar(0, horizon_minutes, f'end_{s_safe_id}')
         model.Add(end_var == start_var + duration)
 
-        is_scheduled = model.NewBoolVar(f'is_scheduled_{surgery.id}')
+        is_scheduled = model.NewBoolVar(f'is_scheduled_{s_safe_id}')
         surgeon_interval = model.NewOptionalIntervalVar(
-            start_var, duration, end_var, is_scheduled, f'surgeon_interval_{surgery.id}')
+            start_var, duration, end_var, is_scheduled, f'surgeon_interval_{s_safe_id}')
 
         room_presences = {}
         room_intervals = {}
 
         for room in request.rooms:
-            presence_var = model.NewBoolVar(f'presence_s{surgery.id}_r{room.id}')
+            r_safe_id = room.id.replace("-", "_")
+            presence_var = model.NewBoolVar(f'presence_s{s_safe_id}_r{r_safe_id}')
             room_presences[room.id] = presence_var
 
             required_type = getattr(surgery, "required_room_type", "GENERAL")
@@ -43,14 +46,14 @@ def generate_optimal_schedule(request: ScheduleGenerationRequest) -> Dict[str, A
 
             blocked_duration = duration + room.sterilization_time_minutes
 
-            room_start = model.NewIntVar(0, horizon_minutes, f'r_start_s{surgery.id}_r{room.id}')
-            room_end = model.NewIntVar(0, horizon_minutes, f'r_end_s{surgery.id}_r{room.id}')
+            room_start = model.NewIntVar(0, horizon_minutes, f'r_start_s{s_safe_id}_r{r_safe_id}')
+            room_end = model.NewIntVar(0, horizon_minutes, f'r_end_s{s_safe_id}_r{r_safe_id}')
 
             model.Add(room_start == start_var).OnlyEnforceIf(presence_var)
             model.Add(room_end == start_var + blocked_duration).OnlyEnforceIf(presence_var)
 
             room_interval = model.NewOptionalIntervalVar(
-                room_start, blocked_duration, room_end, presence_var, f'r_interval_s{surgery.id}_r{room.id}')
+                room_start, blocked_duration, room_end, presence_var, f'r_interval_s{s_safe_id}_r{r_safe_id}')
             room_intervals[room.id] = room_interval
 
         model.Add(sum(room_presences.values()) == is_scheduled)

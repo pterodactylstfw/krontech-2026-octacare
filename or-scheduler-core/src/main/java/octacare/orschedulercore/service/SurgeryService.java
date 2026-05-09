@@ -51,7 +51,7 @@ public class SurgeryService {
         }
 
         public List<SurgeryResponse> getBySurgeon(UUID surgeonId) {
-                return surgeryRepository.findBySurgeon_Id(surgeonId.toString()).stream()
+                return surgeryRepository.findBySurgeon_Id(surgeonId).stream()
                                 .map(SurgeryResponse::from)
                                 .collect(Collectors.toList());
         }
@@ -76,7 +76,7 @@ public class SurgeryService {
                 Patient patient = patientRepository.findById(request.patientId())
                                 .or(() -> patientRepository.findByUserId(request.patientId()))
                                 .orElseThrow(() -> new RuntimeException("Patient not found"));
-                User surgeon = userRepository.findById(request.surgeonId().toString())
+                User surgeon = userRepository.findById(request.surgeonId())
                                 .orElseThrow(() -> new RuntimeException("Surgeon not found"));
                 OperatingRoom room = operatingRoomRepository.findById(request.roomId())
                                 .orElseThrow(() -> new RuntimeException("Operating Room not found"));
@@ -123,7 +123,7 @@ public class SurgeryService {
                 Patient patient = patientRepository.findById(request.patientId())
                                 .or(() -> patientRepository.findByUserId(request.patientId()))
                                 .orElseThrow(() -> new RuntimeException("Patient not found"));
-                User surgeon = userRepository.findById(request.surgeonId().toString())
+                User surgeon = userRepository.findById(request.surgeonId())
                                 .orElseThrow(() -> new RuntimeException("Surgeon not found"));
                 OperatingRoom room = operatingRoomRepository.findById(request.roomId())
                                 .orElseThrow(() -> new RuntimeException("Operating Room not found"));
