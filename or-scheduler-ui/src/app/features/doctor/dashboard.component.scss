@@ -236,7 +236,8 @@ h1 {
   display: grid;
   grid-template-columns: 1fr 380px;
   gap: 20px;
-  align-items: start;
+  align-items: stretch;
+  margin-bottom: 20px;
 
   @media (max-width: 1100px) {
     grid-template-columns: 1fr;
@@ -284,10 +285,19 @@ h1 {
 }
 
 // ─── Timeline ────────────────────────────────────────────────────────────────
+.schedule-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
 .timeline {
   display: flex;
   flex-direction: column;
   gap: 0;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .timeline-item {
@@ -653,9 +663,9 @@ h1 {
 }
 
 .patients-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
 }
 
 .patient-row {
@@ -747,9 +757,6 @@ h1 {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--dc-text);
   }
 
   // ─── Theme Button ─────────────────────────────────────────────────────────

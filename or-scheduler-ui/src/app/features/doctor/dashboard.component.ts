@@ -121,10 +121,6 @@ export class DoctorDashboardComponent implements OnInit {
     this._alerts.update(list => list.filter(a => a.id !== id));
   }
 
-  toggleNotifications(): void {
-    // Will open notifications panel
-  }
-
   getStatusLabel(status: Surgery['status']): string {
     const map: Record<Surgery['status'], string> = {
       'in-progress': 'In Progress',

@@ -15,6 +15,19 @@
   --transition-fast: 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+@import url('https://fonts.googleapis.com/css2?family=Gilda+Display&display=swap');
+
+.logo-text {
+  font-family: 'Gilda Display', serif;
+  font-size: 20px;
+  font-weight: 400;
+  background: linear-gradient(90deg, #1d4ed8, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
 html, body {
   height: 100%;
   width: 100%;

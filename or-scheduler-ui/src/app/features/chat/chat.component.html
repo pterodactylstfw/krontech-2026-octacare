@@ -1,5 +1,5 @@
 <div class="chat-overlay" [class.open]="isOpen" (click)="close()">
-  <div class="chat-drawer" [class.open]="isOpen" (click)="$event.stopPropagation()">
+  <div class="chat-drawer" [class.open]="isOpen" [class.dark]="theme.isDarkMode()" (click)="$event.stopPropagation()">
 
     <!-- CONTACTS LIST VIEW -->
     <ng-container *ngIf="!selectedContact()">

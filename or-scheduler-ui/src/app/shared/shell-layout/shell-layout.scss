@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Gilda+Display&display=swap');
+
 .shell {
   --sb-bg:           rgba(10, 13, 20, 0.7);
   --sb-border:       rgba(255,255,255,0.06);
@@ -204,30 +206,11 @@
 .sidebar-logo {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   padding: 20px 16px 18px;
   border-bottom: 0.5px solid var(--sb-border);
   margin-bottom: 6px;
-}
-
-.logo-icon {
-  width: 28px;
-  height: 28px;
-  background: rgba(59,127,255,0.15);
-  border: 0.5px solid rgba(59,127,255,0.25);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.logo-text {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--sb-logo-text);
-  letter-spacing: -0.02em;
-  font-family: system-ui, -apple-system, sans-serif;
 }
 
 // ─── Nav ──────────────────────────────────────────────

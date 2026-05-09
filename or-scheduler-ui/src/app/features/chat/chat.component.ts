@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, injec
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatContact, ChatService } from './chat.service';
+import { ThemeService } from '../../core/theme/theme.service';
 
 
 @Component({
@@ -17,6 +18,7 @@ export class ChatComponent implements OnChanges {
     @Output() closed = new EventEmitter<void>();
 
     private chatService = inject(ChatService);
+    readonly theme = inject(ThemeService);
 
     selectedContact = this.chatService.selectedContact;
     contacts = this.chatService.contacts;

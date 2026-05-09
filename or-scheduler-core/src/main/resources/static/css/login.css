@@ -32,6 +32,17 @@ body {
     }
 }
 
+@import url('https://fonts.googleapis.com/css2?family=Gilda+Display&display=swap');
+
+.logo-text {
+    font-family: 'Gilda Display', serif;
+    background: linear-gradient(90deg, #1d4ed8, #3b82f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
 .login-image-panel {
     display: none !important;
 }
