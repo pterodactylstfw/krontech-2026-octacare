@@ -30,16 +30,16 @@ public class OperatingRoom {
     @Column(name = "room_type", nullable = false)
     private RoomType roomType;
 
-    @ElementCollection
-    @CollectionTable(name = "operating_room_equipment", joinColumns = @JoinColumn(name = "room_id"))
-    @Column(name = "equipment_name")
-    private List<String> equipment;
+    // @ElementCollection
+    // @CollectionTable(name = "operating_room_equipment", joinColumns = @JoinColumn(name = "room_id"))
+    // @Column(name = "equipment_name")
+    // private List<String> equipment;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RoomStatus status;
 
-    private String floor;
+    private Integer floor;
 
     @Column(name = "sterilization_time_minutes", nullable = false)
     private Integer sterilizationTimeMinutes = 45; 

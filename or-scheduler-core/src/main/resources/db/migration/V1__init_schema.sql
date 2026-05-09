@@ -81,7 +81,8 @@ CREATE TABLE surgeries (
     status VARCHAR(50) NOT NULL DEFAULT 'SCHEDULED' CHECK (status IN ('SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'POSTPONED')),
     priority VARCHAR(50) NOT NULL DEFAULT 'ELECTIVE' CHECK (priority IN ('ELECTIVE', 'URGENT', 'EMERGENCY')),
     notes TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT now()
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    created_by VARCHAR(255)
 );
 
 CREATE INDEX idx_surgeries_patient_id ON surgeries(patient_id);
