@@ -6,7 +6,7 @@ import octacare.orschedulercore.entity.enums.Role;
 import java.util.UUID;
 
 public record UserResponse(
-        Long id,
+        UUID id,
         String email,
         String fullName,
         Role role,

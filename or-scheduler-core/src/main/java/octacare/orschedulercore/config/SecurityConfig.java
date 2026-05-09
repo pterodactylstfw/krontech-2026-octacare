@@ -117,6 +117,7 @@ public class SecurityConfig {
                         .map(GrantedAuthority::getAuthority)
                         // Filtrăm metadatele tehnice ca să nu trimitem "FACTOR_PASSWORD"
                         .filter(auth -> auth.startsWith("ROLE_"))
+                        .map(auth -> auth.substring(5)) // Ștergem "ROLE_" pentru a nu dubla prefixul mai târziu
                         .collect(Collectors.toSet());
 
                 // Le punem într-un câmp numit explicit "user_roles"

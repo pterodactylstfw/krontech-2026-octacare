@@ -37,7 +37,7 @@ public class UserService {
         return users.stream().map(UserResponse::from).toList();
     }
 
-    public UserResponse getById(Long id) {
+    public UserResponse getById(UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Nu a fost găsit utilizatorul cu id: " + id));
         return UserResponse.from(user);
@@ -72,7 +72,7 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponse update(Long id, UserUpsertRequest request) {
+    public UserResponse update(UUID id, UserUpsertRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Nu a fost găsit utilizatorul cu id: " + id));
 
@@ -96,7 +96,7 @@ public class UserService {
     }
 
     @Transactional
-    public void delete(Long id) {
+    public void delete(UUID id) {
         if (!userRepository.existsById(id)) {
             throw new RuntimeException("Nu a fost găsit utilizatorul cu id: " + id);
         }
@@ -104,7 +104,7 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponse patch(Long id, UserPatchRequest request) {
+    public UserResponse patch(UUID id, UserPatchRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Nu a fost găsit utilizatorul cu id: " + id));
 

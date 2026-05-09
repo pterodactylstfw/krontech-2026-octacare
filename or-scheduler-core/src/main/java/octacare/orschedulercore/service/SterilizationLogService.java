@@ -76,7 +76,7 @@ public class SterilizationLogService {
         User technician = null;
         if (request.technicianId() != null) {
             // UserRepository<User, String> — workaround pentru inconsistența existentă a tipului ID
-            technician = userRepository.findById(request.technicianId().toString())
+            technician = userRepository.findById(request.technicianId())
                     .orElseThrow(() -> new RuntimeException(
                             "Tehnicianul cu id=" + request.technicianId() + " nu există."));
         }
