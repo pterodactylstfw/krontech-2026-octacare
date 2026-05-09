@@ -10,4 +10,12 @@ import java.util.UUID;
 @Repository
 public interface OperatingRoomRepository extends JpaRepository<OperatingRoom, UUID> {
     Optional<OperatingRoom> findByNameIgnoreCase(String name);
+
+    List<OperatingRoom> findByStatus(RoomStatus status);
+
+    List<OperatingRoom> findByRoomType(RoomType roomType);
+
+    List<OperatingRoom> findByStatusAndRoomType(RoomStatus status, RoomType roomType);
+
+    boolean existsByName(String name);
 }
