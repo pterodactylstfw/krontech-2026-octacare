@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +30,7 @@ public class SurgeryTypeService {
                 .toList();
     }
 
-    public SurgeryTypeResponse getById(UUID id) {
+    public SurgeryTypeResponse getById(Long id) {
         SurgeryType entity = surgeryTypeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Surgery type not found with id: " + id));
         return SurgeryTypeResponse.from(entity);
@@ -55,7 +54,7 @@ public class SurgeryTypeService {
     }
 
     @Transactional
-    public SurgeryTypeResponse update(UUID id, SurgeryTypeRequest request) {
+    public SurgeryTypeResponse update(Long id, SurgeryTypeRequest request) {
         SurgeryType entity = surgeryTypeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Surgery type not found with id: " + id));
 
@@ -75,7 +74,7 @@ public class SurgeryTypeService {
     }
 
     @Transactional
-    public void delete(UUID id) {
+    public void delete(Long id) {
         if (!surgeryTypeRepository.existsById(id)) {
             throw new RuntimeException("Surgery type not found with id: " + id);
         }

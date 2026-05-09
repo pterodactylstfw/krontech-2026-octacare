@@ -13,7 +13,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/surgery-types")
@@ -31,7 +30,7 @@ public class SurgeryTypeController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Obține un tip de operație după ID")
-    public ResponseEntity<SurgeryTypeResponse> getById(@PathVariable UUID id) {
+    public ResponseEntity<SurgeryTypeResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(surgeryTypeService.getById(id));
     }
 
@@ -52,7 +51,7 @@ public class SurgeryTypeController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Editează un tip de operație existent (doar Admin)")
     public ResponseEntity<SurgeryTypeResponse> update(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @Valid @RequestBody SurgeryTypeRequest request) {
         return ResponseEntity.ok(surgeryTypeService.update(id, request));
     }
@@ -60,7 +59,7 @@ public class SurgeryTypeController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Șterge un tip de operație (doar Admin)")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         surgeryTypeService.delete(id);
         return ResponseEntity.noContent().build();
     }

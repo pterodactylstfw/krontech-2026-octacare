@@ -3,10 +3,9 @@ package octacare.orschedulercore.dto;
 import octacare.orschedulercore.entity.SurgeryType;
 
 import java.util.List;
-import java.util.UUID;
 
 public record SurgeryTypeResponse(
-        UUID id,
+        Long id,
         String name,
         String category,
         Integer avgDurationMinutes,

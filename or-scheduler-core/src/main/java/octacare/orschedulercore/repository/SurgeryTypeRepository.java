@@ -6,10 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Repository
-public interface SurgeryTypeRepository extends JpaRepository<SurgeryType, UUID> {
+public interface SurgeryTypeRepository extends JpaRepository<SurgeryType, Long> {
 
     Optional<SurgeryType> findByNameIgnoreCase(String name);
 
