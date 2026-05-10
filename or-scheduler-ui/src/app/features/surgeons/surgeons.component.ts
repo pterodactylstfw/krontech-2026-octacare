@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { SurgeonAvailabilityService } from './services/surgeon-availability.service';
+import { UserService, UserRole, UserResponse } from '../../core/services/user.service';
 import {
   AvailabilityReason,
   SurgeonAvailability,
@@ -19,8 +20,10 @@ import { ThemeService } from '../../core/theme/theme.service';
 })
 export class SurgeonsComponent {
   private svc = inject(SurgeonAvailabilityService);
+  private userService = inject(UserService);
   readonly theme = inject(ThemeService);
   availability = signal<SurgeonAvailability[]>([]);
+  surgeons = signal<UserResponse[]>([]);
   search = signal('');
   from = signal('');
   to = signal('');
@@ -54,11 +57,7 @@ export class SurgeonsComponent {
   });
 
   readonly surgeonOptions = computed(() => {
-    const map = new Map<string, string>();
-    for (const item of this.availability()) {
-      if (!map.has(item.surgeonId)) map.set(item.surgeonId, item.surgeonName);
-    }
-    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+    return this.surgeons().map(s => ({ id: s.id, name: s.fullName }));
   });
 
   readonly filtered = computed(() => {
@@ -73,7 +72,15 @@ export class SurgeonsComponent {
   });
 
   constructor() {
+    this.loadSurgeons();
     this.loadAvailability();
+  }
+
+  loadSurgeons(): void {
+    this.userService.getAll(UserRole.SURGEON).subscribe({
+      next: (data) => this.surgeons.set(data),
+      error: (err) => console.error('Failed to load surgeons', err)
+    });
   }
 
   loadAvailability(): void {

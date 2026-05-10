@@ -93,4 +93,9 @@ export class PatientService {
        })
      );
    }
+
+   getAllPatients(): Observable<any[]> {
+     const apiUrl = `${environment.apiUrl || 'http://localhost:8080/api'}/patients`;
+     return this.http.get<any[]>(apiUrl);
+   }
 }

@@ -1,4 +1,4 @@
-export type AvailabilityReason = 'LEAVE' | 'ON_CALL' | 'TRAINING' | null;
+export type AvailabilityReason = 'LEAVE' | 'ON_CALL' | 'TRAINING' | 'ON_CALL_SHIFT' | null;
 
 export interface SurgeonAvailability {
   id: string;

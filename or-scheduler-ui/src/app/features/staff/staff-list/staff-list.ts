@@ -96,26 +96,23 @@ export class StaffList implements OnInit {
   addStaff() {
     if (!this.newStaff.name) return;
 
-    // In a real scenario, we would call userService.create here
-    // For now, we update local list to show UI feedback
-    const initials = this.getInitials(this.newStaff.name!);
+    const [firstName, ...lastNameParts] = this.newStaff.name!.split(' ');
+    const email = `${firstName.toLowerCase()}.${(lastNameParts.join('.') || 'user').toLowerCase()}@hospital.com`;
 
-    const newEntry: Staff = {
-      id: crypto.randomUUID(),
-      name: this.newStaff.name!,
-      role: this.newStaff.role as 'Surgeon' | 'Nurse',
-      specialty: this.newStaff.specialty || '',
-      department: this.newStaff.department || '',
-      status: this.newStaff.status as 'On Duty' | 'On Leave' | 'Off Duty',
-      initials,
-      color: this.newStaff.color || '#4f8ef7',
-      surgeriesOrRoom: '',
-      nextSurgeryOrShift: '',
-      weekDays: [false, false, false, false, false]
-    };
-
-    this.staffList.push(newEntry);
-    this.closeModal();
+    this.userService.create({
+      fullName: this.newStaff.name!,
+      email: email,
+      role: (this.newStaff.role?.toUpperCase() || 'SURGEON') as any,
+      specialization: this.newStaff.specialty,
+      department: this.newStaff.department,
+      password: 'ChangeMe123!' // Default password for new staff
+    }).subscribe({
+      next: () => {
+        this.loadStaff();
+        this.closeModal();
+      },
+      error: (err) => console.error('Failed to create staff', err)
+    });
   }
 
   // ── Edit ─────────────────────────────────────────────────────────────────────
@@ -132,19 +129,37 @@ export class StaffList implements OnInit {
   }
 
   saveEdit() {
-    if (!this.editStaff.name) return;
-    const idx = this.staffList.findIndex(s => s.id === this.editingId);
-    if (idx === -1) return;
+    if (!this.editStaff.name || !this.editingId) return;
 
-    const initials = this.getInitials(this.editStaff.name!);
+    // We need the email for update, but it's not in the Staff model.
+    // In a real app, we'd fetch the full user first or have email in Staff.
+    // For this fix, we'll fetch by id then update.
+    this.userService.getById(this.editingId).subscribe({
+      next: (user) => {
+        this.userService.update(this.editingId!, {
+          fullName: this.editStaff.name!,
+          email: user.email,
+          role: (this.editStaff.role?.toUpperCase() || user.role) as any,
+          specialization: this.editStaff.specialty,
+          department: this.editStaff.department
+        }).subscribe({
+          next: () => {
+            this.loadStaff();
+            this.closeEditModal();
+          },
+          error: (err) => console.error('Failed to update staff', err)
+        });
+      }
+    });
+  }
 
-    this.staffList[idx] = {
-      ...this.staffList[idx],
-      ...this.editStaff,
-      initials
-    } as Staff;
-
-    this.closeEditModal();
+  deleteStaff(id: string) {
+    if (confirm('Are you sure you want to delete this staff member?')) {
+      this.userService.delete(id).subscribe({
+        next: () => this.loadStaff(),
+        error: (err) => console.error('Failed to delete staff', err)
+      });
+    }
   }
 
   // ── View Schedule ─────────────────────────────────────────────────────────────

@@ -123,9 +123,13 @@
       <div class="modal-body">
         <div class="form-row">
           <div class="field">
-            <label>Surgeon ID</label>
-            <input type="text" placeholder="UUID" [value]="form().surgeonId"
-              (input)="updateField('surgeonId', $any($event.target).value)" />
+            <label>Surgeon</label>
+            <select [value]="form().surgeonId" (change)="updateField('surgeonId', $any($event.target).value)">
+              <option value="">Select Surgeon</option>
+              @for (s of surgeons(); track s.id) {
+                <option [value]="s.id">{{ s.fullName }}</option>
+              }
+            </select>
           </div>
           <div class="field">
             <label>Date</label>
@@ -159,6 +163,7 @@
               <option value="LEAVE">LEAVE</option>
               <option value="ON_CALL">ON_CALL</option>
               <option value="TRAINING">TRAINING</option>
+              <option value="ON_CALL_SHIFT">ON_CALL_SHIFT</option>
             </select>
           </div>
         </div>

@@ -3,10 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OperatingRoom, RoomType } from '../../../shared/models/room.model';
 import { RoomStatus } from '../../../core/enums/room-status.enum';
-import { MOCK_ROOMS } from '../../../core/mock/mock-data';
 import { SurgeryStatus } from '../../../core/enums/surgery-status.enum';
 import { ThemeService } from '../../../core/theme/theme.service';
 import { SurgeryService } from '../../../core/services/surgery.service';
+import { RoomService } from '../../../core/services/room.service';
 import { type Surgery } from '../../../shared/models/surgery.model';
 
 type RoomFilter = 'ALL' | RoomStatus;
@@ -21,9 +21,13 @@ type RoomFilter = 'ALL' | RoomStatus;
 export class OperatingRoomsListComponent implements OnInit {
   theme = inject(ThemeService);
   private surgeryService = inject(SurgeryService);
+  private roomService = inject(RoomService);
   readonly RoomStatus = RoomStatus;
 
   surgeries: Surgery[] = [];
+  rooms: OperatingRoom[] = [];
+  loading = false;
+  error: string | null = null;
 
   activeFilter: RoomFilter = 'ALL';
   searchQuery = '';
@@ -40,7 +44,6 @@ export class OperatingRoomsListComponent implements OnInit {
   editingRoomId: string | null = null;
   equipmentText = '';
   roomDraft: Partial<OperatingRoom> = this.emptyRoom();
-  rooms: OperatingRoom[] = [...MOCK_ROOMS];
 
   readonly roomTypes: { label: string; value: RoomType }[] = [
     { label: 'General', value: 'GENERAL' },
@@ -58,19 +61,30 @@ export class OperatingRoomsListComponent implements OnInit {
   ];
 
   ngOnInit() {
-    console.log('🔧 OperatingRoomsListComponent ngOnInit started');
+    this.loadRooms();
     this.loadSurgeries();
   }
 
+  loadRooms() {
+    this.loading = true;
+    this.roomService.getAll().subscribe({
+      next: (data) => {
+        this.rooms = data;
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = 'Failed to load rooms';
+        this.loading = false;
+      }
+    });
+  }
+
   private loadSurgeries() {
-    console.log('🔧 loadSurgeries called - about to call surgeryService.getAll()');
     this.surgeryService.getAll().subscribe({
       next: (data: Surgery[]) => {
-        console.log('✅ Surgeries loaded from backend:', data);
         this.surgeries = data;
       },
       error: (err) => {
-        console.error('❌ Failed to load surgeries:', err);
         this.surgeries = [];
       }
     });
@@ -91,7 +105,7 @@ export class OperatingRoomsListComponent implements OnInit {
         r.name.toLowerCase().includes(q) ||
         r.roomType.toLowerCase().includes(q) ||
         String(r.floor).includes(q) ||
-        r.equipment.some((e) => e.toLowerCase().includes(q));
+        (r.equipment && r.equipment.some((e) => e.toLowerCase().includes(q)));
       return matchesFilter && matchesSearch;
     });
   }
@@ -112,7 +126,7 @@ export class OperatingRoomsListComponent implements OnInit {
     this.isEditing = true;
     this.editingRoomId = room.id;
     this.roomDraft = { ...room };
-    this.equipmentText = room.equipment.join(', ');
+    this.equipmentText = (room.equipment || []).join(', ');
     this.showModal = true;
   }
 
@@ -125,28 +139,42 @@ export class OperatingRoomsListComponent implements OnInit {
     const parsedEquipment = this.equipmentText
       .split(',').map((s) => s.trim()).filter(Boolean);
 
-    const next: OperatingRoom = {
-      id: this.isEditing && this.editingRoomId ? this.editingRoomId : this.nextId(),
+    const payload: Partial<OperatingRoom> = {
       name,
       roomType: (this.roomDraft.roomType ?? 'GENERAL') as RoomType,
       status: (this.roomDraft.status ?? RoomStatus.AVAILABLE) as RoomStatus,
       floor: Number(this.roomDraft.floor ?? 1),
       sterilizationTimeMinutes: Number(this.roomDraft.sterilizationTimeMinutes ?? 30),
       equipment: parsedEquipment,
-      capacity: Number(this.roomDraft.capacity ?? 5)
+      capacity: Number(this.roomDraft.capacity ?? 1)
     };
 
     if (this.isEditing && this.editingRoomId) {
-      this.rooms = this.rooms.map((r) => (r.id === this.editingRoomId ? next : r));
+      this.roomService.update(this.editingRoomId, payload).subscribe({
+        next: () => {
+          this.loadRooms();
+          this.closeModal();
+        },
+        error: (err) => this.error = 'Failed to update room'
+      });
     } else {
-      this.rooms = [next, ...this.rooms];
+      this.roomService.create(payload).subscribe({
+        next: () => {
+          this.loadRooms();
+          this.closeModal();
+        },
+        error: (err) => this.error = 'Failed to create room'
+      });
     }
-    this.closeModal();
   }
 
-  private nextId(): string {
-    const max = this.rooms.reduce((acc, r) => Math.max(acc, Number(r.id) || 0), 0);
-    return String(max + 1);
+  deleteRoom(id: string) {
+    if (confirm('Are you sure you want to delete this room?')) {
+      this.roomService.delete(id).subscribe({
+        next: () => this.loadRooms(),
+        error: (err) => this.error = 'Failed to delete room'
+      });
+    }
   }
 
   emptyRoom(): Partial<OperatingRoom> {
