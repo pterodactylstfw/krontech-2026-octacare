@@ -74,3 +74,5 @@ Desktop.ini
 *.njsproj
 *.sln
 *.sw?
+.agents
+_bmad
