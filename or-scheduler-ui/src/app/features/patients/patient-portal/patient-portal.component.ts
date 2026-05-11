@@ -3,12 +3,13 @@ import { CommonModule } from '@angular/common';
 import { PatientService, PatientSurgeryView, PatientProfile } from '../services/patient.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ThemeService } from '../../../core/theme/theme.service';
+import { ChatComponent } from '../../chat/chat.component';
 import { filter, switchMap, Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-patient-portal',
   standalone: true,
-  imports: [CommonModule],
+ imports: [CommonModule, ChatComponent],
   templateUrl: './patient-portal.component.html',
   styleUrls: ['./patient-portal.component.scss']
 })
@@ -21,6 +22,7 @@ export class PatientPortalComponent implements OnInit, OnDestroy {
   upcomingSurgeries: PatientSurgeryView[] = [];
   allSurgeries: PatientSurgeryView[] = [];
   isLoading = true;
+  chatOpen = false;
 
   private destroy$ = new Subject<void>();
 

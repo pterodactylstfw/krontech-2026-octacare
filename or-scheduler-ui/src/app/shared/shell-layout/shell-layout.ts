@@ -33,6 +33,8 @@ export class ShellLayoutComponent implements OnInit {
   userName = '';
   userRole = '';
   userInitials = '';
+  isAdmin = false;
+  isSidebarMobileOpen = false;
 
   private staffNav = [
     { label: 'Dashboard', icon: 'grid', route: '/dashboard' },
@@ -42,6 +44,18 @@ export class ShellLayoutComponent implements OnInit {
     { label: 'Staff', icon: 'users', route: '/staff' },
     { label: 'Settings', icon: 'settings', route: '/settings' },
     { label: 'Reports', icon: 'file', route: '/reports' },
+  ];
+
+  private surgeonNav = [
+    { label: 'Dashboard', icon: 'grid', route: '/doctor' },
+    { label: 'Calendar', icon: 'calendar', route: '/calendar' },
+    { label: 'Settings', icon: 'settings', route: '/settings' },
+  ];
+
+  private nurseNav = [
+    { label: 'Dashboard', icon: 'grid', route: '/nurse' },
+    { label: 'Calendar', icon: 'calendar', route: '/calendar' },
+    { label: 'Settings', icon: 'settings', route: '/settings' },
   ];
 
   private patientNav = [
@@ -56,9 +70,23 @@ export class ShellLayoutComponent implements OnInit {
     this.authService.currentUser$.subscribe(user => {
       if (user) {
         const role = user.role; // Folosim rolul direct din obiectul user
+        this.isAdmin = role === UserRole.ADMIN;
 
         // Configurăm meniul în funcție de rol
-        this.navItems = role === UserRole.PATIENT ? this.patientNav : this.staffNav;
+        switch (role) {
+          case UserRole.PATIENT:
+            this.navItems = this.patientNav;
+            break;
+          case UserRole.SURGEON:
+            this.navItems = this.surgeonNav;
+            break;
+          case UserRole.NURSE:
+            this.navItems = this.nurseNav;
+            break;
+          default:
+            this.navItems = this.staffNav;
+            break;
+        }
 
         // Date de profil
         this.userName = user.fullName ?? 'User';
@@ -103,5 +131,13 @@ export class ShellLayoutComponent implements OnInit {
 
   logout(): void {
     this.authService.logout(); // Apelează fluxul complet de logout[cite: 6]
+  }
+
+  toggleSidebar(): void {
+    this.isSidebarMobileOpen = !this.isSidebarMobileOpen;
+  }
+
+  closeSidebar(): void {
+    this.isSidebarMobileOpen = false;
   }
 }

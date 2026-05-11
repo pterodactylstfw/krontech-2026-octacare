@@ -18,7 +18,7 @@ import { SurgeryService } from '../../../core/services/surgery.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './calendar-view.html',
-styleUrls: ['./calendar-view.scss']
+  styleUrls: ['./calendar-view.scss']
 })
 export class CalendarViewComponent implements OnInit {
   theme = inject(ThemeService);
@@ -57,9 +57,9 @@ export class CalendarViewComponent implements OnInit {
   });
 
   timeSlots: string[] = [
-    '07:00','08:00','09:00','10:00','11:00',
-    '12:00','13:00','14:00','15:00','16:00',
-    '17:00','18:00','19:00'
+    '07:00', '08:00', '09:00', '10:00', '11:00',
+    '12:00', '13:00', '14:00', '15:00', '16:00',
+    '17:00', '18:00', '19:00'
   ];
 
   ngOnInit(): void {
@@ -75,6 +75,7 @@ export class CalendarViewComponent implements OnInit {
     this.surgeryTypeService.getAll().subscribe(data => this.surgeryTypes.set(data));
   }
 
+  ngOnInit(): void { }
   loadRooms(): void {
     this.roomService.getAll().subscribe({
       next: (rooms) => {
@@ -243,6 +244,22 @@ export class CalendarViewComponent implements OnInit {
     this.currentDate = new Date();
     this.loadSchedule();
   }
+
+  goToToday(): void {
+    this.currentDate = new Date();
+  }
+
+  get isToday(): boolean {
+    const t = new Date();
+    return this.currentDate.toDateString() === t.toDateString();
+  }
+
+  get formattedShortDate(): string {
+    return this.currentDate.toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric'
+    });
+  }
+
 
   getSurgeriesForSlot(orRoom: string, time: string): Surgery[] {
     // Extragem doar ora (ex: "08" din "08:00") pentru a permite afișarea operațiilor 

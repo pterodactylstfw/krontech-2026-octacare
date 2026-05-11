@@ -4,13 +4,13 @@
   <div class="calendar-header">
     <div class="header-left">
       <h1>Calendar</h1>
-      <span class="date-label">{{ formattedDate }}</span>
     </div>
     <div class="header-right">
       <div class="nav-buttons">
         <button class="nav-btn" (click)="previousDay()">&#8249;</button>
-        <button class="nav-btn today-btn" (click)="currentDate = today">Today</button>
+        <span class="current-date-label">{{ formattedShortDate }}</span>
         <button class="nav-btn" (click)="nextDay()">&#8250;</button>
+        <button class="nav-btn today-btn" [class.active]="isToday" (click)="goToToday()">Today</button>
       </div>
 
       <div class="action-buttons" style="display: flex; gap: 10px;">
@@ -92,13 +92,10 @@
     <div class="util-card" *ngFor="let room of orRooms">
       <div class="util-ring-wrapper">
         <svg viewBox="0 0 36 36" class="util-ring">
-          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#1e2a3a" stroke-width="3"/>
-          <circle cx="18" cy="18" r="15.9" fill="none"
-            [attr.stroke]="getUtilizationColor(room.utilizationPercent)"
-            stroke-width="3"
-            [attr.stroke-dasharray]="room.utilizationPercent + ', 100'"
-            stroke-linecap="round"
-            transform="rotate(-90 18 18)"/>
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#1e2a3a" stroke-width="3" />
+          <circle cx="18" cy="18" r="15.9" fill="none" [attr.stroke]="getUtilizationColor(room.utilizationPercent)"
+            stroke-width="3" [attr.stroke-dasharray]="room.utilizationPercent + ', 100'" stroke-linecap="round"
+            transform="rotate(-90 18 18)" />
         </svg>
         <span class="util-percent">{{ room.utilizationPercent }}%</span>
       </div>
@@ -120,18 +117,12 @@
 
       <ng-container *ngFor="let time of timeSlots">
         <div class="time-label">{{ time }}</div>
-        <div class="grid-cell"
-          *ngFor="let room of orRooms"
-          (dragover)="onDragOver($event)"
+        <div class="grid-cell" *ngFor="let room of orRooms" (dragover)="onDragOver($event)"
           (drop)="onDrop(room.name, time)">
 
-          <div class="surgery-card"
-            *ngFor="let surgery of getSurgeriesForSlot(room.name, time)"
-            [ngClass]="['card-' + surgery.color, 'status-' + surgery.status]"
-            [style.height.px]="getCardHeight(surgery)"
-            draggable="true"
-            (dragstart)="onDragStart(surgery)"
-            (click)="openModal(surgery)">
+          <div class="surgery-card" *ngFor="let surgery of getSurgeriesForSlot(room.name, time)"
+            [ngClass]="['card-' + surgery.color, 'status-' + surgery.status]" [style.height.px]="getCardHeight(surgery)"
+            draggable="true" (dragstart)="onDragStart(surgery)" (click)="openModal(surgery)">
 
             <div class="card-top">
               <span class="card-emergency" *ngIf="surgery.status === 'emergency'">E</span>

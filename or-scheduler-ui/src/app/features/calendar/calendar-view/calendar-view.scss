@@ -70,7 +70,7 @@
 
   &.today-btn {
     font-size: 13px;
-    color: #94a3b8;
+    color: #ffffff;
     padding: 7px 14px;
 
     &:hover {
@@ -121,13 +121,13 @@
 
 .util-ring-wrapper {
   position: relative;
-  width: 40px;
-  height: 40px;
+  width: 56px;
+  height: 56px;
 }
 
 .util-ring {
-  width: 40px;
-  height: 40px;
+  width: 56px;
+  height: 56px;
 }
 
 .util-percent {
@@ -135,9 +135,21 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 9px;
+   font-size: 12px;
   font-weight: 600;
   color: #fff;
+}
+.current-date-label {
+  font-size: 13px;
+  color: #e2e8f0;
+  padding: 0 8px;
+  min-width: 60px;
+  text-align: center;
+}
+
+.today-btn.active {
+  background: #1a2535;
+  color: #3b7fff;
 }
 
 .util-label {
@@ -446,4 +458,55 @@
   .modal-label { color: #94a3b8; }
   .modal-value { color: #1e293b; }
   .modal-close { color: #94a3b8; &:hover { background: #f1f5f9; color: #0f172a; } }
+}
+
+// ─── Responsive ─────────────────────────────────────────
+@media (max-width: 768px) {
+  :host-context(.not-admin) {
+    .calendar-wrapper {
+      padding: 16px;
+
+      .calendar-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+
+        .header-right {
+          width: 100%;
+          justify-content: space-between;
+        }
+      }
+
+      .utilization-bar {
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding: 12px;
+
+        .util-divider { display: none; }
+        .util-card { flex-direction: row; gap: 10px; }
+        .util-stat { flex-direction: row; align-items: baseline; gap: 8px; }
+      }
+
+      .calendar-grid-wrapper {
+        max-height: calc(100vh - 280px);
+      }
+
+      .modal-card {
+        width: 90%;
+        max-width: 360px;
+        padding: 20px;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  :host-context(.not-admin) {
+    .calendar-wrapper {
+      .nav-btn { padding: 6px 10px; font-size: 12px; }
+      .add-btn { padding: 8px 14px; font-size: 12px; }
+
+      .util-stat-number { font-size: 22px; }
+    }
+  }
 }

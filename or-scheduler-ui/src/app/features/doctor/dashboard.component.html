@@ -2,11 +2,7 @@
 
     <div class="topbar">
         <div class="topbar-logo">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L2 7l10 5 10-5-10-5z" fill="#3b82f6" />
-                <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" />
-            </svg>
-            <span>OR Scheduler</span>
+            <span style="font-size: 12px; font-weight: 500; color: var(--text-secondary); opacity: 0.8; letter-spacing: 0.5px;">Streamlining Your Surgical Workflow</span>
         </div>
         <button class="theme-btn" (click)="theme.toggle()">
             <svg *ngIf="theme.isDarkMode()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -193,30 +189,38 @@
                 </div>
             </div>
 
-            <!-- RECENT PATIENTS -->
-            <div class="panel patients-panel">
-                <div class="panel-header">
-                    <span class="panel-title">Recent Patients</span>
-                    <button class="view-all-btn">View all</button>
-                </div>
-                <div class="patients-list">
-                    @for (patient of recentPatients(); track patient.id) {
-                    <div class="patient-row">
-                        <div class="patient-avatar">{{ patient.initials }}</div>
-                        <div class="patient-info">
-                            <span class="patient-name">{{ patient.name }}</span>
-                            <span class="patient-proc">{{ patient.procedure }}</span>
-                        </div>
-                        <div class="patient-right">
-                            <span class="patient-date">{{ patient.date }}</span>
-                            <span class="patient-outcome" [ngClass]="patient.outcome">{{ patient.outcomeLabel }}</span>
-                        </div>
-                    </div>
-                    }
-                </div>
-            </div>
-
         </div>
     </div>
+
+    <!-- RECENT PATIENTS -->
+    <div class="panel patients-panel full-width">
+        <div class="panel-header">
+            <span class="panel-title">Recent Patients</span>
+            <button class="view-all-btn">View all</button>
+        </div>
+        <div class="patients-list">
+            @for (patient of recentPatients(); track patient.id) {
+            <div class="patient-row" (click)="openChat(patient)">
+                <div class="patient-avatar">{{ patient.initials }}</div>
+                <div class="patient-info">
+                    <span class="patient-name">{{ patient.name }}</span>
+                    <span class="patient-proc">{{ patient.procedure }}</span>
+                </div>
+                <div class="patient-right">
+                    <span class="patient-date">{{ patient.date }}</span>
+                    <span class="patient-outcome" [ngClass]="patient.outcome">{{ patient.outcomeLabel }}</span>
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+    <app-chat [isOpen]="chatOpen" mode="doctor" (closed)="chatOpen = false" />
+
+    <!-- FAB button -->
+    <button class="chat-fab" (click)="chatOpen = true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+    </button>
 
 </div>

@@ -174,12 +174,19 @@
   align-items: center;
   gap: 10px;
 }
+@media (max-width: 600px) {
+  .header-actions {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+}
 
 .theme-toggle-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
+  width: 52px;
   height: 38px;
   padding: 0;
   border: 1px solid var(--pp-surface-border);
@@ -210,7 +217,7 @@
   background: var(--pp-surface);
   backdrop-filter: blur(12px);
   color: var(--pp-text-secondary);
-  font-size: 13px;
+  font-size: 10px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -535,4 +542,57 @@
   background: rgba(239,68,68,0.10);
   color: var(--pp-red);
   margin-right: 6px;
+}
+
+@media (max-width: 768px) {
+  :host-context(.not-admin) {
+    .portal-wrapper {
+      padding: 16px 16px 80px;
+
+      .portal-header {
+        margin-bottom: 20px;
+        .welcome-title { font-size: 16px; }
+        .logout-btn { padding: 8px 12px; span { display: none; } }
+      }
+
+      .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      .action-card {
+        padding: 16px;
+      }
+
+      .glass-card {
+        padding: 16px;
+      }
+
+      .surgery-item {
+        gap: 12px;
+        .surgery-date-block { min-width: auto; }
+        .surgery-badges { width: 100%; justify-content: flex-start; }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  :host-context(.not-admin) {
+    .portal-wrapper {
+      .quick-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .header-left {
+        gap: 10px;
+      }
+
+      .avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
+      }
+    }
+  }
 }

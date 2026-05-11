@@ -1,20 +1,41 @@
-<div class="shell" [class.light]="!theme.isDarkMode()">
+<div class="shell" [class.light]="!theme.isDarkMode()" [class.not-admin]="!isAdmin" [class.sidebar-mobile-open]="isSidebarMobileOpen">
+  <header class="mobile-topbar" *ngIf="!isAdmin">
+    <div class="topbar-left">
+      <button class="menu-toggle" (click)="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+      <div class="sidebar-logo">
+        <span class="logo-text">OR SCHEDULER</span>
+      </div>
+    </div>
+    <div class="mobile-actions">
+      <button class="theme-toggle-mini" (click)="theme.toggle()">
+        <svg *ngIf="theme.isDarkMode()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5" />
+          <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+        </svg>
+        <svg *ngIf="!theme.isDarkMode()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+      </button>
+      <div class="user-avatar-mini" (click)="navigateToSettings()">{{ userInitials }}</div>
+    </div>
+  </header>
+
   <aside class="sidebar">
 
     <!-- Logo -->
     <div class="sidebar-logo">
-      <div class="logo-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path d="M12 2L2 7l10 5 10-5-10-5z" fill="#3b82f6" />
-          <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" />
-        </svg>
-      </div>
-      <span class="logo-text">OR Scheduler</span>
+      <span class="logo-text">OR SCHEDULER</span>
     </div>
 
     <!-- Nav -->
     <nav class="sidebar-nav">
-      <a *ngFor="let item of navItems" [routerLink]="item.route" routerLinkActive="active" class="nav-item">
+      <a *ngFor="let item of navItems" [routerLink]="item.route" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
         <span class="nav-icon">
           <svg *ngIf="item.icon === 'grid'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             stroke-width="1.75">
@@ -81,9 +102,9 @@
         <svg *ngIf="!theme.isDarkMode()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
         </svg>
-        <span class="toggle-label">{{ theme.isDarkMode() ? 'Dark Mode' : 'Light Mode' }}</span>
+        <span class="toggle-label">{{ theme.isDarkMode() ? 'Light Mode' : 'Dark Mode' }}</span>
       </button>
-      
+
       <!-- LOGOUT -->
       <button class="logout-btn" (click)="logout()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
@@ -112,4 +133,6 @@
       <router-outlet #outlet="outlet" />
     </div>
   </main>
+
+  <div class="sidebar-overlay" *ngIf="isSidebarMobileOpen" (click)="closeSidebar()"></div>
 </div>

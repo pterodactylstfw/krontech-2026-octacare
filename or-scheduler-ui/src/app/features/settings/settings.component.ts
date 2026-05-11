@@ -25,23 +25,6 @@ export class SettingsComponent implements OnInit {
     phone: ''
   };
 
-  // ── Notifications ────────────────────────────────────────────────────────────
-  notifications: Record<string, boolean> = {
-    emailAlerts: true,
-    smsAlerts: false,
-    scheduleReminders: true,
-    reportReady: true,
-    systemUpdates: false
-  };
-
-  // Used by *ngFor in template — avoids keyvalue pipe ordering issues
-  notificationItems: { key: string; label: string }[] = [
-    { key: 'emailAlerts',       label: 'Email alerts' },
-    { key: 'smsAlerts',         label: 'SMS alerts' },
-    { key: 'scheduleReminders', label: 'Schedule reminders' },
-    { key: 'reportReady',       label: 'Report ready' },
-    { key: 'systemUpdates',     label: 'System updates' },
-  ];
 
   // ── Appearance ───────────────────────────────────────────────────────────────
   appearance = {

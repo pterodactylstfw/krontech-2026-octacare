@@ -6,7 +6,7 @@
   min-height: 100vh;
 
   /* Fundalul tău dark */
-  background: #0a0e17;
+  background: #ffffff;
   font-family: system-ui, -apple-system, sans-serif;
 }
 
@@ -17,14 +17,16 @@
   justify-content: center;
   gap: 20px;
   padding: 40px 60px;
-
+.login-wrapper{
+  background-image: linear-gradient(to right, #b0ccff, #ffffff);
+}
   /* Efectul de Glassmorphism (sticlă) */
   background: rgba(17, 24, 39, 0.6);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+  box-shadow: none;
 
   /* Animație fină la intrarea în pagină */
   animation: fadeIn 0.4s ease-out;
@@ -62,5 +64,15 @@
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 480px) {
+  .loading-container {
+    padding: 30px 40px;
+    width: 80%;
+    box-shadow: none;
+
+    p { font-size: 13px; }
   }
 }

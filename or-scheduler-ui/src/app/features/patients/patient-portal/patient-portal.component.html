@@ -43,7 +43,6 @@
             <polyline points="16 17 21 12 16 7"/>
             <line x1="21" y1="12" x2="9" y2="12"/>
           </svg>
-          Sign Out
         </button>
       </div>
     </header>
@@ -87,7 +86,7 @@
         <span class="action-count">3 files</span>
       </div>
 
-      <div class="action-card">
+      <div class="action-card" (click)="chatOpen = true">
         <div class="action-icon contact-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -214,4 +213,5 @@
     </section>
 
   </ng-container>
+  <app-chat [isOpen]="chatOpen" mode="patient" (closed)="chatOpen = false" />
 </div>

@@ -9,20 +9,26 @@ import {
   DoctorAlert,
   RecentPatient,
 } from './doctor.models';
+import { ChatComponent } from '../chat/chat.component';
+import { ChatService } from '../chat/chat.service';
+
 
 @Component({
   selector: 'app-doctor-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ChatComponent],
   templateUrl: './dashboard.component.html',
-styleUrl: './dashboard.component.scss',
+  styleUrl: './dashboard.component.scss',
 })
 export class DoctorDashboardComponent implements OnInit {
   readonly theme = inject(ThemeService);
+  private chatService = inject(ChatService);
 
   readonly today = new Date().toLocaleDateString('en-GB', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   });
+
+  chatOpen = false;
 
   // ── State ──────────────────────────────────────────────────────────────────
   doctor = signal<DoctorProfile>({
@@ -38,9 +44,17 @@ export class DoctorDashboardComponent implements OnInit {
 
   private _alerts = signal<DoctorAlert[]>([
     { id: 1, severity: 'critical', message: 'OR 1 equipment check overdue', time: '3h ago' },
-    { id: 2, severity: 'warning',  message: 'Patient Popa I. — pre-op labs pending', time: '1h ago' },
-    { id: 3, severity: 'info',     message: '2 surgeries pending approval', time: 'Just now' },
+    { id: 2, severity: 'warning', message: 'Patient Popa I. — pre-op labs pending', time: '1h ago' },
+    { id: 3, severity: 'info', message: '2 surgeries pending approval', time: 'Just now' },
   ]);
+
+  selectedPatient: { name: string; initials: string } | null = null;
+
+  openChat(patient: RecentPatient): void {
+    this.selectedPatient = { name: patient.name, initials: patient.initials };
+    this.chatService.openConversation(patient.id, patient.name, patient.initials);
+    this.chatOpen = true;
+  }
 
   private _schedule = signal<Surgery[]>([
     {
@@ -107,15 +121,11 @@ export class DoctorDashboardComponent implements OnInit {
     this._alerts.update(list => list.filter(a => a.id !== id));
   }
 
-  toggleNotifications(): void {
-    // Will open notifications panel
-  }
-
   getStatusLabel(status: Surgery['status']): string {
     const map: Record<Surgery['status'], string> = {
       'in-progress': 'In Progress',
-      'scheduled':   'Scheduled',
-      'completed':   'Completed',
+      'scheduled': 'Scheduled',
+      'completed': 'Completed',
     };
     return map[status];
   }
@@ -126,5 +136,5 @@ export class DoctorDashboardComponent implements OnInit {
     return 'status-sterilizing';
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 }

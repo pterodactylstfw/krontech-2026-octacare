@@ -5,7 +5,6 @@ import { SurgeryPriority } from '../enums/surgery-priority.enum';
 import { User } from '../../shared/models/user.model';
 import { OperatingRoom } from '../../shared/models/room.model';
 import { Surgery } from '../../shared/models/surgery.model';
-import { Notification } from '../../shared/models/notification.model';
 
 export const MOCK_USERS: User[] = [
   {
@@ -207,26 +206,5 @@ export const MOCK_SURGERIES: Surgery[] = [
     status: SurgeryStatus.CANCELLED,
     priority: SurgeryPriority.ELECTIVE,
     createdAt: '2025-09-01T08:00:00'
-  }
-];
-
-export const MOCK_NOTIFICATIONS: Notification[] = [
-  {
-    id: '1',
-    userId: '2',
-    type: 'EMERGENCY',
-    message: 'Emergency surgery added in Operating Room 1 at 2:00 PM',
-    isRead: false,
-    surgeryId: '3',
-    createdAt: '2026-04-22T13:45:00'
-  },
-  {
-    id: '2',
-    userId: '2',
-    type: 'REMINDER',
-    message: 'Scheduled surgery tomorrow at 8:00 AM in Operating Room 1',
-    isRead: true,
-    surgeryId: '1',
-    createdAt: '2026-04-21T18:00:00'
   }
 ];
