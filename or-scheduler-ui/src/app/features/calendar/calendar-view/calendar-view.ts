@@ -1,30 +1,60 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Surgery, ORRoom } from '../models/surgery.model';
+import { SurgeryRequest } from '../../../shared/models/surgery.model';
+import { OperatingRoom } from '../../../shared/models/room.model';
 import { ThemeService } from '../../../core/theme/theme.service';
+import { ScheduleService } from '../../../core/services/schedule.service';
+import { RoomService } from '../../../core/services/room.service';
+import { UserService, UserRole, UserResponse } from '../../../core/services/user.service';
+import { PatientService } from '../../patients/services/patient.service';
+import { SurgeryTypeService, SurgeryTypeResponse } from '../../../core/services/surgery-type.service';
+import { SurgeryService } from '../../../core/services/surgery.service';
 
 
 @Component({
   selector: 'app-calendar-view',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './calendar-view.html',
   styleUrls: ['./calendar-view.scss']
 })
 export class CalendarViewComponent implements OnInit {
   theme = inject(ThemeService);
+  scheduleService = inject(ScheduleService);
+  roomService = inject(RoomService);
+  userService = inject(UserService);
+  patientService = inject(PatientService);
+  surgeryTypeService = inject(SurgeryTypeService);
+  surgeryService = inject(SurgeryService);
 
   currentDate = new Date();
   today = new Date();
   selectedSurgery: Surgery | null = null;
   draggedSurgery: Surgery | null = null;
+  isGenerating = false;
 
-  orRooms: ORRoom[] = [
-    { id: 'or1', name: 'OR 1', utilizationPercent: 75 },
-    { id: 'or2', name: 'OR 2', utilizationPercent: 96 },
-    { id: 'or3', name: 'OR 3', utilizationPercent: 60 },
-    { id: 'or4', name: 'OR 4', utilizationPercent: 23 },
-  ];
+  orRooms: ORRoom[] = [];
+  surgeries: Surgery[] = [];
+
+  // ── Add Surgery Modal ────────────────────────────────────────────────────────
+  showAddModal = signal(false);
+  patients = signal<any[]>([]);
+  surgeons = signal<UserResponse[]>([]);
+  rooms = signal<OperatingRoom[]>([]);
+  surgeryTypes = signal<SurgeryTypeResponse[]>([]);
+  
+  newSurgery = signal<SurgeryRequest>({
+    patientId: '',
+    surgeonId: '',
+    roomId: '',
+    surgeryTypeId: '',
+    scheduledStart: '',
+    scheduledEnd: '',
+    priority: 'ELECTIVE',
+    notes: ''
+  });
 
   timeSlots: string[] = [
     '07:00', '08:00', '09:00', '10:00', '11:00',
@@ -32,64 +62,163 @@ export class CalendarViewComponent implements OnInit {
     '17:00', '18:00', '19:00'
   ];
 
-  surgeries: Surgery[] = [
-    {
-      id: 's1', patientId: 'Patient ID1', surgeonName: 'Dr. Smith',
-      surgeonInitials: 'DS', type: 'Appendectomy', orRoom: 'OR 1',
-      startTime: '08:00', endTime: '09:30', durationMin: 90,
-      status: 'scheduled', color: 'blue'
-    },
-    {
-      id: 's2', patientId: 'Patient ID1', surgeonName: 'Dr. Patel',
-      surgeonInitials: 'DP', type: 'Knee Replacement', orRoom: 'OR 2',
-      startTime: '08:00', endTime: '09:30', durationMin: 90,
-      status: 'scheduled', color: 'green'
-    },
-    {
-      id: 's3', patientId: 'Patient ID1', surgeonName: 'Dr. Patel',
-      surgeonInitials: 'DP', type: 'Knee Replacement', orRoom: 'OR 3',
-      startTime: '08:00', endTime: '09:30', durationMin: 90,
-      status: 'scheduled', color: 'green'
-    },
-    {
-      id: 's4', patientId: 'Patient ID3', surgeonName: 'Dr. Smith',
-      surgeonInitials: 'DS', type: 'Appendectomy', orRoom: 'OR 1',
-      startTime: '10:00', endTime: '11:30', durationMin: 90,
-      status: 'in-progress', color: 'blue'
-    },
-    {
-      id: 's5', patientId: 'Patient ID5', surgeonName: 'Dr. Ionescu',
-      surgeonInitials: 'DI', type: 'Heart Bypass', orRoom: 'OR 4',
-      startTime: '10:00', endTime: '11:30', durationMin: 90,
-      status: 'emergency', color: 'amber'
-    },
-    {
-      id: 's6', patientId: 'Patient ID5', surgeonName: 'Dr. Smith',
-      surgeonInitials: 'DS', type: 'Appendectomy', orRoom: 'OR 1',
-      startTime: '14:00', endTime: '15:30', durationMin: 90,
-      status: 'scheduled', color: 'blue'
-    },
-    {
-      id: 's7', patientId: 'Patient D3', surgeonName: 'Dr. Patel',
-      surgeonInitials: 'DP', type: 'Knee Replacement', orRoom: 'OR 3',
-      startTime: '14:00', endTime: '15:00', durationMin: 60,
-      status: 'sterilization', color: 'orange'
-    },
-    {
-      id: 's8', patientId: 'Patient ID7', surgeonName: 'Dr. Ionescu',
-      surgeonInitials: 'DI', type: 'Heart Bypass', orRoom: 'OR 2',
-      startTime: '15:00', endTime: '16:30', durationMin: 90,
-      status: 'sterilization', color: 'orange'
-    },
-    {
-      id: 's9', patientId: 'Patient ID8', surgeonName: 'Dr. Ionescu',
-      surgeonInitials: 'DI', type: 'Heart Bypass', orRoom: 'OR 4',
-      startTime: '16:00', endTime: '17:30', durationMin: 90,
-      status: 'emergency', color: 'amber'
-    },
-  ];
+  ngOnInit(): void {
+    this.loadRooms();
+    this.loadSchedule();
+    this.loadModalData();
+  }
+
+  loadModalData(): void {
+    this.patientService.getAllPatients().subscribe(data => this.patients.set(data));
+    this.userService.getAll(UserRole.SURGEON).subscribe(data => this.surgeons.set(data));
+    this.roomService.getAll().subscribe(data => this.rooms.set(data));
+    this.surgeryTypeService.getAll().subscribe(data => this.surgeryTypes.set(data));
+  }
 
   ngOnInit(): void { }
+  loadRooms(): void {
+    this.roomService.getAll().subscribe({
+      next: (rooms) => {
+        this.orRooms = rooms.map(r => ({
+          id: r.id,
+          name: r.name,
+          utilizationPercent: Math.floor(Math.random() * 100)
+        }));
+      },
+      error: (err) => console.error('Failed to load rooms', err)
+    });
+  }
+
+  loadSchedule(): void {
+    const start = new Date(this.currentDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(this.currentDate);
+    end.setHours(23, 59, 59, 999);
+
+    const startStr = this.formatLocalISO(start);
+    const endStr = this.formatLocalISO(end);
+
+    this.scheduleService.getSchedule(startStr, endStr).subscribe({
+      next: (data: any[]) => {
+        this.surgeries = data.map(item => ({
+          id: item.id,
+          patientId: item.patientName || 'Unknown Patient',
+          surgeonName: item.surgeonName || 'Unknown Surgeon',
+          surgeonInitials: this.getInitials(item.surgeonName || 'US'),
+          type: item.surgeryTypeName || 'Procedure',
+          orRoom: item.roomName || 'OR 1',
+          startTime: this.formatTime(item.scheduledStart),
+          endTime: this.formatTime(item.scheduledEnd),
+          durationMin: this.diffInMinutes(item.scheduledStart, item.scheduledEnd),
+          status: item.status?.toLowerCase() as any || 'scheduled',
+          color: this.getColorForStatus(item.status)
+        }));
+      },
+      error: (err) => console.error('Failed to load schedule', err)
+    });
+  }
+
+  openAddModal(): void {
+    const start = new Date(this.currentDate);
+    start.setHours(8, 0, 0, 0);
+    const end = new Date(this.currentDate);
+    end.setHours(9, 0, 0, 0);
+
+    this.newSurgery.set({
+      patientId: '',
+      surgeonId: '',
+      roomId: '',
+      surgeryTypeId: '',
+      scheduledStart: this.formatLocalISO(start),
+      scheduledEnd: this.formatLocalISO(end),
+      priority: 'ELECTIVE',
+      notes: ''
+    });
+    this.showAddModal.set(true);
+  }
+
+  saveSurgery(): void {
+    const s = this.newSurgery();
+    if (!s.patientId || !s.surgeonId || !s.surgeryTypeId) return;
+
+    this.surgeryService.create(s).subscribe({
+      next: () => {
+        this.showAddModal.set(false);
+        this.loadSchedule();
+      },
+      error: (err) => console.error('Failed to create surgery', err)
+    });
+  }
+
+  closeAddModal(): void {
+    this.showAddModal.set(false);
+  }
+
+  updateSurgeryField(field: keyof SurgeryRequest, value: any): void {
+    this.newSurgery.update(current => ({ ...current, [field]: value }));
+  }
+
+  generateSchedule(): void {
+    if (this.isGenerating) return;
+    this.isGenerating = true;
+
+    const startDate = this.formatDateOnly(this.currentDate);
+    const endDate = this.formatDateOnly(this.currentDate); // Generam doar pentru ziua curenta implicit
+
+    this.scheduleService.generateSchedule(startDate, endDate).subscribe({
+      next: () => {
+        this.loadSchedule();
+        this.isGenerating = false;
+      },
+      error: () => {
+        this.isGenerating = false;
+      }
+    });
+  }
+
+  formatLocalISO(d: Date): string {
+    const pad = (n: number) => n < 10 ? '0' + n : n;
+    return d.getFullYear() + '-' +
+           pad(d.getMonth() + 1) + '-' +
+           pad(d.getDate()) + 'T' +
+           pad(d.getHours()) + ':' +
+           pad(d.getMinutes()) + ':' +
+           pad(d.getSeconds());
+  }
+
+  formatDateOnly(d: Date): string {
+    const pad = (n: number) => n < 10 ? '0' + n : n;
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '';
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  }
+
+  formatTime(dateStr: string): string {
+    if (!dateStr) return '00:00';
+    const d = new Date(dateStr);
+    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+  }
+
+  diffInMinutes(start: string, end: string): number {
+    if (!start || !end) return 60;
+    const s = new Date(start).getTime();
+    const e = new Date(end).getTime();
+    return Math.max(15, (e - s) / 60000);
+  }
+
+  getColorForStatus(status: string): string {
+    if (!status) return 'blue';
+    switch(status.toUpperCase()) {
+      case 'SCHEDULED': return 'blue';
+      case 'IN_PROGRESS': return 'green';
+      case 'EMERGENCY': return 'amber';
+      case 'STERILIZATION': return 'orange';
+      default: return 'blue';
+    }
+  }
 
   get formattedDate(): string {
     return this.currentDate.toLocaleDateString('en-US', {
@@ -101,12 +230,19 @@ export class CalendarViewComponent implements OnInit {
     const d = new Date(this.currentDate);
     d.setDate(d.getDate() - 1);
     this.currentDate = d;
+    this.loadSchedule();
   }
 
   nextDay(): void {
     const d = new Date(this.currentDate);
     d.setDate(d.getDate() + 1);
     this.currentDate = d;
+    this.loadSchedule();
+  }
+
+  goToToday(): void {
+    this.currentDate = new Date();
+    this.loadSchedule();
   }
 
   goToToday(): void {
@@ -126,7 +262,16 @@ export class CalendarViewComponent implements OnInit {
 
 
   getSurgeriesForSlot(orRoom: string, time: string): Surgery[] {
-    return this.surgeries.filter(s => s.orRoom === orRoom && s.startTime === time);
+    // Extragem doar ora (ex: "08" din "08:00") pentru a permite afișarea operațiilor 
+    // care încep la minute intermediare (ex: 08:30) în slotul orei respective.
+    const [slotHour] = time.split(':');
+    
+    return this.surgeries.filter(s => {
+      if (!s.startTime) return false;
+      const [surgeryHour] = s.startTime.split(':');
+      
+      return s.orRoom === orRoom && surgeryHour === slotHour;
+    });
   }
 
   getCardHeight(surgery: Surgery): number {
@@ -147,7 +292,7 @@ export class CalendarViewComponent implements OnInit {
 
   onDrop(orRoom: string, time: string): void {
     if (!this.draggedSurgery) return;
-    this.draggedSurgery.orRoom = orRoom as Surgery['orRoom'];
+    this.draggedSurgery.orRoom = orRoom;
     this.draggedSurgery.startTime = time;
     this.draggedSurgery = null;
   }
@@ -156,7 +301,8 @@ export class CalendarViewComponent implements OnInit {
     event.preventDefault();
   }
 
-  getUtilizationColor(percent: number): string {
+  getUtilizationColor(percent?: number): string {
+    if (!percent) return '#f87171';
     if (percent >= 80) return '#4ade80';
     if (percent >= 50) return '#facc15';
     return '#f87171';
@@ -170,6 +316,6 @@ export class CalendarViewComponent implements OnInit {
       'emergency': 'Emergency',
       'sterilization': 'Sterilization Pending'
     };
-    return map[status] || status;
+    return map[status.toLowerCase()] || status;
   }
 }

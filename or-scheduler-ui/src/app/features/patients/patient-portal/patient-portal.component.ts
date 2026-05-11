@@ -1,10 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
 import { PatientService, PatientSurgeryView, PatientProfile } from '../services/patient.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ThemeService } from '../../../core/theme/theme.service';
 import { ChatComponent } from '../../chat/chat.component';
+import { filter, switchMap, Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-patient-portal',
@@ -13,10 +13,9 @@ import { ChatComponent } from '../../chat/chat.component';
   templateUrl: './patient-portal.component.html',
   styleUrls: ['./patient-portal.component.scss']
 })
-export class PatientPortalComponent implements OnInit {
+export class PatientPortalComponent implements OnInit, OnDestroy {
   private patientService = inject(PatientService);
   private authService = inject(AuthService);
-  private router = inject(Router);
   theme = inject(ThemeService);
 
   profile: PatientProfile | null = null;
@@ -25,15 +24,37 @@ export class PatientPortalComponent implements OnInit {
   isLoading = true;
   chatOpen = false;
 
+  private destroy$ = new Subject<void>();
+
   ngOnInit(): void {
-    this.patientService.getMyProfile().subscribe(p => this.profile = p);
-    this.patientService.getMySurgeries().subscribe(s => {
-      this.allSurgeries = s;
-      this.upcomingSurgeries = s.filter(
-        x => x.status === 'SCHEDULED' || x.status === 'IN_PROGRESS'
-      );
-      this.isLoading = false;
-    });
+    // Wait for authentication to be ready (user is set), then load data
+    this.authService.currentUser$
+      .pipe(
+        filter(user => user !== null), // Wait for user to be authenticated
+        switchMap(() => this.patientService.getMyProfile()),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(p => this.profile = p);
+
+    // Similarly wait for auth before loading surgeries
+    this.authService.currentUser$
+      .pipe(
+        filter(user => user !== null), // Wait for user to be authenticated
+        switchMap(() => this.patientService.getMySurgeries()),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(s => {
+        this.allSurgeries = s;
+        this.upcomingSurgeries = s.filter(
+          x => x.status === 'SCHEDULED' || x.status === 'IN_PROGRESS'
+        );
+        this.isLoading = false;
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   getStatusClass(status: string): string {

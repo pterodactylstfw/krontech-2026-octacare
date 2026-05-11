@@ -1,10 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { OAuthService } from 'angular-oauth2-oidc';
-import { BehaviorSubject, Observable, from, of } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 import { User } from '../../shared/models/user.model';
 import { UserRole } from '../enums/user-role.enum';
 import { authConfig } from '../config/auth.config';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -12,7 +13,7 @@ export class AuthService {
   currentUser$ = this.currentUserSubject.asObservable();
 
   private oauthService = inject(OAuthService);
-  private router = inject(Router);
+  private http = inject(HttpClient);
 
   constructor() {
     this.configureOAuth();
@@ -25,68 +26,103 @@ export class AuthService {
     this.oauthService.events.subscribe(event => {
       if (event.type === 'token_validation_error' || event.type === 'invalid_nonce_in_state') {
         console.error('Eroare critică la validarea token-ului:', event);
-        // Dacă validarea eșuează, ștergem tot pentru a permite o reîncercare curată
-        this.oauthService.logOut();
+        this.handleUnauthorized();
       }
     });
 
     this.oauthService.setupAutomaticSilentRefresh();
 
     // Încărcăm documentul și încercăm logarea
-    this.oauthService.loadDiscoveryDocumentAndTryLogin().then(() => {
-      if (this.oauthService.hasValidAccessToken()) {
-        this.loadUserProfile();
+    this.oauthService.loadDiscoveryDocumentAndTryLogin()
+      .then(() => {
+        if (this.oauthService.hasValidAccessToken()) {
+          this.loadUserProfile();
+        } else {
+          // Dacă nu avem token, anunțăm restul aplicației
+          this.currentUserSubject.next(null);
+        }
+      })
+      .catch(err => {
+        console.error('❌ Nu s-a putut încărca documentul de discovery (Backend offline?):', err);
+        this.currentUserSubject.next(null);
+      });
+  }
+
+  /**
+   * RESETARE COMPLETĂ A SESIUNII (NUCLEAR OPTION)
+   */
+  private handleUnauthorized() {
+    console.warn('🔄 Sesiune invalidă detectată. Se execută resetare forțată...');
+    
+    // 1. Curățăm starea locală a aplicației
+    this.currentUserSubject.next(null);
+    
+    // 2. Curățăm tot storage-ul pentru a elimina token-urile expirate/invalide
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // 3. Forțăm redirecționarea la login
+    // Încercăm prin librărie, dar dacă backend-ul a dat 401, probabil librăria e blocată
+    try {
+      this.oauthService.logOut();
+      // Verificăm dacă suntem deja pe login pentru a evita loop-ul
+      if (!window.location.pathname.includes('/auth/login')) {
+         this.initiateLoginFlow();
+      } else {
+         // Dacă suntem deja pe login și e blocat, dăm un refresh dur la pagină
+         window.location.reload();
       }
-    });
+    } catch (e) {
+      // Fallback extrem: mergem direct la URL-ul de login
+      window.location.href = window.location.origin + '/auth/login';
+    }
   }
 
   /**
    * DECLANȘEAZĂ FLOW-UL DE LOGIN CĂTRE SPRING
    */
   public initiateLoginFlow() {
-    // Metoda asta va genera code_challenge și va face redirectul la 8080 corect
+    console.log('🚀 Initiating OIDC Code Flow...');
     this.oauthService.initCodeFlow();
   }
 
-  private loadUserProfile() {
-    // În mod ideal, Spring ar trebui să expună un endpoint /userinfo
-    // pe care să-l apelăm cu this.oauthService.loadUserProfile()
-    // Pentru moment, vom extrage datele direct din JWT (dacă există)
-    const claims: any = this.oauthService.getIdentityClaims();
-    if (claims) {
-      const user: User = {
-        id: claims.sub,
-        email: claims.sub,
-        fullName: claims.name || claims.sub,
-        role: this.extractRoleFromClaims(claims)
-      };
-      this.currentUserSubject.next(user);
-    }
-  }
+   private loadUserProfile() {
+     console.log('📥 Fetching user profile from /api/auth/me...');
+     const authUrl = environment.apiUrl ? environment.apiUrl.replace('/api', '') + '/api/auth/me' : '/api/auth/me';
 
-  private extractRoleFromClaims(claims: any): UserRole {
-    // Căutăm în noul câmp 'user_roles' creat în backend
-    const roles = claims['user_roles'] || claims['roles'] || [];
-
-    if (Array.isArray(roles)) {
-      // Luăm primul rol care începe cu ROLE_ (ex: ROLE_SURGEON)
-      const actualRole = roles.find(r => r.startsWith('ROLE_'));
-      if (actualRole) {
-        return actualRole.replace('ROLE_', '') as UserRole;
-      }
-    }
-
-    // Dacă tot nu găsim nimic, returnăm un fallback, dar logăm claims pentru debug
-    console.warn('Rol real negăsit în claims:', claims);
-    return UserRole.ADMIN;
-  }
+     this.http.get<any>(authUrl).subscribe({
+       next: (resp) => {
+         console.log('✅ User profile received:', resp);
+         if (resp && resp.email) {
+           const user: User = {
+             id: resp.id,
+             email: resp.email,
+             fullName: resp.fullName || resp.email,
+             role: resp.role as UserRole,
+             specialization: resp.specialization,
+             phone: resp.phone,
+             department: resp.department
+           };
+           this.currentUserSubject.next(user);
+           return;
+         }
+         this.currentUserSubject.next(null);
+       },
+       error: (err) => {
+         console.error('❌ Failed to load /api/auth/me:', err);
+         if (err.status === 401) {
+            this.handleUnauthorized();
+         } else {
+            this.currentUserSubject.next(null);
+         }
+       }
+     });
+   }
 
   public logout(): void {
     this.currentUserSubject.next(null);
-
-    // Această metodă șterge token-urile locale și FACE REDIRECT automat
-    // către http://localhost:8080/connect/logout pentru a ucide cookie-ul.
-    // Spring te va trimite înapoi pe portul 4200 (postLogoutRedirectUri) automat!
+    localStorage.clear();
+    sessionStorage.clear();
     this.oauthService.logOut();
   }
 
@@ -98,7 +134,6 @@ export class AuthService {
     return this.oauthService.hasValidAccessToken();
   }
 
-  // --- Metodele de roluri (Păstrate din varianta veche) ---
   getCurrentUserRole(): UserRole | null {
     return this.currentUserSubject.value?.role || null;
   }

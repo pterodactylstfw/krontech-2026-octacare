@@ -1,225 +1,183 @@
 <div class="surgeons-container" [class.light]="!theme.isDarkMode()">
 
-  <!-- HEADER -->
   <div class="header">
     <div class="header-left">
-      <h1>Surgeons</h1>
-      <span class="header-sub">Manage surgical staff and schedules</span>
+      <h1>Surgeon Availability</h1>
+      <span class="header-sub">Manage surgeon schedules with real-time availability</span>
     </div>
-    <button class="add-btn" (click)="openAddModal()">+ Add Surgeon</button>
+    <div class="header-actions">
+      <button class="ghost-btn" (click)="loadAvailability()">Refresh</button>
+      <button class="add-btn" (click)="openAddModal()">+ Add Availability</button>
+    </div>
   </div>
 
-  <!-- STATS -->
   <div class="stats-row">
     <div class="stat-card">
-      <span class="stat-label">Total Surgeons</span>
-      <span class="stat-value">{{ stats().total }}</span>
+      <span class="stat-label">Entries</span>
+      <span class="stat-value">{{ stats().totalEntries }}</span>
     </div>
     <div class="stat-card">
-      <span class="stat-label">On Duty Today</span>
-      <span class="stat-value duty">{{ stats().onDuty }}</span>
+      <span class="stat-label">Available</span>
+      <span class="stat-value duty">{{ stats().available }}</span>
     </div>
     <div class="stat-card">
-      <span class="stat-label">On Leave</span>
-      <span class="stat-value leave">{{ stats().onLeave }}</span>
+      <span class="stat-label">Unavailable</span>
+      <span class="stat-value leave">{{ stats().unavailable }}</span>
     </div>
     <div class="stat-card">
-      <span class="stat-label">Surgeries Today</span>
-      <span class="stat-value">{{ stats().surgeriesToday }}</span>
+      <span class="stat-label">Surgeons</span>
+      <span class="stat-value">{{ stats().uniqueSurgeons }}</span>
     </div>
   </div>
 
-  <!-- CONTROLS -->
-  <div class="controls">
-    <div class="filter-group">
-      @for (f of filters; track f) {
-        <button class="filter-btn" [class.active]="activeFilter() === f" (click)="setFilter(f)">
-          {{ f }}
-        </button>
-      }
-    </div>
-    <div class="right-controls">
-      <select class="dept-select" [value]="departmentFilter()" (change)="setDepartment($any($event.target).value)">
-        @for (d of departments; track d) {
-          <option [value]="d">{{ d === 'All' ? 'All Departments' : d }}</option>
+  <div class="filters">
+    <div class="filter-left">
+      <input class="search-input" type="text" placeholder="Search surgeon..." [value]="search()"
+        (input)="onSearch($event)" />
+      <select class="dept-select" [value]="selectedSurgeonId()"
+        (change)="selectedSurgeonId.set($any($event.target).value)">
+        <option value="">All Surgeons</option>
+        @for (s of surgeonOptions(); track s.id) {
+        <option [value]="s.id">{{ s.name }}</option>
         }
       </select>
-      <input class="search-input" type="text" placeholder="Search surgeons..." (input)="onSearch($event)" />
+    </div>
+    <div class="filter-right">
+      <div class="date-group">
+        <label>From</label>
+        <input type="date" [value]="from()" (change)="from.set($any($event.target).value)" />
+      </div>
+      <div class="date-group">
+        <label>To</label>
+        <input type="date" [value]="to()" (change)="to.set($any($event.target).value)" />
+      </div>
+      <button class="ghost-btn" (click)="applyFilters()">Apply</button>
+      <button class="ghost-btn" (click)="resetFilters()">Reset</button>
     </div>
   </div>
 
-  <!-- GRID -->
+  @if (error()) {
+  <div class="banner error">{{ error() }}</div>
+  }
+  @if (loading()) {
+  <div class="banner info">Loading availability...</div>
+  }
+
   <div class="grid">
-    @for (surgeon of filtered(); track surgeon.id) {
-      <div class="card">
-
-        <!-- CARD HEADER -->
-        <div class="card-header">
-          <div class="avatar" [style.background]="surgeon.color + '22'" [style.color]="surgeon.color"
-               [style.border]="'1.5px solid ' + surgeon.color + '55'">
-            {{ surgeon.initials }}
-          </div>
-          <div class="card-info">
-            <strong class="card-name">{{ surgeon.name }}</strong>
-            <span class="card-role">Surgeon · {{ surgeon.specialty }}</span>
-          </div>
-          <span class="badge" [ngClass]="getStatusClass(surgeon.status)">
-            {{ getStatusLabel(surgeon.status) }}
-          </span>
+    @for (item of filtered(); track item.id) {
+    <div class="card">
+      <div class="card-header">
+        <div class="card-info">
+          <strong class="card-name">{{ item.surgeonName }}</strong>
+          <span class="card-role">{{ item.surgeonId }}</span>
         </div>
-
-        <!-- SUCCESS RATE BAR -->
-        @if (surgeon.successRate > 0) {
-          <div class="rate-row">
-            <span class="rate-label">Success rate</span>
-            <div class="rate-bar-wrap">
-              <div class="rate-bar">
-                <div class="rate-fill" [style.width.%]="surgeon.successRate"
-                     [ngClass]="getSuccessColor(surgeon.successRate)"></div>
-              </div>
-              <span class="rate-value" [ngClass]="getSuccessColor(surgeon.successRate)">
-                {{ surgeon.successRate }}%
-              </span>
-            </div>
-          </div>
-        }
-
-        <!-- DETAILS -->
-        <div class="details">
-          <div class="detail-row">
-            <span>Department</span>
-            <strong>{{ surgeon.department }}</strong>
-          </div>
-          <div class="detail-row">
-            <span>Surgeries today</span>
-            <strong>{{ surgeon.surgeriesToday }}</strong>
-          </div>
-          <div class="detail-row">
-            <span>This week</span>
-            <strong>{{ surgeon.surgeriesWeek }}</strong>
-          </div>
-          <div class="detail-row">
-            <span>Experience</span>
-            <strong>{{ surgeon.yearsExperience }} yrs</strong>
-          </div>
-          @if (surgeon.nextSurgery) {
-            <div class="detail-row">
-              <span>Next surgery</span>
-              <strong>{{ surgeon.nextSurgery }} · {{ surgeon.nextRoom }}</strong>
-            </div>
-          }
-        </div>
-
-        <!-- WEEK SCHEDULE -->
-        <div class="week-row">
-          <span class="week-label">This week</span>
-          <div class="days">
-            @for (active of surgeon.weekDays; track $index) {
-              <span class="day" [class.active]="active">{{ days[$index] }}</span>
-            }
-          </div>
-        </div>
-
-        <!-- CERTIFICATIONS -->
-        @if (surgeon.certifications.length > 0) {
-          <div class="certs">
-            @for (cert of surgeon.certifications; track cert) {
-              <span class="cert-tag">{{ cert }}</span>
-            }
-          </div>
-        }
-
-        <!-- ACTIONS -->
-        <div class="actions">
-          <button class="action-btn" (click)="openEditModal(surgeon)">Edit</button>
-          <button class="action-btn danger" (click)="deleteSurgeon(surgeon.id)">Delete</button>
-        </div>
-
+        <span class="badge" [class.badge-duty]="item.isAvailable" [class.badge-off]="!item.isAvailable">
+          {{ getAvailabilityLabel(item.isAvailable) }}
+        </span>
       </div>
+
+      <div class="details">
+        <div class="detail-row">
+          <span>Date</span>
+          <strong>{{ item.date }}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Time</span>
+          <strong>{{ item.startTime }} - {{ item.endTime }}</strong>
+        </div>
+        <div class="detail-row" *ngIf="!item.isAvailable">
+          <span>Reason</span>
+          <strong>{{ item.reason || 'N/A' }}</strong>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="action-btn" (click)="openEditModal(item)">Edit</button>
+        <button class="action-btn danger" (click)="deleteAvailability(item.id)">Delete</button>
+      </div>
+    </div>
     }
 
-    @if (filtered().length === 0) {
-      <div class="empty-state">
-        <div class="empty-icon">🔍</div>
-        <p>No surgeons match your filters.</p>
-      </div>
+    @if (filtered().length === 0 && !loading()) {
+    <div class="empty-state">
+      <div class="empty-icon">📅</div>
+      <p>No availability entries found.</p>
+    </div>
     }
   </div>
 
-  <!-- MODAL -->
   @if (showModal()) {
-    <div class="modal-overlay" (click)="closeModal()">
-      <div class="modal" (click)="$event.stopPropagation()">
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
 
-        <div class="modal-header">
-          <h2>{{ editingSurgeon() ? 'Edit Surgeon' : 'Add Surgeon' }}</h2>
-          <button class="close-btn" (click)="closeModal()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
-        </div>
-
-        <div class="modal-body">
-          <div class="form-row">
-            <div class="field">
-              <label>Full Name</label>
-              <input type="text" placeholder="Dr. John Doe"
-                     [value]="newSurgeon().name"
-                     (input)="updateField('name', $any($event.target).value)" />
-            </div>
-            <div class="field">
-              <label>Specialty</label>
-              <input type="text" placeholder="Cardiac, Neuro..."
-                     [value]="newSurgeon().specialty"
-                     (input)="updateField('specialty', $any($event.target).value)" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="field">
-              <label>Department</label>
-              <select [value]="newSurgeon().department"
-                      (change)="updateField('department', $any($event.target).value)">
-                @for (d of departments.slice(1); track d) {
-                  <option [value]="d">{{ d }}</option>
-                }
-              </select>
-            </div>
-            <div class="field">
-              <label>Status</label>
-              <select [value]="newSurgeon().status"
-                      (change)="updateField('status', $any($event.target).value)">
-                <option value="on-duty">On Duty</option>
-                <option value="on-leave">On Leave</option>
-                <option value="off-duty">Off Duty</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="field">
-              <label>Years of Experience</label>
-              <input type="number" placeholder="10"
-                     [value]="newSurgeon().yearsExperience"
-                     (input)="updateField('yearsExperience', +$any($event.target).value)" />
-            </div>
-            <div class="field">
-              <label>Avatar Color</label>
-              <input type="color" [value]="newSurgeon().color"
-                     (input)="updateField('color', $any($event.target).value)" />
-            </div>
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <button class="btn-cancel" (click)="closeModal()">Cancel</button>
-          <button class="btn-save" (click)="saveSurgeon()">
-            {{ editingSurgeon() ? 'Save Changes' : 'Add Surgeon' }}
-          </button>
-        </div>
-
+      <div class="modal-header">
+        <h2>{{ editingId() ? 'Edit Availability' : 'Add Availability' }}</h2>
+        <button class="close-btn" (click)="closeModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
       </div>
+
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="field">
+            <label>Surgeon</label>
+            <select [value]="form().surgeonId" (change)="updateField('surgeonId', $any($event.target).value)">
+              <option value="">Select Surgeon</option>
+              @for (s of surgeons(); track s.id) {
+                <option [value]="s.id">{{ s.fullName }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label>Date</label>
+            <input type="date" [value]="form().date" (change)="updateField('date', $any($event.target).value)" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Start Time</label>
+            <input type="time" [value]="form().startTime"
+              (change)="updateField('startTime', $any($event.target).value)" />
+          </div>
+          <div class="field">
+            <label>End Time</label>
+            <input type="time" [value]="form().endTime" (change)="updateField('endTime', $any($event.target).value)" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Available</label>
+            <select [value]="form().isAvailable"
+              (change)="updateField('isAvailable', $any($event.target).value === 'true')">
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Reason</label>
+            <select [value]="form().reason" (change)="updateField('reason', $any($event.target).value || null)">
+              <option value="">None</option>
+              <option value="LEAVE">LEAVE</option>
+              <option value="ON_CALL">ON_CALL</option>
+              <option value="TRAINING">TRAINING</option>
+              <option value="ON_CALL_SHIFT">ON_CALL_SHIFT</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeModal()">Cancel</button>
+        <button class="btn-save" (click)="saveAvailability()">
+          {{ editingId() ? 'Save Changes' : 'Add Availability' }}
+        </button>
+      </div>
+
     </div>
+  </div>
   }
 
 </div>
