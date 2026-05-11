@@ -5,7 +5,7 @@ import { DashboardService } from './services/dashboard.service';
 import { DashboardData, TimelineBlock } from './models/dashboard.models';
 import { AlertCountPipe } from '../../shared/pipes/alert-count.pipe';
 import { ThemeService } from '../../core/theme/theme.service';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 
 
 @Component({
@@ -79,6 +79,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   generateReport(): void {
     const d = this.data();
+    if (!d) return;
+
     const doc = new jsPDF();
     const now = new Date();
     let y = 20;

@@ -8,5 +8,6 @@ export const API_ENDPOINTS = {
   schedule: `${API_BASE}/schedule`,
   staff: `${API_BASE}/staff`,
   users: `${API_BASE}/users`,
-  surgeries: `${API_BASE}/surgeries`
+  surgeries: `${API_BASE}/surgeries`,
+  availability: `${API_BASE}/availability`
 };

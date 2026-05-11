@@ -75,7 +75,6 @@ export class CalendarViewComponent implements OnInit {
     this.surgeryTypeService.getAll().subscribe(data => this.surgeryTypes.set(data));
   }
 
-  ngOnInit(): void { }
   loadRooms(): void {
     this.roomService.getAll().subscribe({
       next: (rooms) => {
@@ -243,10 +242,6 @@ export class CalendarViewComponent implements OnInit {
   goToToday(): void {
     this.currentDate = new Date();
     this.loadSchedule();
-  }
-
-  goToToday(): void {
-    this.currentDate = new Date();
   }
 
   get isToday(): boolean {

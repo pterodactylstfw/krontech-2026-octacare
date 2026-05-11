@@ -120,9 +120,13 @@ export class AuthService {
    }
 
   public logout(): void {
+    console.log('🚪 Logging out...');
     this.currentUserSubject.next(null);
-    localStorage.clear();
-    sessionStorage.clear();
+    
+    // NOTĂ: Nu ștergem localStorage/sessionStorage manual înainte de logOut().
+    // Librăria oauthService.logOut() are nevoie de id_token din storage 
+    // pentru a-l trimite ca 'id_token_hint' către backend (OIDC standard).
+    // Ea se va ocupa singură de curățarea token-urilor după ce inițiază redirect-ul.
     this.oauthService.logOut();
   }
 
