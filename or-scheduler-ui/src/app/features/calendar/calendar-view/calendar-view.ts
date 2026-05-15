@@ -78,9 +78,9 @@ export class CalendarViewComponent implements OnInit {
   loadRooms(): void {
     this.roomService.getAll().subscribe({
       next: (rooms) => {
-        this.orRooms = rooms.map(r => ({
-          id: r.id,
-          name: r.name,
+        this.orRooms = (rooms || []).map(r => ({
+          id: r.id || 'new',
+          name: r.name || `OR ${String(r.id || '').substring(0, 4) || '??'}`,
           utilizationPercent: Math.floor(Math.random() * 100)
         }));
       },
