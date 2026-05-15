@@ -60,12 +60,25 @@ export class SurgeonsComponent {
     return this.surgeons().map(s => ({ id: s.id, name: s.fullName }));
   });
 
+  readonly enrichedAvailability = computed(() => {
+    const surgeonsMap = new Map(this.surgeons().map(s => [s.id, s]));
+    return this.availability().map(item => {
+      const surgeon = surgeonsMap.get(item.surgeonId);
+      return {
+        ...item,
+        specialization: surgeon?.specialization || 'Surgeon',
+        phone: surgeon?.phone || 'N/A'
+      };
+    });
+  });
+
   readonly filtered = computed(() => {
     const query = this.search().trim().toLowerCase();
     const selectedId = this.selectedSurgeonId();
 
-    return this.availability().filter((item: SurgeonAvailability) => {
-      const matchesSearch = !query || item.surgeonName.toLowerCase().includes(query);
+    return this.enrichedAvailability().filter((item) => {
+      const matchesSearch = !query || item.surgeonName.toLowerCase().includes(query) || 
+                           item.specialization.toLowerCase().includes(query);
       const matchesSurgeon = !selectedId || item.surgeonId === selectedId;
       return matchesSearch && matchesSurgeon;
     });
@@ -175,8 +188,13 @@ export class SurgeonsComponent {
     });
   }
 
-  updateField(field: keyof SurgeonAvailabilityRequest, value: string | boolean | AvailabilityReason): void {
+  updateField(field: keyof SurgeonAvailabilityRequest, value: any): void {
     this.form.update((current: SurgeonAvailabilityRequest) => ({ ...current, [field]: value }));
+  }
+
+  getSurgeonName(id: string): string {
+    const s = this.surgeons().find(s => s.id === id);
+    return s ? s.fullName : 'Unknown Surgeon';
   }
 
   getAvailabilityLabel(isAvailable: boolean): string {

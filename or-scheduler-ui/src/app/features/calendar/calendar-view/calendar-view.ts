@@ -256,16 +256,19 @@ export class CalendarViewComponent implements OnInit {
   }
 
 
-  getSurgeriesForSlot(orRoom: string, time: string): Surgery[] {
-    // Extragem doar ora (ex: "08" din "08:00") pentru a permite afișarea operațiilor 
-    // care încep la minute intermediare (ex: 08:30) în slotul orei respective.
+  getSurgeriesForSlot(orRoomName: string, time: string): Surgery[] {
+    if (!orRoomName || !time) return [];
+    
+    // Extragem doar ora (ex: "08" din "08:00")
     const [slotHour] = time.split(':');
     
     return this.surgeries.filter(s => {
-      if (!s.startTime) return false;
+      if (!s.startTime || !s.orRoom) return false;
       const [surgeryHour] = s.startTime.split(':');
       
-      return s.orRoom === orRoom && surgeryHour === slotHour;
+      // Comparație case-insensitive și trimmed pentru a evita erori de date
+      return s.orRoom.trim().toLowerCase() === orRoomName.trim().toLowerCase() && 
+             surgeryHour === slotHour;
     });
   }
 
