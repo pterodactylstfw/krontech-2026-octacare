@@ -69,7 +69,17 @@ export class OperatingRoomsListComponent implements OnInit {
     this.loading = true;
     this.roomService.getAll().subscribe({
       next: (data) => {
-        this.rooms = data;
+        this.rooms = (data || []).map(r => ({
+          ...r,
+          id: r.id || Math.random().toString(36).substring(7),
+          name: r.name || `OR ${String(r.id || '').substring(0, 4) || 'New'}`,
+          roomType: r.roomType || 'GENERAL',
+          status: r.status || RoomStatus.AVAILABLE,
+          floor: r.floor || 1,
+          equipment: r.equipment || [],
+          capacity: r.capacity || 1,
+          sterilizationTimeMinutes: r.sterilizationTimeMinutes || 30
+        }));
         this.loading = false;
       },
       error: (err) => {
@@ -102,9 +112,9 @@ export class OperatingRoomsListComponent implements OnInit {
       const matchesFilter = this.activeFilter === 'ALL' || r.status === this.activeFilter;
       const matchesSearch =
         !q ||
-        r.name.toLowerCase().includes(q) ||
-        r.roomType.toLowerCase().includes(q) ||
-        String(r.floor).includes(q) ||
+        (r.name || '').toLowerCase().includes(q) ||
+        (r.roomType || '').toLowerCase().includes(q) ||
+        String(r.floor || '').includes(q) ||
         (r.equipment && r.equipment.some((e) => e.toLowerCase().includes(q)));
       return matchesFilter && matchesSearch;
     });

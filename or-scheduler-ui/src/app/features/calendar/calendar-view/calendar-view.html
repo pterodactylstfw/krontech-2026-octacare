@@ -33,43 +33,43 @@
       <div class="modal-body">
         <div class="modal-row">
           <span class="modal-label">Patient</span>
-          <select [value]="newSurgery().patientId" (change)="updateSurgeryField('patientId', $any($event.target).value)" class="modal-select">
+          <select [ngModel]="newSurgery().patientId" (ngModelChange)="updateSurgeryField('patientId', $event)" class="modal-select">
             <option value="">Select Patient</option>
             <option *ngFor="let p of patients()" [value]="p.id">{{ p.fullName || p.medicalRecordNumber }}</option>
           </select>
         </div>
         <div class="modal-row">
           <span class="modal-label">Surgeon</span>
-          <select [value]="newSurgery().surgeonId" (change)="updateSurgeryField('surgeonId', $any($event.target).value)" class="modal-select">
+          <select [ngModel]="newSurgery().surgeonId" (ngModelChange)="updateSurgeryField('surgeonId', $event)" class="modal-select">
             <option value="">Select Surgeon</option>
             <option *ngFor="let s of surgeons()" [value]="s.id">{{ s.fullName }}</option>
           </select>
         </div>
         <div class="modal-row">
           <span class="modal-label">Room</span>
-          <select [value]="newSurgery().roomId" (change)="updateSurgeryField('roomId', $any($event.target).value)" class="modal-select">
+          <select [ngModel]="newSurgery().roomId" (ngModelChange)="updateSurgeryField('roomId', $event)" class="modal-select">
             <option value="">Select Room (Optional)</option>
             <option *ngFor="let r of rooms()" [value]="r.id">{{ r.name }}</option>
           </select>
         </div>
         <div class="modal-row">
           <span class="modal-label">Surgery Type</span>
-          <select [value]="newSurgery().surgeryTypeId" (change)="updateSurgeryField('surgeryTypeId', $any($event.target).value)" class="modal-select">
+          <select [ngModel]="newSurgery().surgeryTypeId" (ngModelChange)="updateSurgeryField('surgeryTypeId', $event)" class="modal-select">
             <option value="">Select Type</option>
             <option *ngFor="let t of surgeryTypes()" [value]="t.id">{{ t.name }} ({{ t.avgDurationMinutes }} min)</option>
           </select>
         </div>
         <div class="modal-row">
           <span class="modal-label">Scheduled Start</span>
-          <input type="datetime-local" [value]="newSurgery().scheduledStart" (change)="updateSurgeryField('scheduledStart', $any($event.target).value)" class="modal-input" />
+          <input type="datetime-local" [ngModel]="newSurgery().scheduledStart" (ngModelChange)="updateSurgeryField('scheduledStart', $event)" class="modal-input" />
         </div>
         <div class="modal-row">
           <span class="modal-label">Scheduled End</span>
-          <input type="datetime-local" [value]="newSurgery().scheduledEnd" (change)="updateSurgeryField('scheduledEnd', $any($event.target).value)" class="modal-input" />
+          <input type="datetime-local" [ngModel]="newSurgery().scheduledEnd" (ngModelChange)="updateSurgeryField('scheduledEnd', $event)" class="modal-input" />
         </div>
         <div class="modal-row">
           <span class="modal-label">Priority</span>
-          <select [value]="newSurgery().priority" (change)="updateSurgeryField('priority', $any($event.target).value)" class="modal-select">
+          <select [ngModel]="newSurgery().priority" (ngModelChange)="updateSurgeryField('priority', $event)" class="modal-select">
             <option value="ELECTIVE">Elective</option>
             <option value="URGENT">Urgent</option>
             <option value="EMERGENCY">Emergency</option>
@@ -77,7 +77,7 @@
         </div>
         <div class="modal-row">
           <span class="modal-label">Notes</span>
-          <textarea [value]="newSurgery().notes" (input)="updateSurgeryField('notes', $any($event.target).value)" class="modal-input" placeholder="Surgery notes..."></textarea>
+          <textarea [ngModel]="newSurgery().notes" (ngModelChange)="updateSurgeryField('notes', $event)" class="modal-input" placeholder="Surgery notes..."></textarea>
         </div>
         <div class="modal-footer" style="display: flex; justify-content: flex-end; margin-top: 20px;">
           <button class="nav-btn" (click)="closeAddModal()" style="margin-right: 10px;">Cancel</button>
