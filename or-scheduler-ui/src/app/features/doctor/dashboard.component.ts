@@ -11,7 +11,8 @@ import {
 } from './doctor.models';
 import { ChatComponent } from '../chat/chat.component';
 import { ChatService } from '../chat/chat.service';
-
+import { SurgeryService } from '../../core/services/surgery.service';
+import { Surgery as BackendSurgery } from '../../shared/models/surgery.model';
 
 @Component({
   selector: 'app-doctor-dashboard',
@@ -23,6 +24,7 @@ import { ChatService } from '../chat/chat.service';
 export class DoctorDashboardComponent implements OnInit {
   readonly theme = inject(ThemeService);
   private chatService = inject(ChatService);
+  private surgeryService = inject(SurgeryService);
 
   readonly today = new Date().toLocaleDateString('en-GB', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
@@ -74,14 +76,7 @@ export class DoctorDashboardComponent implements OnInit {
     },
   ]);
 
-  private _recentPatients = signal<RecentPatient[]>([
-    { id: 1, initials: 'GM', name: 'Gheorghe Mihai', procedure: 'Appendectomy', date: 'Today', outcome: 'good', outcomeLabel: 'Successful' },
-    { id: 2, initials: 'NR', name: 'Nicolae Radu', procedure: 'Bypass x3', date: 'Yesterday', outcome: 'good', outcomeLabel: 'Successful' },
-    { id: 3, initials: 'SD', name: 'Stan Diana', procedure: 'Valve Repair', date: '28 Apr', outcome: 'warning', outcomeLabel: 'Monitoring' },
-    { id: 4, initials: 'AP', name: 'Andrei Popa', procedure: 'Cataract Surgery', date: '25 Apr', outcome: 'good', outcomeLabel: 'Successful' },
-    { id: 5, initials: 'MI', name: 'Marian Ionescu', procedure: 'Knee Replacement', date: '20 Apr', outcome: 'good', outcomeLabel: 'Successful' },
-    { id: 6, initials: 'EC', name: 'Elena Constantin', procedure: 'Hip Replacement', date: '15 Apr', outcome: 'warning', outcomeLabel: 'Monitoring' },
-  ]);
+  private _recentPatients = signal<RecentPatient[]>([]);
 
   showAllPatients = signal<boolean>(false);
 
@@ -147,5 +142,82 @@ export class DoctorDashboardComponent implements OnInit {
     this.showAllPatients.set(!this.showAllPatients());
   }
 
-  ngOnInit(): void { }
+  ngOnInit(): void {
+    this.surgeryService.getAll().subscribe({
+      next: (response: any) => {
+        const surgeries: BackendSurgery[] = Array.isArray(response) ? response : (response.content || response.data || []);
+        this._recentPatients.set(this.mapRecentPatients(surgeries));
+      },
+      error: (err) => {
+        console.error('Eroare la preluarea pacientilor recenti din surgeries:', err);
+        this._recentPatients.set([]);
+      }
+    });
+  }
+
+  private mapRecentPatients(surgeries: BackendSurgery[]): RecentPatient[] {
+    const sorted = [...surgeries].sort((a, b) => {
+      const aTime = new Date(a.scheduledStart).getTime();
+      const bTime = new Date(b.scheduledStart).getTime();
+      return bTime - aTime;
+    });
+
+    const seen = new Set<string>();
+    const recent = sorted
+      .filter(surgery => {
+        const key = surgery.patientId || surgery.patientName;
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, 6)
+      .map((surgery) => {
+        const patientKey = surgery.patientId || surgery.patientName || surgery.id;
+        return {
+          id: this.toNumericId(patientKey),
+          initials: this.getInitials(surgery.patientName || 'Unknown Patient'),
+          name: surgery.patientName || 'Unknown Patient',
+          procedure: surgery.surgeryTypeName || 'Consultation',
+          date: this.formatRecentDate(surgery.scheduledStart),
+          outcome: this.getOutcomeFromStatus(surgery.status),
+          outcomeLabel: this.getOutcomeLabelFromStatus(surgery.status),
+        } satisfies RecentPatient;
+      });
+
+    return recent;
+  }
+
+  private getOutcomeFromStatus(status: string): RecentPatient['outcome'] {
+    const normalized = (status || '').toLowerCase();
+    if (normalized === 'completed') return 'good';
+    if (normalized === 'emergency') return 'critical';
+    return 'warning';
+  }
+
+  private getOutcomeLabelFromStatus(status: string): string {
+    const normalized = (status || '').toLowerCase();
+    if (normalized === 'completed') return 'Successful';
+    if (normalized === 'emergency') return 'Urgent';
+    if (normalized === 'in-progress') return 'In Progress';
+    return 'Monitoring';
+  }
+
+  private formatRecentDate(iso: string): string {
+    if (!iso) return 'Recent';
+    const date = new Date(iso);
+    const today = new Date();
+    if (date.toDateString() === today.toDateString()) return 'Today';
+    return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+
+  private toNumericId(value: string): number {
+    return Math.abs(Array.from(value).reduce((acc, char) => ((acc * 31) + char.charCodeAt(0)) | 0, 0));
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '??';
+    const parts = name.trim().split(' ');
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
 }
