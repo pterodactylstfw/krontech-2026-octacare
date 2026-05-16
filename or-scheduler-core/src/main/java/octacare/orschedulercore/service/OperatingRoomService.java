@@ -42,7 +42,7 @@ public class OperatingRoomService {
         
         existingRoom.setName(roomData.getName());
         existingRoom.setRoomType(roomData.getRoomType());
-        // existingRoom.setEquipment(roomData.getEquipment());
+        existingRoom.setEquipment(roomData.getEquipment());
         existingRoom.setStatus(roomData.getStatus());
         existingRoom.setFloor(roomData.getFloor());
         existingRoom.setSterilizationTimeMinutes(roomData.getSterilizationTimeMinutes());

@@ -43,7 +43,7 @@ export class OperatingRoomsListComponent implements OnInit {
   isEditing = false;
   editingRoomId: string | null = null;
   equipmentText = '';
-  roomDraft: Partial<OperatingRoom> = this.emptyRoom();
+  roomDraft: Partial<OperatingRoom> = this.buildRoomDraft();
 
   readonly roomTypes: { label: string; value: RoomType }[] = [
     { label: 'General', value: 'GENERAL' },
@@ -82,7 +82,7 @@ export class OperatingRoomsListComponent implements OnInit {
         }));
         this.loading = false;
       },
-      error: (err) => {
+      error: () => {
         this.error = 'Failed to load rooms';
         this.loading = false;
       }
@@ -94,7 +94,7 @@ export class OperatingRoomsListComponent implements OnInit {
       next: (data: Surgery[]) => {
         this.surgeries = data;
       },
-      error: (err) => {
+      error: () => {
         this.surgeries = [];
       }
     });
@@ -127,7 +127,7 @@ export class OperatingRoomsListComponent implements OnInit {
   openAddModal() {
     this.isEditing = false;
     this.editingRoomId = null;
-    this.roomDraft = this.emptyRoom();
+    this.roomDraft = this.buildRoomDraft();
     this.equipmentText = '';
     this.showModal = true;
   }
@@ -135,8 +135,8 @@ export class OperatingRoomsListComponent implements OnInit {
   openEditModal(room: OperatingRoom) {
     this.isEditing = true;
     this.editingRoomId = room.id;
-    this.roomDraft = { ...room };
-    this.equipmentText = (room.equipment || []).join(', ');
+    this.roomDraft = this.buildRoomDraft(room);
+    this.equipmentText = Array.isArray(room.equipment) ? room.equipment.join(', ') : '';
     this.showModal = true;
   }
 
@@ -165,7 +165,7 @@ export class OperatingRoomsListComponent implements OnInit {
           this.loadRooms();
           this.closeModal();
         },
-        error: (err) => this.error = 'Failed to update room'
+        error: () => this.error = 'Failed to update room'
       });
     } else {
       this.roomService.create(payload).subscribe({
@@ -173,7 +173,7 @@ export class OperatingRoomsListComponent implements OnInit {
           this.loadRooms();
           this.closeModal();
         },
-        error: (err) => this.error = 'Failed to create room'
+        error: () => this.error = 'Failed to create room'
       });
     }
   }
@@ -182,15 +182,20 @@ export class OperatingRoomsListComponent implements OnInit {
     if (confirm('Are you sure you want to delete this room?')) {
       this.roomService.delete(id).subscribe({
         next: () => this.loadRooms(),
-        error: (err) => this.error = 'Failed to delete room'
+        error: () => this.error = 'Failed to delete room'
       });
     }
   }
 
-  emptyRoom(): Partial<OperatingRoom> {
+  private buildRoomDraft(room?: Partial<OperatingRoom>): Partial<OperatingRoom> {
     return {
-      name: '', roomType: 'GENERAL', status: RoomStatus.AVAILABLE,
-      floor: 1, sterilizationTimeMinutes: 30, equipment: [], capacity: 5
+      name: room?.name ?? '',
+      roomType: (room?.roomType ?? 'GENERAL') as RoomType,
+      status: (room?.status ?? RoomStatus.AVAILABLE) as RoomStatus,
+      floor: room?.floor ?? 1,
+      sterilizationTimeMinutes: room?.sterilizationTimeMinutes ?? 30,
+      equipment: Array.isArray(room?.equipment) ? [...room!.equipment!] : [],
+      capacity: room?.capacity ?? 5
     };
   }
 
