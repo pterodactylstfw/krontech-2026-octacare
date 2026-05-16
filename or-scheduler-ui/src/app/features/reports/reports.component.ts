@@ -12,12 +12,23 @@ import { ReportsData } from './models/reports.models';
 })
 export class ReportsComponent implements OnInit {
   reportsData: ReportsData | null = null;
+  loading = false;
+  error: string | null = null;
 
   constructor(private reportsService: ReportsService) {}
 
   ngOnInit(): void {
-    this.reportsService.getReportsData().subscribe(data => {
-      this.reportsData = data;
+    this.loading = true;
+    this.reportsService.getReportsData().subscribe({
+      next: (data) => {
+        console.log('✅ ReportsComponent loaded reportsData:', data);
+        this.reportsData = data;
+        this.loading = false;
+      },
+      error: () => {
+        this.error = 'Could not load reports right now.';
+        this.loading = false;
+      }
     });
   }
 }

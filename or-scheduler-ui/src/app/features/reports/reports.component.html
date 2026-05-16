@@ -1,4 +1,13 @@
-<div class="reports-wrapper" *ngIf="reportsData">
+<div *ngIf="loading" class="loading-state">
+  <div class="loading-spinner"></div>
+  <span>Loading reports…</span>
+</div>
+
+<div *ngIf="error && !loading" class="loading-state error-state">
+  <span>{{ error }}</span>
+</div>
+
+<div class="reports-wrapper" *ngIf="reportsData && !loading && !error">
 
   <!-- Floating decorative bubbles -->
   <div class="bubble bubble-blue"></div>
@@ -116,8 +125,3 @@
   </div>
 </div>
 
-<!-- Loading State -->
-<div *ngIf="!reportsData" class="loading-state">
-  <div class="loading-spinner"></div>
-  <span>Loading reports…</span>
-</div>
