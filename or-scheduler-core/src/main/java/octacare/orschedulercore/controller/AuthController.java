@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import octacare.orschedulercore.config.AuthProperties;
 import octacare.orschedulercore.service.AuditService;
+import octacare.orschedulercore.service.UserService;
 
 /**
  * AuthController gestionează:
@@ -53,16 +54,17 @@ public class AuthController {
     private final WebClient webClient;
     private final AuthProperties authProperties;
     private final AuditService auditService;
-
+    private final UserService userService;
     private final Logger log = LoggerFactory.getLogger(AuthController.class);
 
-    public AuthController(AuthService authService, JwtDecoder jwtDecoder, WebClient webClient, AuthProperties authProperties, AuditService auditService) {
-        this.authService = authService;
-        this.jwtDecoder = jwtDecoder;
-        this.webClient = webClient;
-        this.authProperties = authProperties;
-        this.auditService = auditService;
-    }
+  public AuthController(AuthService authService, JwtDecoder jwtDecoder, WebClient webClient, AuthProperties authProperties, AuditService auditService, UserService userService) {
+    this.authService = authService;
+    this.jwtDecoder = jwtDecoder;
+    this.webClient = webClient;
+    this.authProperties = authProperties;
+    this.auditService = auditService;
+    this.userService = userService;
+}
 
     /**
      * GET /api/auth/me
@@ -349,5 +351,35 @@ public class AuthController {
             return ResponseEntity.status(500).body(new ErrorResponse(500, "Refresh failed", e.getMessage(), LocalDateTime.now()));
         }
     }
+    @PostMapping("/forgot-password")
+       @Operation(summary = "Trimitere email reset parolă")
+          public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+          try {
+           String email = request.get("email");
+            if (email == null || email.isBlank()) {
+              return ResponseEntity.badRequest().body("Email is required");
+           }
+              userService.forgotPassword(email);
+         return ResponseEntity.ok("If this email exists, a reset link has been sent.");
+        } catch (Exception e) {
+        return ResponseEntity.status(500).body(new ErrorResponse(500, "Error", e.getMessage(), LocalDateTime.now()));
+         }
+}
+
+@PostMapping("/reset-password")
+@Operation(summary = "Resetare parolă cu token")
+public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+    try {
+        String token = request.get("token");
+        String newPassword = request.get("newPassword");
+        if (token == null || newPassword == null) {
+            return ResponseEntity.badRequest().body("Token and newPassword are required");
+        }
+        userService.resetPassword(token, newPassword);
+        return ResponseEntity.ok("Password reset successfully.");
+    } catch (Exception e) {
+        return ResponseEntity.status(400).body(new ErrorResponse(400, "Error", e.getMessage(), LocalDateTime.now()));
+    }
+}
 }
 

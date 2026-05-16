@@ -50,7 +50,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Order(2) // 1. PASĂREA DE PRADĂ: Verificăm mai întâi dacă cererea e pentru API
+    @Order(2) // 1. PASĂREA DE PRADĂ: Verificăm mai întâi dacă cererea e pentru API 
     public SecurityFilterChain resourceServerFilterChain(HttpSecurity http, octacare.orschedulercore.security.CookieBearerTokenFilter cookieBearerTokenFilter) throws Exception {
         http
                 .securityMatcher("/api/**") // Se aplică DOAR pentru rutele care încep cu /api/
@@ -60,7 +60,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Allow unauthenticated access to the exchange & refresh endpoints so SPA or tools
                         // can perform the authorization_code PKCE exchange and refresh without an auth header.
-                        .requestMatchers("/api/auth/exchange-code", "/api/auth/refresh").permitAll()
+                        .requestMatchers("/api/auth/exchange-code", "/api/auth/refresh", "/api/auth/forgot-password", "/api/auth/reset-password").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

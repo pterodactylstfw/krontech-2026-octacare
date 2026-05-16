@@ -14,6 +14,14 @@ export const routes: Routes = [
     path: 'auth/callback',
     loadComponent: () => import('./features/auth/login/login.component').then((m) => m.LoginComponent)
   },
+  {
+    path: 'auth/forgot-password',
+    loadComponent: () => import('./features/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent)
+  },
+{
+  path: 'auth/reset-password',
+  loadComponent: () => import('./features/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent)
+},
 
   // 2. Rute Protejate de Shell Layout (Necesită login)[cite: 13, 14]
   {

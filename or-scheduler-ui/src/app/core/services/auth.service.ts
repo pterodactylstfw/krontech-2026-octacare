@@ -19,34 +19,40 @@ export class AuthService {
     this.configureOAuth();
   }
 
+  
+
   private configureOAuth() {
-    this.oauthService.configure(authConfig);
-
-    // Setează librăria să curețe automat datele vechi de login dacă apare o eroare
-    this.oauthService.events.subscribe(event => {
-      if (event.type === 'token_validation_error' || event.type === 'invalid_nonce_in_state') {
-        console.error('Eroare critică la validarea token-ului:', event);
-        this.handleUnauthorized();
-      }
-    });
-
-    this.oauthService.setupAutomaticSilentRefresh();
-
-    // Încărcăm documentul și încercăm logarea
-    this.oauthService.loadDiscoveryDocumentAndTryLogin()
-      .then(() => {
-        if (this.oauthService.hasValidAccessToken()) {
-          this.loadUserProfile();
-        } else {
-          // Dacă nu avem token, anunțăm restul aplicației
-          this.currentUserSubject.next(null);
-        }
-      })
-      .catch(err => {
-        console.error('❌ Nu s-a putut încărca documentul de discovery (Backend offline?):', err);
-        this.currentUserSubject.next(null);
-      });
+  const currentPath = window.location.pathname;
+  const publicPaths = ['/auth/forgot-password', '/auth/reset-password'];
+  if (publicPaths.some(p => currentPath.startsWith(p))) {
+    this.currentUserSubject.next(null);
+    return;
   }
+
+  this.oauthService.configure(authConfig);
+
+  this.oauthService.events.subscribe(event => {
+    if (event.type === 'token_validation_error' || event.type === 'invalid_nonce_in_state') {
+      console.error('Eroare critică la validarea token-ului:', event);
+      this.handleUnauthorized();
+    }
+  });
+
+  this.oauthService.setupAutomaticSilentRefresh();
+
+  this.oauthService.loadDiscoveryDocumentAndTryLogin()
+    .then(() => {
+      if (this.oauthService.hasValidAccessToken()) {
+        this.loadUserProfile();
+      } else {
+        this.currentUserSubject.next(null);
+      }
+    })
+    .catch(err => {
+      console.error('❌ Nu s-a putut încărca documentul de discovery (Backend offline?):', err);
+      this.currentUserSubject.next(null);
+    });
+}
 
   /**
    * RESETARE COMPLETĂ A SESIUNII (NUCLEAR OPTION)
