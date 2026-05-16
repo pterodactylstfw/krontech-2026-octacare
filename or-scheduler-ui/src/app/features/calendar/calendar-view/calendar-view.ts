@@ -11,6 +11,7 @@ import { UserService, UserRole, UserResponse } from '../../../core/services/user
 import { PatientService } from '../../patients/services/patient.service';
 import { SurgeryTypeService, SurgeryTypeResponse } from '../../../core/services/surgery-type.service';
 import { SurgeryService } from '../../../core/services/surgery.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 
 @Component({
@@ -28,6 +29,7 @@ export class CalendarViewComponent implements OnInit {
   patientService = inject(PatientService);
   surgeryTypeService = inject(SurgeryTypeService);
   surgeryService = inject(SurgeryService);
+  authService = inject(AuthService);
 
   currentDate = new Date();
   today = new Date();
@@ -70,7 +72,29 @@ export class CalendarViewComponent implements OnInit {
 
   loadModalData(): void {
     this.patientService.getAllPatients().subscribe(data => this.patients.set(data));
-    this.userService.getAll(UserRole.SURGEON).subscribe(data => this.surgeons.set(data));
+    
+    // Încarcă toți chirurgii pentru admin, dar asigură-te că lista nu e goală dacă ești chirurg
+    this.userService.getAll(UserRole.SURGEON).subscribe({
+      next: (data) => this.surgeons.set(data),
+      error: () => {
+        // Dacă ești chirurg și nu ai voie să listezi toți chirurgii, pune-te măcar pe tine în listă
+        const me = this.authService.getCurrentUser();
+        if (me && me.role === UserRole.SURGEON) {
+           this.surgeons.set([{
+             id: me.id,
+             email: me.email,
+             fullName: me.fullName,
+             role: me.role as any,
+             specialization: me.specialization,
+             phone: me.phone,
+             department: me.department,
+             createdAt: '',
+             updatedAt: ''
+           }]);
+        }
+      }
+    });
+
     this.roomService.getAll().subscribe(data => this.rooms.set(data));
     this.surgeryTypeService.getAll().subscribe(data => this.surgeryTypes.set(data));
   }
@@ -118,14 +142,26 @@ export class CalendarViewComponent implements OnInit {
   }
 
   openAddModal(): void {
-    const start = new Date(this.currentDate);
-    start.setHours(8, 0, 0, 0);
-    const end = new Date(this.currentDate);
-    end.setHours(9, 0, 0, 0);
+    const now = new Date();
+    // Dacă vizualizăm altă zi decât azi, punem ora 08:00 în acea zi. 
+    // Dacă e azi, punem ora curentă.
+    let start: Date;
+    if (this.isToday) {
+       start = new Date();
+    } else {
+       start = new Date(this.currentDate);
+       start.setHours(8, 0, 0, 0);
+    }
+    
+    const end = new Date(start);
+    end.setHours(end.getHours() + 1);
+
+    const user = this.authService.getCurrentUser();
+    const isSurgeon = user?.role === UserRole.SURGEON;
 
     this.newSurgery.set({
       patientId: '',
-      surgeonId: '',
+      surgeonId: isSurgeon ? (user?.id || '') : '',
       roomId: '',
       surgeryTypeId: '',
       scheduledStart: this.formatLocalISO(start),

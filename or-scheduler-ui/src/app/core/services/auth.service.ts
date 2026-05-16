@@ -149,6 +149,9 @@ export class AuthService {
   getCurrentUserRole(): UserRole | null {
     return this.currentUserSubject.value?.role || null;
   }
+  getCurrentUser(): User | null {
+    return this.currentUserSubject.value;
+  }
   isAdmin(): boolean { return this.getCurrentUserRole() === UserRole.ADMIN; }
   isSurgeon(): boolean { return this.getCurrentUserRole() === UserRole.SURGEON; }
   isNurse(): boolean { return this.getCurrentUserRole() === UserRole.NURSE; }

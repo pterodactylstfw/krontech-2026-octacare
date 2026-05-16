@@ -40,7 +40,8 @@
         </div>
         <div class="modal-row">
           <span class="modal-label">Surgeon</span>
-          <select [ngModel]="newSurgery().surgeonId" (ngModelChange)="updateSurgeryField('surgeonId', $event)" class="modal-select">
+          <select [ngModel]="newSurgery().surgeonId" (ngModelChange)="updateSurgeryField('surgeonId', $event)" 
+                  class="modal-select" [disabled]="!authService.isAdmin()">
             <option value="">Select Surgeon</option>
             <option *ngFor="let s of surgeons()" [value]="s.id">{{ s.fullName }}</option>
           </select>

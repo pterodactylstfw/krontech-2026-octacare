@@ -56,7 +56,7 @@ public class UsersController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SURGEON')")
     @Operation(summary = "Listează toți utilizatorii, cu filtrare după rol și departament")
     public ResponseEntity<List<UserResponse>> getAll(
             @RequestParam(required = false) Role role,

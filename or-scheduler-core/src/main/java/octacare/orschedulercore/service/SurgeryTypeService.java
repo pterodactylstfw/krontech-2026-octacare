@@ -19,7 +19,7 @@ public class SurgeryTypeService {
     private final SurgeryTypeRepository surgeryTypeRepository;
 
     public List<SurgeryTypeResponse> getAll() {
-        return surgeryTypeRepository.findAll()
+        return surgeryTypeRepository.findAllWithEquipment()
                 .stream()
                 .map(SurgeryTypeResponse::from)
                 .toList();

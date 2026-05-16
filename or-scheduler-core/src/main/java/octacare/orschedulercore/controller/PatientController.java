@@ -15,6 +15,7 @@ import java.util.UUID;
 @CrossOrigin
 public class PatientController {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PatientController.class);
     private final PatientService patientService;
 
     public PatientController(PatientService patientService) {
@@ -23,6 +24,7 @@ public class PatientController {
 
     @GetMapping
     public ResponseEntity<List<PatientResponse>> getAllPatients() {
+        log.info("GET /api/patients - Fetching all patients");
         return ResponseEntity.ok(patientService.getAllPatients());
     }
 
