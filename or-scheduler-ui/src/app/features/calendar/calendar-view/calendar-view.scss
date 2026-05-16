@@ -286,6 +286,12 @@ textarea.modal-input {
   &:hover {
     background: #0f1825;
   }
+
+  &.drag-over {
+    background: rgba(59, 127, 255, 0.1);
+    outline: 1px dashed rgba(59, 127, 255, 0.5);
+    outline-offset: -2px;
+  }
 }
 
 // Surgery Cards

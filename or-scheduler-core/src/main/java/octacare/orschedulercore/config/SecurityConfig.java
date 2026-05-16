@@ -152,7 +152,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         // Trebuie să fie adresa exactă a Angular-ului
         configuration.setAllowedOrigins(List.of("http://localhost:4200"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(true); // Necesar pentru cookie-uri[cite: 1]
 

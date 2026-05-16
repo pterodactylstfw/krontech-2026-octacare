@@ -13,11 +13,12 @@
         <button class="nav-btn today-btn" [class.active]="isToday" (click)="goToToday()">Today</button>
       </div>
 
-      <div class="action-buttons" style="display: flex; gap: 10px;">
+      <div class="action-buttons" style="display: flex; gap: 10px; align-items: center;">
         <button class="add-btn auto-schedule-btn" (click)="generateSchedule()" [disabled]="isGenerating" style="background: linear-gradient(135deg, #8b5cf6, #3b82f6);">
           <span *ngIf="!isGenerating">✨ Auto-Schedule</span>
           <span *ngIf="isGenerating">⏳ Generating...</span>
         </button>
+        <span *ngIf="generateError" style="font-size:12px;color:#f87171;max-width:220px;line-height:1.3;">{{ generateError }}</span>
         <button class="add-btn" (click)="openAddModal()">+ Add Surgery</button>
       </div>
     </div>
@@ -32,28 +33,28 @@
       </div>
       <div class="modal-body">
         <div class="modal-row">
-          <span class="modal-label">Patient</span>
+          <span class="modal-label">Patient *</span>
           <select [value]="newSurgery().patientId" (change)="updateSurgeryField('patientId', $any($event.target).value)" class="modal-select">
             <option value="">Select Patient</option>
-            <option *ngFor="let p of patients()" [value]="p.id">{{ p.fullName || p.medicalRecordNumber }}</option>
+            <option *ngFor="let p of patients()" [value]="p.id">{{ p.user?.fullName || p.medicalRecordNumber || p.id }}</option>
           </select>
         </div>
         <div class="modal-row">
-          <span class="modal-label">Surgeon</span>
+          <span class="modal-label">Surgeon *</span>
           <select [value]="newSurgery().surgeonId" (change)="updateSurgeryField('surgeonId', $any($event.target).value)" class="modal-select">
             <option value="">Select Surgeon</option>
             <option *ngFor="let s of surgeons()" [value]="s.id">{{ s.fullName }}</option>
           </select>
         </div>
         <div class="modal-row">
-          <span class="modal-label">Room</span>
+          <span class="modal-label">Room *</span>
           <select [value]="newSurgery().roomId" (change)="updateSurgeryField('roomId', $any($event.target).value)" class="modal-select">
-            <option value="">Select Room (Optional)</option>
+            <option value="">Select Room</option>
             <option *ngFor="let r of rooms()" [value]="r.id">{{ r.name }}</option>
           </select>
         </div>
         <div class="modal-row">
-          <span class="modal-label">Surgery Type</span>
+          <span class="modal-label">Surgery Type *</span>
           <select [value]="newSurgery().surgeryTypeId" (change)="updateSurgeryField('surgeryTypeId', $any($event.target).value)" class="modal-select">
             <option value="">Select Type</option>
             <option *ngFor="let t of surgeryTypes()" [value]="t.id">{{ t.name }} ({{ t.avgDurationMinutes }} min)</option>
@@ -79,9 +80,14 @@
           <span class="modal-label">Notes</span>
           <textarea [value]="newSurgery().notes" (input)="updateSurgeryField('notes', $any($event.target).value)" class="modal-input" placeholder="Surgery notes..."></textarea>
         </div>
+        <div *ngIf="saveError()" style="margin-top:12px;padding:8px 12px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:8px;font-size:12px;color:#f87171;">
+          {{ saveError() }}
+        </div>
         <div class="modal-footer" style="display: flex; justify-content: flex-end; margin-top: 20px;">
           <button class="nav-btn" (click)="closeAddModal()" style="margin-right: 10px;">Cancel</button>
-          <button class="add-btn" (click)="saveSurgery()">Save Surgery</button>
+          <button class="add-btn" (click)="saveSurgery()" [disabled]="isSaving()">
+            {{ isSaving() ? 'Saving...' : 'Save Surgery' }}
+          </button>
         </div>
       </div>
     </div>
@@ -117,12 +123,18 @@
 
       <ng-container *ngFor="let time of timeSlots">
         <div class="time-label">{{ time }}</div>
-        <div class="grid-cell" *ngFor="let room of orRooms" (dragover)="onDragOver($event)"
+        <div class="grid-cell" *ngFor="let room of orRooms"
+          [class.drag-over]="dragOverCell === room.name + time"
+          (dragover)="onDragOver($event, room.name, time)"
           (drop)="onDrop(room.name, time)">
 
           <div class="surgery-card" *ngFor="let surgery of getSurgeriesForSlot(room.name, time)"
             [ngClass]="['card-' + surgery.color, 'status-' + surgery.status]" [style.height.px]="getCardHeight(surgery)"
-            draggable="true" (dragstart)="onDragStart(surgery)" (click)="openModal(surgery)">
+            draggable="true"
+            (dragstart)="onDragStart(surgery)"
+            (dragend)="onDragEnd()"
+            (dragover)="onDragOver($event, room.name, time)"
+            (click)="openModal(surgery)">
 
             <div class="card-top">
               <span class="card-emergency" *ngIf="surgery.status === 'emergency'">E</span>

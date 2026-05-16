@@ -2,6 +2,7 @@ import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular
 import { CommonModule } from '@angular/common';
 import { ThemeService } from '../../core/theme/theme.service';
 import { AuthService } from '../../core/services/auth.service';
+import { UserRole } from '../../core/enums/user-role.enum';
 import { ScheduleService } from '../../core/services/schedule.service';
 import {
   DoctorProfile,
@@ -165,10 +166,20 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
     this.scheduleService.getSchedule(this.formatLocalISO(start), this.formatLocalISO(end)).subscribe({
       next: (response: any) => {
         const surgeries: BackendSurgery[] = Array.isArray(response) ? response : (response.content || response.data || []);
-        const surgeonName = this.getCurrentSurgeonName();
-        const filtered = surgeonName
-          ? surgeries.filter(s => (s.surgeonName || '').toLowerCase() === surgeonName.toLowerCase())
-          : surgeries;
+
+        // Surgeons see only their own schedule; admins see all
+        const role = this.authService.getCurrentUserRole();
+        let filtered = surgeries;
+        if (role === UserRole.SURGEON) {
+          const surgeonName = this.getCurrentSurgeonName();
+          if (surgeonName) {
+            const byName = surgeries.filter(
+              s => (s.surgeonName || '').toLowerCase() === surgeonName.toLowerCase()
+            );
+            // Fall back to all if no exact match (e.g. name mismatch)
+            filtered = byName.length > 0 ? byName : surgeries;
+          }
+        }
 
         this._schedule.set(this.mapTodaySchedule(filtered));
       },
@@ -225,13 +236,10 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
       }));
   }
 
-  private getCurrentSurgeonName(): string {
+  private getCurrentSurgeonName(): string | null {
     let current: any = null;
-    this.authService.currentUser$.subscribe(user => {
-      current = user;
-    }).unsubscribe();
-
-    return current?.fullName || this.doctor().name;
+    this.authService.currentUser$.subscribe(user => { current = user; }).unsubscribe();
+    return current?.fullName ?? null;
   }
 
   private getTimelineTypeLabel(surgeryTypeName?: string): string {
@@ -244,7 +252,8 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
   }
 
   private getTimelineStatus(status: string): Surgery['status'] {
-    const normalized = (status || '').toLowerCase();
+    // Backend may send IN_PROGRESS (underscore) or in-progress (dash)
+    const normalized = (status || '').toLowerCase().replace(/_/g, '-');
     if (normalized === 'in-progress') return 'in-progress';
     if (normalized === 'completed') return 'completed';
     return 'scheduled';
