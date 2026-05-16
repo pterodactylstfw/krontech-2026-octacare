@@ -78,12 +78,19 @@ export class DoctorDashboardComponent implements OnInit {
     { id: 1, initials: 'GM', name: 'Gheorghe Mihai', procedure: 'Appendectomy', date: 'Today', outcome: 'good', outcomeLabel: 'Successful' },
     { id: 2, initials: 'NR', name: 'Nicolae Radu', procedure: 'Bypass x3', date: 'Yesterday', outcome: 'good', outcomeLabel: 'Successful' },
     { id: 3, initials: 'SD', name: 'Stan Diana', procedure: 'Valve Repair', date: '28 Apr', outcome: 'warning', outcomeLabel: 'Monitoring' },
+    { id: 4, initials: 'AP', name: 'Andrei Popa', procedure: 'Cataract Surgery', date: '25 Apr', outcome: 'good', outcomeLabel: 'Successful' },
+    { id: 5, initials: 'MI', name: 'Marian Ionescu', procedure: 'Knee Replacement', date: '20 Apr', outcome: 'good', outcomeLabel: 'Successful' },
+    { id: 6, initials: 'EC', name: 'Elena Constantin', procedure: 'Hip Replacement', date: '15 Apr', outcome: 'warning', outcomeLabel: 'Monitoring' },
   ]);
+
+  showAllPatients = signal<boolean>(false);
 
   // ── Computed ───────────────────────────────────────────────────────────────
   readonly todaySchedule = this._schedule.asReadonly();
   readonly alerts = this._alerts.asReadonly();
-  readonly recentPatients = this._recentPatients.asReadonly();
+  readonly recentPatients = computed(() => {
+    return this.showAllPatients() ? this._recentPatients() : this._recentPatients().slice(0, 3);
+  });
 
   readonly unreadCount = computed(() => this._alerts().length);
 
@@ -134,6 +141,10 @@ export class DoctorDashboardComponent implements OnInit {
     if (status === 'Active') return 'status-busy';
     if (status === 'Available') return 'status-available';
     return 'status-sterilizing';
+  }
+
+  toggleViewAll(): void {
+    this.showAllPatients.set(!this.showAllPatients());
   }
 
   ngOnInit(): void { }

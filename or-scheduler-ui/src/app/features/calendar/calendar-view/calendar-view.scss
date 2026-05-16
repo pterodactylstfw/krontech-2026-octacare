@@ -41,6 +41,31 @@
   }
 }
 
+.modal-input,
+.modal-select {
+  background: #f2f7ff;
+  color: #030303;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  width: 220px;
+  transition: all 0.2s;
+  font-family: inherit;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: #3b7fff;
+    box-shadow: 0 0 0 2px rgba(59, 127, 255, 0.2);
+  }
+}
+
+textarea.modal-input {
+  resize: vertical;
+  min-height: 60px;
+}
+
+
 .nav-buttons {
   display: flex;
   align-items: center;

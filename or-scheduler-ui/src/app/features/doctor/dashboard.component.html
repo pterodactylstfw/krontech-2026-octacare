@@ -196,7 +196,9 @@
     <div class="panel patients-panel full-width">
         <div class="panel-header">
             <span class="panel-title">Recent Patients</span>
-            <button class="view-all-btn">View all</button>
+            <button class="view-all-btn" (click)="toggleViewAll()">
+                {{ showAllPatients() ? 'View less' : 'View all' }}
+            </button>
         </div>
         <div class="patients-list">
             @for (patient of recentPatients(); track patient.id) {
