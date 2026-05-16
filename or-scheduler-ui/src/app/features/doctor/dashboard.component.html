@@ -196,7 +196,7 @@
     <div class="panel patients-panel full-width">
         <div class="panel-header">
             <span class="panel-title">Recent Patients</span>
-            <button class="view-all-btn">View all</button>
+            <button type="button" class="view-all-btn" (click)="openAllPatients()">View all</button>
         </div>
         <div class="patients-list">
             @for (patient of recentPatients(); track patient.id) {
@@ -214,6 +214,51 @@
             }
         </div>
     </div>
+
+    @if (showAllPatients) {
+    <div class="patients-modal-backdrop" (click)="closeAllPatients()">
+        <div class="patients-modal" (click)="$event.stopPropagation()">
+            <div class="patients-modal-header">
+                <div>
+                    <span class="panel-title">All Patients</span>
+                    <div class="patients-modal-subtitle">{{ allPatients().length }} patients loaded from the backend</div>
+                </div>
+                <button type="button" class="modal-close-btn" (click)="closeAllPatients()">×</button>
+            </div>
+
+            @if (patientsLoading) {
+            <div class="modal-state">Loading patients...</div>
+            }
+
+            @if (!patientsLoading && patientsError) {
+            <div class="modal-state error">{{ patientsError }}</div>
+            }
+
+            @if (!patientsLoading && !patientsError) {
+            <div class="all-patients-list">
+                @for (patient of allPatients(); track patient.id) {
+                <button type="button" class="patient-modal-row" (click)="openPatientChat(patient)">
+                    <div class="patient-avatar">{{ patient.initials }}</div>
+                    <div class="patient-info">
+                        <span class="patient-name">{{ patient.name }}</span>
+                        <span class="patient-proc">{{ patient.medicalRecordNumber }}</span>
+                    </div>
+                    <div class="patient-right">
+                        <span class="patient-date">{{ patient.bloodType }}</span>
+                        <span class="patient-outcome good">{{ patient.email }}</span>
+                    </div>
+                </button>
+                }
+
+                @if (allPatients().length === 0) {
+                <div class="modal-state">No patients found.</div>
+                }
+            </div>
+            }
+        </div>
+    </div>
+    }
+
     <app-chat [isOpen]="chatOpen" mode="doctor" (closed)="chatOpen = false" />
 
     <!-- FAB button -->

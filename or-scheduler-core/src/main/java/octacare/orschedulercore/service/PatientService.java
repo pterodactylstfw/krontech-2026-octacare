@@ -1,13 +1,17 @@
 package octacare.orschedulercore.service;
 
+import octacare.orschedulercore.dto.PatientResponse;
 import octacare.orschedulercore.entity.Patient;
 import octacare.orschedulercore.repository.PatientRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class PatientService {
 
     private final PatientRepository patientRepository;
@@ -16,17 +20,28 @@ public class PatientService {
         this.patientRepository = patientRepository;
     }
 
-    public List<Patient> getAllPatients() {
-        return patientRepository.findAll();
-    }
-
-    public Patient getPatientById(UUID id) {
-        return patientRepository.findById(id)
+    // Helper to load the entity when we need to mutate it. Service exposes DTO-returning
+    // getters for controllers, but create/update/delete still operate on the entity.
+    private Patient findEntityById(UUID id) {
+        return patientRepository.findByIdWithUser(id)
                 .orElseThrow(() -> new RuntimeException("Patient not found"));
     }
 
-    public Patient getPatientByUserId(UUID userId) {
-        return patientRepository.findByUser_Id(userId)
+    public List<PatientResponse> getAllPatients() {
+        return patientRepository.findAllWithUser().stream()
+                .map(PatientResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    public PatientResponse getPatientById(UUID id) {
+        return patientRepository.findByIdWithUser(id)
+                .map(PatientResponse::from)
+                .orElseThrow(() -> new RuntimeException("Patient not found"));
+    }
+
+    public PatientResponse getPatientByUserId(UUID userId) {
+        return patientRepository.findByUserIdWithUser(userId)
+                .map(PatientResponse::from)
                 .orElseThrow(() -> new RuntimeException("Patient not found"));
     }
 
@@ -47,7 +62,7 @@ public class PatientService {
     }
 
     public Patient updatePatient(UUID id, Patient patientData) {
-        Patient existingPatient = getPatientById(id);
+        Patient existingPatient = findEntityById(id);
 
         if (patientData.getMedicalRecordNumber() != null && !patientData.getMedicalRecordNumber().trim().isEmpty()) {
             if (!patientData.getMedicalRecordNumber().equals(existingPatient.getMedicalRecordNumber()) &&
