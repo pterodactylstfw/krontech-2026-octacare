@@ -69,26 +69,30 @@
       <div class="card-header">
         <div class="card-info">
           <strong class="card-name">{{ item.surgeonName }}</strong>
-          <span class="card-role">{{ item.surgeonId }}</span>
+          <span class="card-role">{{ item.specialization }}</span>
         </div>
         <span class="badge" [class.badge-duty]="item.isAvailable" [class.badge-off]="!item.isAvailable">
           {{ getAvailabilityLabel(item.isAvailable) }}
         </span>
       </div>
 
-      <div class="details">
+      <div class="card-details">
         <div class="detail-row">
           <span>Date</span>
           <strong>{{ item.date }}</strong>
         </div>
         <div class="detail-row">
+          <span>Phone</span>
+          <strong>{{ item.phone }}</strong>
+        </div>
+        <div class="detail-row">
           <span>Time</span>
           <strong>{{ item.startTime }} - {{ item.endTime }}</strong>
         </div>
-        <div class="detail-row" *ngIf="!item.isAvailable">
-          <span>Reason</span>
-          <strong>{{ item.reason || 'N/A' }}</strong>
-        </div>
+      </div>
+
+      <div class="card-reason" *ngIf="item.reason">
+        <span>Reason:</span> {{ item.reason }}
       </div>
 
       <div class="actions">
@@ -124,42 +128,48 @@
         <div class="form-row">
           <div class="field">
             <label>Surgeon</label>
-            <select [value]="form().surgeonId" (change)="updateField('surgeonId', $any($event.target).value)">
-              <option value="">Select Surgeon</option>
-              @for (s of surgeons(); track s.id) {
-                <option [value]="s.id">{{ s.fullName }}</option>
-              }
-            </select>
+            @if (editingId()) {
+              <div class="modal-value" style="padding: 10px 0; font-weight: 600; color: var(--sg-text);">
+                {{ getSurgeonName(form().surgeonId) }}
+              </div>
+            } @else {
+              <select [ngModel]="form().surgeonId" (ngModelChange)="updateField('surgeonId', $event)">
+                <option value="">Select Surgeon</option>
+                @for (s of surgeons(); track s.id) {
+                  <option [value]="s.id">{{ s.fullName }}</option>
+                }
+              </select>
+            }
           </div>
           <div class="field">
             <label>Date</label>
-            <input type="date" [value]="form().date" (change)="updateField('date', $any($event.target).value)" />
+            <input type="date" [ngModel]="form().date" (ngModelChange)="updateField('date', $event)" />
           </div>
         </div>
         <div class="form-row">
           <div class="field">
             <label>Start Time</label>
-            <input type="time" [value]="form().startTime"
-              (change)="updateField('startTime', $any($event.target).value)" />
+            <input type="time" [ngModel]="form().startTime"
+              (ngModelChange)="updateField('startTime', $event)" />
           </div>
           <div class="field">
             <label>End Time</label>
-            <input type="time" [value]="form().endTime" (change)="updateField('endTime', $any($event.target).value)" />
+            <input type="time" [ngModel]="form().endTime" (ngModelChange)="updateField('endTime', $event)" />
           </div>
         </div>
         <div class="form-row">
           <div class="field">
             <label>Available</label>
-            <select [value]="form().isAvailable"
-              (change)="updateField('isAvailable', $any($event.target).value === 'true')">
-              <option value="true">Yes</option>
-              <option value="false">No</option>
+            <select [ngModel]="form().isAvailable"
+              (ngModelChange)="updateField('isAvailable', $event === 'true' || $event === true)">
+              <option [value]="true">Yes</option>
+              <option [value]="false">No</option>
             </select>
           </div>
           <div class="field">
             <label>Reason</label>
-            <select [value]="form().reason" (change)="updateField('reason', $any($event.target).value || null)">
-              <option value="">None</option>
+            <select [ngModel]="form().reason" (ngModelChange)="updateField('reason', $event || null)">
+              <option [value]="null">None</option>
               <option value="LEAVE">LEAVE</option>
               <option value="ON_CALL">ON_CALL</option>
               <option value="TRAINING">TRAINING</option>

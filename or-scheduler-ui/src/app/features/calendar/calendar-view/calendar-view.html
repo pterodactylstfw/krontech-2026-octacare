@@ -62,15 +62,15 @@
         </div>
         <div class="modal-row">
           <span class="modal-label">Scheduled Start</span>
-          <input type="datetime-local" [value]="newSurgery().scheduledStart" (change)="updateSurgeryField('scheduledStart', $any($event.target).value)" class="modal-input" />
+          <input type="datetime-local" [ngModel]="newSurgery().scheduledStart" (ngModelChange)="updateSurgeryField('scheduledStart', $event)" class="modal-input" />
         </div>
         <div class="modal-row">
           <span class="modal-label">Scheduled End</span>
-          <input type="datetime-local" [value]="newSurgery().scheduledEnd" (change)="updateSurgeryField('scheduledEnd', $any($event.target).value)" class="modal-input" />
+          <input type="datetime-local" [ngModel]="newSurgery().scheduledEnd" (ngModelChange)="updateSurgeryField('scheduledEnd', $event)" class="modal-input" />
         </div>
         <div class="modal-row">
           <span class="modal-label">Priority</span>
-          <select [value]="newSurgery().priority" (change)="updateSurgeryField('priority', $any($event.target).value)" class="modal-select">
+          <select [ngModel]="newSurgery().priority" (ngModelChange)="updateSurgeryField('priority', $event)" class="modal-select">
             <option value="ELECTIVE">Elective</option>
             <option value="URGENT">Urgent</option>
             <option value="EMERGENCY">Emergency</option>
@@ -78,7 +78,7 @@
         </div>
         <div class="modal-row">
           <span class="modal-label">Notes</span>
-          <textarea [value]="newSurgery().notes" (input)="updateSurgeryField('notes', $any($event.target).value)" class="modal-input" placeholder="Surgery notes..."></textarea>
+          <textarea [ngModel]="newSurgery().notes" (ngModelChange)="updateSurgeryField('notes', $event)" class="modal-input" placeholder="Surgery notes..."></textarea>
         </div>
         <div *ngIf="saveError()" style="margin-top:12px;padding:8px 12px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:8px;font-size:12px;color:#f87171;">
           {{ saveError() }}
