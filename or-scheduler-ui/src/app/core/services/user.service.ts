@@ -80,4 +80,8 @@ export class UserService {
   patch(id: string, request: any): Observable<UserResponse> {
     return this.http.patch<UserResponse>(`${this.apiUrl}/${id}`, request);
   }
+
+  patchMe(request: any): Observable<UserResponse> {
+    return this.http.patch<UserResponse>(`${this.apiUrl}/me`, request);
+  }
 }

@@ -4,6 +4,7 @@ import octacare.orschedulercore.security.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -56,6 +57,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Allow unauthenticated access to the exchange & refresh endpoints so SPA or tools
                         // can perform the authorization_code PKCE exchange and refresh without an auth header.
                         .requestMatchers("/api/auth/exchange-code", "/api/auth/refresh").permitAll()
@@ -152,7 +154,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         // Trebuie să fie adresa exactă a Angular-ului
         configuration.setAllowedOrigins(List.of("http://localhost:4200"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(true); // Necesar pentru cookie-uri[cite: 1]
 

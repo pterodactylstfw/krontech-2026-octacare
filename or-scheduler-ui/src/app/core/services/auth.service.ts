@@ -53,14 +53,14 @@ export class AuthService {
    */
   private handleUnauthorized() {
     console.warn('🔄 Sesiune invalidă detectată. Se execută resetare forțată...');
-    
+
     // 1. Curățăm starea locală a aplicației
     this.currentUserSubject.next(null);
-    
+
     // 2. Curățăm tot storage-ul pentru a elimina token-urile expirate/invalide
     localStorage.clear();
     sessionStorage.clear();
-    
+
     // 3. Forțăm redirecționarea la login
     // Încercăm prin librărie, dar dacă backend-ul a dat 401, probabil librăria e blocată
     try {
@@ -119,12 +119,20 @@ export class AuthService {
      });
    }
 
+    /**
+     * Public wrapper to reload the current user's profile from the API.
+     * Useful for letting other components request a refresh after updates.
+     */
+    public refreshProfile(): void {
+      this.loadUserProfile();
+    }
+
   public logout(): void {
     console.log('🚪 Logging out...');
     this.currentUserSubject.next(null);
-    
+
     // NOTĂ: Nu ștergem localStorage/sessionStorage manual înainte de logOut().
-    // Librăria oauthService.logOut() are nevoie de id_token din storage 
+    // Librăria oauthService.logOut() are nevoie de id_token din storage
     // pentru a-l trimite ca 'id_token_hint' către backend (OIDC standard).
     // Ea se va ocupa singură de curățarea token-urilor după ce inițiază redirect-ul.
     this.oauthService.logOut();

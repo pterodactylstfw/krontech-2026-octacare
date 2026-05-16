@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ThemeService } from '../../core/theme/theme.service';
 import { AuthService } from '../../core/services/auth.service';
 import { User } from '../../shared/models/user.model';
+import { UserService } from '../../core/services/user.service';
 @Component({
   selector: 'app-settings',
   standalone: true,
@@ -14,6 +15,7 @@ import { User } from '../../shared/models/user.model';
 export class SettingsComponent implements OnInit {
   private theme = inject(ThemeService);
   private authService = inject(AuthService);
+  private userService = inject(UserService);
 
   // ── Profile (cu datele reale din AuthService) ────────────────────────────────
   currentUser: User | null = null;
@@ -71,13 +73,38 @@ export class SettingsComponent implements OnInit {
     if (this.saving || this.saved) return;
 
     this.saving = true;
+    // Persist profile changes to the backend for the current user
+    if (this.currentUser) {
+      const payload: any = {
+        fullName: this.profile.fullName,
+        phone: this.profile.phone,
+        department: this.profile.department,
+        email: this.profile.email
+      };
 
-    // Simulate async save (replace with your actual service call)
-    setTimeout(() => {
-      this.theme.setTheme(this.appearance.theme);
-      this.saving = false;
-      this.saved = true;
-      setTimeout(() => (this.saved = false), 2200);
-    }, 900);
+      this.userService.patchMe(payload).subscribe({
+        next: (updated) => {
+          // Refresh local auth profile and UI
+          this.authService.refreshProfile();
+          this.theme.setTheme(this.appearance.theme);
+          this.saving = false;
+          this.saved = true;
+          setTimeout(() => (this.saved = false), 2200);
+          console.log('✅ Profile saved:', updated);
+        },
+        error: (err) => {
+          console.error('❌ Failed to save profile:', err);
+          this.saving = false;
+        }
+      });
+    } else {
+      // No authenticated user - still apply appearance changes
+      setTimeout(() => {
+        this.theme.setTheme(this.appearance.theme);
+        this.saving = false;
+        this.saved = true;
+        setTimeout(() => (this.saved = false), 2200);
+      }, 900);
+    }
   }
 }
