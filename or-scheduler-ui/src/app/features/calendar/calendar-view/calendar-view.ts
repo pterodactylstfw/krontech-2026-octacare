@@ -44,7 +44,7 @@ export class CalendarViewComponent implements OnInit {
   surgeons = signal<UserResponse[]>([]);
   rooms = signal<OperatingRoom[]>([]);
   surgeryTypes = signal<SurgeryTypeResponse[]>([]);
-  
+
   newSurgery = signal<SurgeryRequest>({
     patientId: '',
     surgeonId: '',
@@ -66,6 +66,15 @@ export class CalendarViewComponent implements OnInit {
     this.loadRooms();
     this.loadSchedule();
     this.loadModalData();
+  }
+
+  // Expose a grid-template string so the template can create one fixed left column
+  // for time labels and one column per OR room. This ensures hours are the first
+  // column and each room has its own column after that.
+  get gridTemplateColumns(): string {
+    // first column fixed for time labels (64px), then one column per room
+    const roomCols = this.orRooms && this.orRooms.length ? this.orRooms.map(() => 'minmax(160px, 1fr)').join(' ') : '';
+    return `64px ${roomCols}`.trim();
   }
 
   loadModalData(): void {
@@ -257,14 +266,14 @@ export class CalendarViewComponent implements OnInit {
 
 
   getSurgeriesForSlot(orRoom: string, time: string): Surgery[] {
-    // Extragem doar ora (ex: "08" din "08:00") pentru a permite afișarea operațiilor 
+    // Extragem doar ora (ex: "08" din "08:00") pentru a permite afișarea operațiilor
     // care încep la minute intermediare (ex: 08:30) în slotul orei respective.
     const [slotHour] = time.split(':');
-    
+
     return this.surgeries.filter(s => {
       if (!s.startTime) return false;
       const [surgeryHour] = s.startTime.split(':');
-      
+
       return s.orRoom === orRoom && surgeryHour === slotHour;
     });
   }
@@ -287,8 +296,38 @@ export class CalendarViewComponent implements OnInit {
 
   onDrop(orRoom: string, time: string): void {
     if (!this.draggedSurgery) return;
-    this.draggedSurgery.orRoom = orRoom;
-    this.draggedSurgery.startTime = time;
+
+    // local update for immediate UI feedback
+    const surgery = this.draggedSurgery;
+    const durationMin = surgery.durationMin || 60;
+
+    // Build start Date using currentDate + target time (HH:mm)
+    const [hourStr, minStr] = time.split(':');
+    const startDate = new Date(this.currentDate);
+    startDate.setHours(Number(hourStr), Number(minStr), 0, 0);
+
+    const endDate = new Date(startDate.getTime() + durationMin * 60000);
+
+    // Update the local object for immediate visual feedback
+    surgery.orRoom = orRoom;
+    surgery.startTime = this.formatTime(startDate.toISOString());
+    surgery.endTime = this.formatTime(endDate.toISOString());
+
+    // Persist change on backend via SurgeryService.reschedule and then reload calendar
+    // surgery.id is expected to be a string id
+    this.surgeryService.reschedule(surgery.id, this.formatLocalISO(startDate), this.formatLocalISO(endDate)).subscribe({
+      next: (updated) => {
+        // reload local schedule and notify other components (dashboard) to refresh
+        this.loadSchedule();
+        this.scheduleService.emitScheduleUpdate();
+      },
+      error: (err) => {
+        console.error('Failed to reschedule surgery:', err);
+        // revert local dragged change if error (best-effort)
+        this.loadSchedule();
+      }
+    });
+
     this.draggedSurgery = null;
   }
 

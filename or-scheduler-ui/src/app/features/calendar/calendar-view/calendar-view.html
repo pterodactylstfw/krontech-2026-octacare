@@ -110,7 +110,7 @@
 
   <!-- Calendar Grid -->
   <div class="calendar-grid-wrapper">
-    <div class="calendar-grid">
+      <div class="calendar-grid" [style.gridTemplateColumns]="gridTemplateColumns">
 
       <div class="time-header"></div>
       <div class="room-header" *ngFor="let room of orRooms">{{ room.name }}</div>
