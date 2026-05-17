@@ -35,6 +35,7 @@ public class ScheduleService {
     private final OperatingRoomRepository roomRepository;
     private final UserRepository userRepository;
     private final WebClient webClient;
+    private final NotificationService notificationService;
 
     @Value("${algorithm.url:http://localhost:8000}")
     private String algorithmUrl;
@@ -173,6 +174,33 @@ public class ScheduleService {
             }
         } else {
             log.warn("Algorithm returned null or empty response");
+        }
+
+        // 6. Trimitere notificari real-time
+        if (response != null && response.schedule() != null && !response.schedule().isEmpty()) {
+            notificationService.sendGlobalNotification(
+                "Program actualizat", 
+                "Programul salilor de operatie a fost optimizat pentru perioada solicitata.", 
+                "success"
+            );
+
+            // Notificam chirurgii implicati (folosim email-ul ca username pentru STOMP)
+            response.schedule().stream()
+                .map(ScheduledSurgeryDto::surgeryId)
+                .map(id -> surgeryRepository.findById(id).orElse(null))
+                .filter(java.util.Objects::nonNull)
+                .map(Surgery::getSurgeon)
+                .filter(java.util.Objects::nonNull)
+                .map(User::getEmail)
+                .distinct()
+                .forEach(email -> {
+                    notificationService.sendUserNotification(
+                        email,
+                        "Actualizare program",
+                        "Interventiile tale au fost reprogramate in urma optimizarii.",
+                        "info"
+                    );
+                });
         }
 
         return response;

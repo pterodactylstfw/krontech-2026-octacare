@@ -29,7 +29,6 @@ interface DoctorPatientSummary {
   phone: string;
 }
 
-
 @Component({
   selector: 'app-doctor-dashboard',
   standalone: true,
@@ -44,7 +43,7 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
   private chatService = inject(ChatService);
   private scheduleService = inject(ScheduleService);
   private surgeryService = inject(SurgeryService);
-  // Subscription placeholder to unsubscribe on destroy
+
   private _scheduleSub: any = null;
 
   readonly today = new Date().toLocaleDateString('en-GB', {
@@ -52,11 +51,12 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
   });
 
   chatOpen = false;
-  showAllPatients = false;
   patientsLoading = false;
   patientsError: string | null = null;
 
   private _allPatients = signal<DoctorPatientSummary[]>([]);
+  showAllPatients = signal<boolean>(false);
+  private _recentPatients = signal<RecentPatient[]>([]);
 
   // ── State ──────────────────────────────────────────────────────────────────
   doctor = signal<DoctorProfile>({
@@ -76,24 +76,134 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
     { id: 3, severity: 'info', message: '2 surgeries pending approval', time: 'Just now' },
   ]);
 
+  private _schedule = signal<Surgery[]>([
+    {
+      id: 1, procedureName: 'Appendectomy', patientName: 'Gheorghe Mihai',
+      room: 'OR 1', type: 'General', startTime: '08:00', duration: 90,
+      status: 'completed', notes: '',
+    },
+    {
+      id: 2, procedureName: 'Coronary Bypass', patientName: 'Popa Ion',
+      room: 'OR 1', type: 'Cardiac', startTime: '10:30', duration: 180,
+      status: 'in-progress', notes: '⚠ Pre-op labs not confirmed',
+    },
+    {
+      id: 3, procedureName: 'Aortic Valve Repair', patientName: 'Dumitru Elena',
+      room: 'OR 1', type: 'Cardiac', startTime: '14:00', duration: 120,
+      status: 'scheduled', notes: '',
+    },
+  ]);
+
+  // ── Computed & Readonly ──────────────────────────────────────────────────
+  readonly allPatients = this._allPatients.asReadonly();
+  readonly todaySchedule = this._schedule.asReadonly();
+  readonly alerts = this._alerts.asReadonly();
+  
+  readonly recentPatients = computed(() => {
+    return this.showAllPatients() ? this._recentPatients() : this._recentPatients().slice(0, 3);
+  });
+
+  readonly stats = computed<DoctorStats>(() => {
+    const schedule = this._schedule();
+    const completed = schedule.filter(s => s.status === 'completed').length;
+    const next = schedule.find(s => s.status === 'scheduled');
+    return {
+      surgeriesToday: schedule.length,
+      completed,
+      nextTime: next?.startTime ?? '—',
+      nextRoom: next?.room ?? '—',
+      orStatus: 'Active',
+      orName: 'OR 1 · Floor 2',
+    };
+  });
+
+  readonly currentOr = signal<OperatingRoomStatus>({
+    name: 'OR 1 · Cardiac · Floor 2',
+    status: 'active',
+    statusLabel: 'Active',
+    utilization: 75,
+    floor: 'Floor 2',
+    currentPatient: 'Popa Ion',
+    nextAt: '14:00',
+  });
+
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
+  ngOnInit(): void {
+    this.loadTodaySchedule();
+
+    this._scheduleSub = this.scheduleService.scheduleUpdated$.subscribe(() => {
+      this.loadTodaySchedule();
+    });
+
+    this.surgeryService.getAll().subscribe({
+      next: (response: any) => {
+        const surgeries: BackendSurgery[] = Array.isArray(response) ? response : (response.content || response.data || []);
+        this._recentPatients.set(this.mapRecentPatients(surgeries));
+      },
+      error: (err) => {
+        console.error('❌ Error fetching recent patients:', err);
+        this._recentPatients.set([]);
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this._scheduleSub && typeof this._scheduleSub.unsubscribe === 'function') {
+      this._scheduleSub.unsubscribe();
+    }
+  }
+
+  // ── Public Methods ────────────────────────────────────────────────────────
   openChat(patient: RecentPatient): void {
     this.chatService.openConversation(patient.id, patient.name, patient.initials);
     this.chatOpen = true;
   }
 
-  private _schedule = signal<Surgery[]>([]);
   openAllPatients(): void {
-    this.showAllPatients = true;
-
+    this.showAllPatients.set(true);
     if (!this._allPatients().length && !this.patientsLoading) {
       this.loadAllPatients();
     }
   }
 
   closeAllPatients(): void {
-    this.showAllPatients = false;
+    this.showAllPatients.set(false);
   }
 
+  toggleViewAll(): void {
+    this.showAllPatients.set(!this.showAllPatients());
+  }
+
+  selectSurgery(surgery: Surgery): void {
+    console.log('Selected surgery:', surgery.id);
+  }
+
+  dismissAlert(id: number): void {
+    this._alerts.update(list => list.filter(a => a.id !== id));
+  }
+
+  getStatusLabel(status: Surgery['status']): string {
+    const map: Record<Surgery['status'], string> = {
+      'in-progress': 'In Progress',
+      'scheduled': 'Scheduled',
+      'completed': 'Completed',
+    };
+    return map[status];
+  }
+
+  getOrStatusClass(status: string): string {
+    if (status === 'Active') return 'status-busy';
+    if (status === 'Available') return 'status-available';
+    return 'status-sterilizing';
+  }
+
+  openPatientChat(patient: DoctorPatientSummary): void {
+    this.chatService.openConversation(this.toThreadId(patient.id), patient.name, patient.initials);
+    this.chatOpen = true;
+    this.closeAllPatients();
+  }
+
+  // ── Private Helpers ───────────────────────────────────────────────────────
   private loadAllPatients(): void {
     this.patientsLoading = true;
     this.patientsError = null;
@@ -138,124 +248,6 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
     }, 0);
   }
 
-  openPatientChat(patient: DoctorPatientSummary): void {
-    this.chatService.openConversation(this.toThreadId(patient.id), patient.name, patient.initials);
-    this.chatOpen = true;
-    this.closeAllPatients();
-  }
-
-  readonly allPatients = this._allPatients.asReadonly();
-
-  private _schedule = signal<Surgery[]>([
-    {
-      id: 1, procedureName: 'Appendectomy', patientName: 'Gheorghe Mihai',
-      room: 'OR 1', type: 'General', startTime: '08:00', duration: 90,
-      status: 'completed', notes: '',
-    },
-    {
-      id: 2, procedureName: 'Coronary Bypass', patientName: 'Popa Ion',
-      room: 'OR 1', type: 'Cardiac', startTime: '10:30', duration: 180,
-      status: 'in-progress', notes: '⚠ Pre-op labs not confirmed',
-    },
-    {
-      id: 3, procedureName: 'Aortic Valve Repair', patientName: 'Dumitru Elena',
-      room: 'OR 1', type: 'Cardiac', startTime: '14:00', duration: 120,
-      status: 'scheduled', notes: '',
-    },
-  ]);
-
-  private _recentPatients = signal<RecentPatient[]>([]);
-
-  showAllPatients = signal<boolean>(false);
-
-  // ── Computed ───────────────────────────────────────────────────────────────
-  readonly todaySchedule = this._schedule.asReadonly();
-  readonly alerts = this._alerts.asReadonly();
-  readonly recentPatients = computed(() => {
-    return this.showAllPatients() ? this._recentPatients() : this._recentPatients().slice(0, 3);
-  });
-  readonly recentPatients = this._recentPatients.asReadonly();
-
-
-  readonly stats = computed<DoctorStats>(() => {
-    const schedule = this._schedule();
-    const completed = schedule.filter(s => s.status === 'completed').length;
-    const next = schedule.find(s => s.status === 'scheduled');
-    return {
-      surgeriesToday: schedule.length,
-      completed,
-      nextTime: next?.startTime ?? '—',
-      nextRoom: next?.room ?? '—',
-      orStatus: 'Active',
-      orName: 'OR 1 · Floor 2',
-    };
-  });
-
-  readonly currentOr = signal<OperatingRoomStatus>({
-    name: 'OR 1 · Cardiac · Floor 2',
-    status: 'active',
-    statusLabel: 'Active',
-    utilization: 75,
-    floor: 'Floor 2',
-    currentPatient: 'Popa Ion',
-    nextAt: '14:00',
-  });
-
-  // ── Methods ────────────────────────────────────────────────────────────────
-  selectSurgery(surgery: Surgery): void {
-    // Will navigate to surgery detail when backend is ready
-    console.log('Selected surgery:', surgery.id);
-  }
-
-  dismissAlert(id: number): void {
-    this._alerts.update(list => list.filter(a => a.id !== id));
-  }
-
-  getStatusLabel(status: Surgery['status']): string {
-    const map: Record<Surgery['status'], string> = {
-      'in-progress': 'In Progress',
-      'scheduled': 'Scheduled',
-      'completed': 'Completed',
-    };
-    return map[status];
-  }
-
-  getOrStatusClass(status: string): string {
-    if (status === 'Active') return 'status-busy';
-    if (status === 'Available') return 'status-available';
-    return 'status-sterilizing';
-  }
-
-  toggleViewAll(): void {
-    this.showAllPatients.set(!this.showAllPatients());
-  }
-
-  ngOnInit(): void {
-    this.loadTodaySchedule();
-
-    // Listen to schedule update events (e.g., when calendar reschedules a surgery)
-    this._scheduleSub = this.scheduleService.scheduleUpdated$.subscribe(() => {
-      this.loadTodaySchedule();
-    });
-
-    this.surgeryService.getAll().subscribe({
-      next: (response: any) => {
-        const surgeries: BackendSurgery[] = Array.isArray(response) ? response : (response.content || response.data || []);
-        this._recentPatients.set(this.mapRecentPatients(surgeries));
-      },
-      error: (err) => {
-        console.error('Eroare la preluarea pacientilor recenti din surgeries:', err);
-        this._recentPatients.set([]);
-      }
-    });
-  }
-
-  ngOnDestroy(): void {
-    if (this._scheduleSub && typeof this._scheduleSub.unsubscribe === 'function') {
-      this._scheduleSub.unsubscribe();
-    }
-  }
-
   private loadTodaySchedule(): void {
     const start = new Date();
     start.setHours(0, 0, 0, 0);
@@ -265,8 +257,6 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
     this.scheduleService.getSchedule(this.formatLocalISO(start), this.formatLocalISO(end)).subscribe({
       next: (response: any) => {
         const surgeries: BackendSurgery[] = Array.isArray(response) ? response : (response.content || response.data || []);
-
-        // Surgeons see only their own schedule; admins see all
         const role = this.authService.getCurrentUserRole();
         let filtered = surgeries;
         if (role === UserRole.SURGEON) {
@@ -275,15 +265,13 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
             const byName = surgeries.filter(
               s => (s.surgeonName || '').toLowerCase() === surgeonName.toLowerCase()
             );
-            // Fall back to all if no exact match (e.g. name mismatch)
             filtered = byName.length > 0 ? byName : surgeries;
           }
         }
-
         this._schedule.set(this.mapTodaySchedule(filtered));
       },
       error: (err) => {
-        console.error('Eroare la preluarea programului de azi:', err);
+        console.error('❌ Error fetching today schedule:', err);
         this._schedule.set([]);
       }
     });
@@ -351,7 +339,6 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
   }
 
   private getTimelineStatus(status: string): Surgery['status'] {
-    // Backend may send IN_PROGRESS (underscore) or in-progress (dash)
     const normalized = (status || '').toLowerCase().replace(/_/g, '-');
     if (normalized === 'in-progress') return 'in-progress';
     if (normalized === 'completed') return 'completed';
@@ -406,12 +393,5 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
 
   private toNumericId(value: string): number {
     return Math.abs(Array.from(value).reduce((acc, char) => ((acc * 31) + char.charCodeAt(0)) | 0, 0));
-  }
-
-  getInitials(name: string): string {
-    if (!name) return '??';
-    const parts = name.trim().split(' ');
-    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 }
