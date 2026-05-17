@@ -18,14 +18,17 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/surgery-types")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:4200")
 @Tag(name = "Surgery Types", description = "Managementul tipurilor de operații")
 public class SurgeryTypeController {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SurgeryTypeController.class);
     private final SurgeryTypeService surgeryTypeService;
 
     @GetMapping
     @Operation(summary = "Listează toate tipurile de operații")
     public ResponseEntity<List<SurgeryTypeResponse>> getAll() {
+        log.info("GET /api/surgery-types - Fetching all surgery types");
         return ResponseEntity.ok(surgeryTypeService.getAll());
     }
 
@@ -63,5 +66,12 @@ public class SurgeryTypeController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         surgeryTypeService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleException(Exception ex) {
+        log.error("Error in SurgeryTypeController: ", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ex.getClass().getSimpleName() + ": " + ex.getMessage());
     }
 }

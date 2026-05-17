@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import octacare.orschedulercore.entity.enums.RoomStatus;
 import octacare.orschedulercore.entity.enums.RoomType;
+import octacare.orschedulercore.entity.converter.StringListConverter;
 
 import java.util.List;
 import java.util.UUID;
@@ -30,10 +31,9 @@ public class OperatingRoom {
     @Column(name = "room_type", nullable = false)
     private RoomType roomType;
 
-    // @ElementCollection
-    // @CollectionTable(name = "operating_room_equipment", joinColumns = @JoinColumn(name = "room_id"))
-    // @Column(name = "equipment_name")
-    // private List<String> equipment;
+    @Convert(converter = StringListConverter.class)
+    @Column(name = "equipment", columnDefinition = "TEXT")
+    private List<String> equipment;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

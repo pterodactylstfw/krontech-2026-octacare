@@ -4,6 +4,8 @@ import { ThemeService } from '../../core/theme/theme.service';
 import { AuthService } from '../../core/services/auth.service';
 import { UserRole } from '../../core/enums/user-role.enum';
 import { ScheduleService } from '../../core/services/schedule.service';
+import { PatientService } from '../patients/services/patient.service';
+import { catchError, of } from 'rxjs';
 import {
   DoctorProfile,
   DoctorStats,
@@ -17,6 +19,17 @@ import { ChatService } from '../chat/chat.service';
 import { SurgeryService } from '../../core/services/surgery.service';
 import { Surgery as BackendSurgery } from '../../shared/models/surgery.model';
 
+interface DoctorPatientSummary {
+  id: string;
+  initials: string;
+  name: string;
+  email: string;
+  medicalRecordNumber: string;
+  bloodType: string;
+  phone: string;
+}
+
+
 @Component({
   selector: 'app-doctor-dashboard',
   standalone: true,
@@ -27,6 +40,7 @@ import { Surgery as BackendSurgery } from '../../shared/models/surgery.model';
 export class DoctorDashboardComponent implements OnInit, OnDestroy {
   readonly theme = inject(ThemeService);
   private authService = inject(AuthService);
+  private patientService = inject(PatientService);
   private chatService = inject(ChatService);
   private scheduleService = inject(ScheduleService);
   private surgeryService = inject(SurgeryService);
@@ -38,6 +52,11 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
   });
 
   chatOpen = false;
+  showAllPatients = false;
+  patientsLoading = false;
+  patientsError: string | null = null;
+
+  private _allPatients = signal<DoctorPatientSummary[]>([]);
 
   // ── State ──────────────────────────────────────────────────────────────────
   doctor = signal<DoctorProfile>({
@@ -57,15 +76,93 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
     { id: 3, severity: 'info', message: '2 surgeries pending approval', time: 'Just now' },
   ]);
 
-  selectedPatient: { name: string; initials: string } | null = null;
-
   openChat(patient: RecentPatient): void {
-    this.selectedPatient = { name: patient.name, initials: patient.initials };
     this.chatService.openConversation(patient.id, patient.name, patient.initials);
     this.chatOpen = true;
   }
 
   private _schedule = signal<Surgery[]>([]);
+  openAllPatients(): void {
+    this.showAllPatients = true;
+
+    if (!this._allPatients().length && !this.patientsLoading) {
+      this.loadAllPatients();
+    }
+  }
+
+  closeAllPatients(): void {
+    this.showAllPatients = false;
+  }
+
+  private loadAllPatients(): void {
+    this.patientsLoading = true;
+    this.patientsError = null;
+
+    this.patientService.getAllPatients().pipe(
+      catchError((error) => {
+        console.error('❌ DoctorDashboard: Failed to load patients', error);
+        this.patientsError = 'Could not load patients right now.';
+        return of([]);
+      })
+    ).subscribe((patients: any[]) => {
+      this._allPatients.set((patients ?? []).map((patient) => this.mapPatient(patient)));
+      this.patientsLoading = false;
+    });
+  }
+
+  private mapPatient(patient: any): DoctorPatientSummary {
+    const fullName = patient?.fullName ?? 'Unknown patient';
+    return {
+      id: String(patient?.id ?? patient?.userId ?? fullName),
+      initials: this.getInitials(fullName),
+      name: fullName,
+      email: patient?.email ?? 'No email',
+      medicalRecordNumber: patient?.medicalRecordNumber ?? 'MRN unavailable',
+      bloodType: patient?.bloodType ?? 'Blood type unknown',
+      phone: patient?.phone ?? 'No phone'
+    };
+  }
+
+  private getInitials(name: string): string {
+    return name
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(part => part[0]?.toUpperCase() ?? '')
+      .join('');
+  }
+
+  private toThreadId(source: string): number {
+    return Array.from(source).reduce((hash, char) => {
+      return ((hash << 5) - hash + char.charCodeAt(0)) | 0;
+    }, 0);
+  }
+
+  openPatientChat(patient: DoctorPatientSummary): void {
+    this.chatService.openConversation(this.toThreadId(patient.id), patient.name, patient.initials);
+    this.chatOpen = true;
+    this.closeAllPatients();
+  }
+
+  readonly allPatients = this._allPatients.asReadonly();
+
+  private _schedule = signal<Surgery[]>([
+    {
+      id: 1, procedureName: 'Appendectomy', patientName: 'Gheorghe Mihai',
+      room: 'OR 1', type: 'General', startTime: '08:00', duration: 90,
+      status: 'completed', notes: '',
+    },
+    {
+      id: 2, procedureName: 'Coronary Bypass', patientName: 'Popa Ion',
+      room: 'OR 1', type: 'Cardiac', startTime: '10:30', duration: 180,
+      status: 'in-progress', notes: '⚠ Pre-op labs not confirmed',
+    },
+    {
+      id: 3, procedureName: 'Aortic Valve Repair', patientName: 'Dumitru Elena',
+      room: 'OR 1', type: 'Cardiac', startTime: '14:00', duration: 120,
+      status: 'scheduled', notes: '',
+    },
+  ]);
 
   private _recentPatients = signal<RecentPatient[]>([]);
 
@@ -77,6 +174,8 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
   readonly recentPatients = computed(() => {
     return this.showAllPatients() ? this._recentPatients() : this._recentPatients().slice(0, 3);
   });
+  readonly recentPatients = this._recentPatients.asReadonly();
+
 
   readonly stats = computed<DoctorStats>(() => {
     const schedule = this._schedule();

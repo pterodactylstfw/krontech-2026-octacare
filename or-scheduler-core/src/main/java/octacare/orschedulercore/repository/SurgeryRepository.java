@@ -5,6 +5,7 @@ import octacare.orschedulercore.entity.enums.SurgeryPriority;
 import octacare.orschedulercore.entity.enums.SurgeryStatus;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -14,11 +15,14 @@ import java.util.UUID;
 @Repository
 public interface SurgeryRepository extends JpaRepository<Surgery, UUID> {
 
+    @Query("select distinct s from Surgery s left join fetch s.patient left join fetch s.surgeon left join fetch s.room left join fetch s.surgeryType")
+    List<Surgery> findAllWithDetails();
+
     List<Surgery> findBySurgeon_Id(UUID surgeonId);
 
     List<Surgery> findByPatient_Id(UUID patientId);
 
-    List<Surgery> findByRoomId(UUID roomId);
+    List<Surgery> findByRoom_Id(UUID roomId);
 
     @EntityGraph(attributePaths = {"surgeon", "surgeryType"})
     List<Surgery> findByStatus(SurgeryStatus status);

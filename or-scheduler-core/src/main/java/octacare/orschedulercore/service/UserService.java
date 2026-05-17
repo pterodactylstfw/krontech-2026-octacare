@@ -10,6 +10,10 @@ import octacare.orschedulercore.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,6 +24,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JavaMailSender mailSender;
 
     public List<UserResponse> getAll(Role role, String department) {
         List<User> users;
@@ -136,4 +141,40 @@ public class UserService {
 
         return UserResponse.from(userRepository.save(user));
     }
+
+    @Transactional
+public void forgotPassword(String email) {
+    Optional<User> userOpt = userRepository.findByEmail(email);
+    if (userOpt.isEmpty()) return;
+
+    User user = userOpt.get();
+    String token = UUID.randomUUID().toString();
+    user.setResetToken(token);
+    user.setResetTokenExpiry(LocalDateTime.now().plusHours(1));
+    userRepository.save(user);
+
+    String resetLink = "http://localhost:4200/auth/reset-password?token=" + token;
+    
+    SimpleMailMessage message = new SimpleMailMessage();
+    message.setTo(email);
+    message.setSubject("OR Scheduler - Reset Password");
+    message.setText("Click the link below to reset your password:\n\n" + resetLink + "\n\nThis link expires in 1 hour.");
+    
+    mailSender.send(message);
+}
+
+@Transactional
+public void resetPassword(String token, String newPassword) {
+    User user = userRepository.findByResetToken(token)
+            .orElseThrow(() -> new RuntimeException("Invalid or expired token"));
+    
+    if (user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
+        throw new RuntimeException("Token has expired");
+    }
+
+    user.setPasswordHash(passwordEncoder.encode(newPassword));
+    user.setResetToken(null);
+    user.setResetTokenExpiry(null);
+    userRepository.save(user);
+}
 }

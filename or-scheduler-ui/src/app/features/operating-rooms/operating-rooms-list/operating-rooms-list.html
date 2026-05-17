@@ -126,7 +126,7 @@
         <!-- Timeline track -->
         <div class="tl-track">
           <div class="tl-grid-lines">
-            <div class="tl-grid-line" *ngFor="let h of timelineHours"></div>
+            <div class="tl-grid-line" *ngFor="let _ of timelineHours"></div>
           </div>
 
           <div class="tl-now" [style.left.%]="getNowPercent()">
@@ -207,45 +207,47 @@
         <div class="form-row">
           <div class="field">
             <label>Room name</label>
-            <input type="text" placeholder="Sala 1" [(ngModel)]="roomDraft.name" />
+            <input type="text" name="roomName" placeholder="Sala 1" [(ngModel)]="roomDraft.name" />
           </div>
           <div class="field">
             <label>Status</label>
-            <select [(ngModel)]="roomDraft.status">
-              <option *ngFor="let s of statusOptions" [ngValue]="s.value">{{ s.label }}</option>
+            <select name="roomStatus" [(ngModel)]="roomDraft.status">
+              <option [value]="''" disabled>Select status</option>
+              <option *ngFor="let s of statusOptions" [value]="s.value">{{ s.label }}</option>
             </select>
           </div>
         </div>
         <div class="form-row">
           <div class="field">
             <label>Type</label>
-            <select [(ngModel)]="roomDraft.roomType">
-              <option *ngFor="let t of roomTypes" [ngValue]="t.value">{{ t.label }}</option>
+            <select name="roomType" [(ngModel)]="roomDraft.roomType">
+              <option [value]="''" disabled>Select type</option>
+              <option *ngFor="let t of roomTypes" [value]="t.value">{{ t.label }}</option>
             </select>
           </div>
           <div class="field">
             <label>Floor</label>
-            <input type="number" min="0" [(ngModel)]="roomDraft.floor" />
+            <input type="number" name="roomFloor" min="0" [(ngModel)]="roomDraft.floor" />
           </div>
         </div>
         <div class="form-row">
           <div class="field">
             <label>Capacity</label>
-            <input type="number" min="1" [(ngModel)]="roomDraft.capacity" />
+            <input type="number" name="roomCapacity" min="1" [(ngModel)]="roomDraft.capacity" />
           </div>
           <div class="field">
             <label>Sterilization (min)</label>
-            <input type="number" min="0" [(ngModel)]="roomDraft.sterilizationTimeMinutes" />
+            <input type="number" name="roomSterilization" min="0" [(ngModel)]="roomDraft.sterilizationTimeMinutes" />
           </div>
         </div>
         <div class="field full">
           <label>Equipment</label>
-          <input type="text" placeholder="ECG, Defibrillator, Bypass" [(ngModel)]="equipmentText" />
+          <input type="text" name="roomEquipment" placeholder="ECG, Defibrillator, Bypass" [(ngModel)]="equipmentText" />
         </div>
       </div>
       <div class="modal-footer">
-        <button class="cancel-btn" (click)="closeModal()">Cancel</button>
-        <button class="save-btn" (click)="saveRoom()">{{ isEditing ? 'Save' : 'Add Room' }}</button>
+        <button type="button" class="cancel-btn" (click)="closeModal()">Cancel</button>
+        <button type="button" class="save-btn" (click)="saveRoom()">{{ isEditing ? 'Save' : 'Add Room' }}</button>
       </div>
     </div>
   </div>

@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 @Tag(name = "Users", description = "Managementul utilizatorilor și al profilului")
@@ -34,8 +35,28 @@ public class UsersController {
         return ResponseEntity.ok(userService.getByEmail(email));
     }
 
+    @PutMapping("/me")
+    @Operation(summary = "Actualizează complet profilul utilizatorului curent")
+    public ResponseEntity<UserResponse> updateMe(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody UserUpsertRequest request) {
+        String email = jwt.getClaimAsString("sub");
+        UserResponse current = userService.getByEmail(email);
+        return ResponseEntity.ok(userService.update(current.id(), request));
+    }
+
+    @PatchMapping("/me")
+    @Operation(summary = "Actualizează parțial profilul utilizatorului curent")
+    public ResponseEntity<UserResponse> patchMe(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestBody UserPatchRequest request) {
+        String email = jwt.getClaimAsString("sub");
+        UserResponse current = userService.getByEmail(email);
+        return ResponseEntity.ok(userService.patch(current.id(), request));
+    }
+
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SURGEON')")
     @Operation(summary = "Listează toți utilizatorii, cu filtrare după rol și departament")
     public ResponseEntity<List<UserResponse>> getAll(
             @RequestParam(required = false) Role role,

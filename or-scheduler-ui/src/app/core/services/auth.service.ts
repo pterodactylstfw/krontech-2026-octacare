@@ -19,48 +19,54 @@ export class AuthService {
     this.configureOAuth();
   }
 
+  
+
   private configureOAuth() {
-    this.oauthService.configure(authConfig);
-
-    // Setează librăria să curețe automat datele vechi de login dacă apare o eroare
-    this.oauthService.events.subscribe(event => {
-      if (event.type === 'token_validation_error' || event.type === 'invalid_nonce_in_state') {
-        console.error('Eroare critică la validarea token-ului:', event);
-        this.handleUnauthorized();
-      }
-    });
-
-    this.oauthService.setupAutomaticSilentRefresh();
-
-    // Încărcăm documentul și încercăm logarea
-    this.oauthService.loadDiscoveryDocumentAndTryLogin()
-      .then(() => {
-        if (this.oauthService.hasValidAccessToken()) {
-          this.loadUserProfile();
-        } else {
-          // Dacă nu avem token, anunțăm restul aplicației
-          this.currentUserSubject.next(null);
-        }
-      })
-      .catch(err => {
-        console.error('❌ Nu s-a putut încărca documentul de discovery (Backend offline?):', err);
-        this.currentUserSubject.next(null);
-      });
+  const currentPath = window.location.pathname;
+  const publicPaths = ['/auth/forgot-password', '/auth/reset-password'];
+  if (publicPaths.some(p => currentPath.startsWith(p))) {
+    this.currentUserSubject.next(null);
+    return;
   }
+
+  this.oauthService.configure(authConfig);
+
+  this.oauthService.events.subscribe(event => {
+    if (event.type === 'token_validation_error' || event.type === 'invalid_nonce_in_state') {
+      console.error('Eroare critică la validarea token-ului:', event);
+      this.handleUnauthorized();
+    }
+  });
+
+  this.oauthService.setupAutomaticSilentRefresh();
+
+  this.oauthService.loadDiscoveryDocumentAndTryLogin()
+    .then(() => {
+      if (this.oauthService.hasValidAccessToken()) {
+        this.loadUserProfile();
+      } else {
+        this.currentUserSubject.next(null);
+      }
+    })
+    .catch(err => {
+      console.error('❌ Nu s-a putut încărca documentul de discovery (Backend offline?):', err);
+      this.currentUserSubject.next(null);
+    });
+}
 
   /**
    * RESETARE COMPLETĂ A SESIUNII (NUCLEAR OPTION)
    */
   private handleUnauthorized() {
     console.warn('🔄 Sesiune invalidă detectată. Se execută resetare forțată...');
-    
+
     // 1. Curățăm starea locală a aplicației
     this.currentUserSubject.next(null);
-    
+
     // 2. Curățăm tot storage-ul pentru a elimina token-urile expirate/invalide
     localStorage.clear();
     sessionStorage.clear();
-    
+
     // 3. Forțăm redirecționarea la login
     // Încercăm prin librărie, dar dacă backend-ul a dat 401, probabil librăria e blocată
     try {
@@ -119,12 +125,20 @@ export class AuthService {
      });
    }
 
+    /**
+     * Public wrapper to reload the current user's profile from the API.
+     * Useful for letting other components request a refresh after updates.
+     */
+    public refreshProfile(): void {
+      this.loadUserProfile();
+    }
+
   public logout(): void {
     console.log('🚪 Logging out...');
     this.currentUserSubject.next(null);
-    
+
     // NOTĂ: Nu ștergem localStorage/sessionStorage manual înainte de logOut().
-    // Librăria oauthService.logOut() are nevoie de id_token din storage 
+    // Librăria oauthService.logOut() are nevoie de id_token din storage
     // pentru a-l trimite ca 'id_token_hint' către backend (OIDC standard).
     // Ea se va ocupa singură de curățarea token-urilor după ce inițiază redirect-ul.
     this.oauthService.logOut();
@@ -140,6 +154,9 @@ export class AuthService {
 
   getCurrentUserRole(): UserRole | null {
     return this.currentUserSubject.value?.role || null;
+  }
+  getCurrentUser(): User | null {
+    return this.currentUserSubject.value;
   }
   isAdmin(): boolean { return this.getCurrentUserRole() === UserRole.ADMIN; }
   isSurgeon(): boolean { return this.getCurrentUserRole() === UserRole.SURGEON; }
