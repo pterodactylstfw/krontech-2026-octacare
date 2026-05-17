@@ -1,0 +1,41 @@
+name: Frontend Unit Tests
+
+on:
+  pull_request:
+    paths:
+      - 'or-scheduler-ui/**'
+      - '.github/workflows/frontend-unit.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'or-scheduler-ui/**'
+      - '.github/workflows/frontend-unit.yml'
+  workflow_dispatch:
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+
+    defaults:
+      run:
+        working-directory: or-scheduler-ui
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: or-scheduler-ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm run test:unit:ci
