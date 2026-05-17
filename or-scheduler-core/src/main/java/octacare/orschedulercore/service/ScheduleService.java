@@ -62,13 +62,19 @@ public class ScheduleService {
         // 2. Obtinem medicii chirurgi (Mock pentru disponibilitate deoarece lipseste entitatea momentan)
         List<User> surgeons = userRepository.findByRole(Role.SURGEON);
         log.info("Found {} surgeons", surgeons.size());
-        List<SurgeonAvailabilityDto> surgeonAvailabilityDtos = surgeons.stream()
-                .map(s -> new SurgeonAvailabilityDto(
+        List<SurgeonAvailabilityDto> surgeonAvailabilityDtos = new ArrayList<>();
+        LocalDate currentDate = startDate;
+        while (!currentDate.isAfter(endDate)) {
+            for (User s : surgeons) {
+                surgeonAvailabilityDtos.add(new SurgeonAvailabilityDto(
                         s.getId(),
-                        startDate,
+                        currentDate,
                         "08:00",
                         "16:00"
-                )).toList();
+                ));
+            }
+            currentDate = currentDate.plusDays(1);
+        }
 
         // 3. Get surgeries to (re-)schedule:
         //    - SCHEDULED ones in the requested date range (re-optimization of existing day)
@@ -100,7 +106,7 @@ public class ScheduleService {
                         s.getSurgeryType().getId(),
                         s.getPriority() != null ? s.getPriority().name() : "ELECTIVE",
                         (s.getSurgeryType().getAvgDurationMinutes() != null && s.getSurgeryType().getAvgDurationMinutes() > 0) ? s.getSurgeryType().getAvgDurationMinutes() : 60,
-                        "GENERAL" // Default required room type
+                        "GENERAL"
                 ));
             } catch (Exception e) {
                 log.error("❌ Error mapping pending surgery {}: {}", s.getId(), e.getMessage());
@@ -136,6 +142,11 @@ public class ScheduleService {
             log.info("Algorithm returned {} scheduled surgeries. Status: {}, Score: {}", 
                 response.schedule().size(), response.status(), response.score());
             
+            java.util.Set<UUID> scheduledIds = response.schedule().stream()
+                .map(ScheduledSurgeryDto::surgeryId)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toSet());
+
             for (ScheduledSurgeryDto dto : response.schedule()) {
                 log.debug("Processing scheduled surgery DTO: {}", dto);
                 
@@ -170,6 +181,18 @@ public class ScheduleService {
                     });
                 } catch (Exception innerEx) {
                     log.error("❌ Error processing surgery {}: {}", dto.surgeryId(), innerEx.getMessage(), innerEx);
+                }
+            }
+
+            // Mark unscheduled surgeries as PENDING
+            for (Surgery s : pendingSurgeries) {
+                if (!scheduledIds.contains(s.getId())) {
+                    log.info("Surgery {} was not scheduled by the algorithm. Marking as PENDING.", s.getId());
+                    s.setStatus(SurgeryStatus.PENDING);
+                    s.setScheduledStart(null);
+                    s.setScheduledEnd(null);
+                    s.setRoom(null);
+                    surgeryRepository.save(s);
                 }
             }
         } else {
