@@ -134,14 +134,13 @@ export class AuthService {
     }
 
   public logout(): void {
-    console.log('🚪 Logging out...');
+    console.log('🚪 Logging out via server endpoint...');
     this.currentUserSubject.next(null);
-
-    // NOTĂ: Nu ștergem localStorage/sessionStorage manual înainte de logOut().
-    // Librăria oauthService.logOut() are nevoie de id_token din storage
-    // pentru a-l trimite ca 'id_token_hint' către backend (OIDC standard).
-    // Ea se va ocupa singură de curățarea token-urilor după ce inițiază redirect-ul.
-    this.oauthService.logOut();
+    this.oauthService.logOut(true); // true means skip the OIDC-defined logout URL and just clear local tokens
+    
+    // Forțăm o redirecționare la endpoint-ul de logout al Spring Boot (prin Nginx)
+    // Acest lucru distruge JSESSIONID-ul și sesiunea de securitate a serverului
+    window.location.href = '/logout';
   }
 
   public getToken(): string {
