@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-reset-password',
@@ -52,7 +53,8 @@ export class ResetPasswordComponent implements OnInit {
   this.isLoading = true;
   this.errorMessage = '';
 
-  this.http.post('http://localhost:8080/api/auth/reset-password', {
+  this.http.post(`${environment.apiUrl}/auth/reset-password`, {
+
     token: this.token,
     newPassword: this.newPassword
   }, { responseType: 'text' }).subscribe({

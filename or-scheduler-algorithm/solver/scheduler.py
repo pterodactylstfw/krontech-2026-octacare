@@ -15,7 +15,8 @@ def generate_optimal_schedule(request: ScheduleGenerationRequest) -> Dict[str, A
     model = cp_model.CpModel()
     surgery_vars = {}
 
-    horizon_minutes = 7*24*60
+    days = (request.date_range_end - request.date_range_start).days + 1
+    horizon_minutes = max(1, days) * 24 * 60
     sterilization_time = request.rooms[0].sterilization_time_minutes if request.rooms else 45
 
     for surgery in request.surgeries:
@@ -40,7 +41,7 @@ def generate_optimal_schedule(request: ScheduleGenerationRequest) -> Dict[str, A
             room_presences[room.id] = presence_var
 
             required_type = getattr(surgery, "required_room_type", "GENERAL")
-            if room.room_type != required_type:
+            if required_type != "GENERAL" and room.room_type != required_type:
                 model.Add(presence_var == 0)
                 continue
 
@@ -73,7 +74,7 @@ def generate_optimal_schedule(request: ScheduleGenerationRequest) -> Dict[str, A
     # Aplicăm constrângerile HARD
     apply_room_capacity_constraints(model, surgery_vars, request.rooms)
     apply_surgeon_capacity_constraints(model, surgery_vars)
-    apply_surgeon_availability_constraints(model, surgery_vars, request.surgeons_availability)
+    apply_surgeon_availability_constraints(model, surgery_vars, request.surgeons_availability, request.date_range_start)
 
     PRIORITY_WEIGHTS = {
         "EMERGENCY": 1000,
@@ -82,9 +83,9 @@ def generate_optimal_schedule(request: ScheduleGenerationRequest) -> Dict[str, A
     }
 
     DROP_PENALTIES = {
-        "EMERGENCY": 1000000,
-        "URGENT": 100000,
-        "ELECTIVE": 10000
+        "EMERGENCY": 1000000000,
+        "URGENT": 100000000,
+        "ELECTIVE": 10000000
     }
 
     objective_terms = []
@@ -119,7 +120,7 @@ def generate_optimal_schedule(request: ScheduleGenerationRequest) -> Dict[str, A
 
     solver = cp_model.CpSolver()
 
-    solver.parameters.max_time_in_seconds = 10.0
+    solver.parameters.max_time_in_seconds = 8.0
     start_time = time.time()
     status = solver.Solve(model)
     generation_time_ms = int((time.time() - start_time) * 1000)

@@ -38,6 +38,9 @@ import java.util.UUID;
 @Configuration
 public class AuthorizationServerConfig {
 
+    @org.springframework.beans.factory.annotation.Value("${app.ui-url}")
+    private String uiUrl;
+
     @Bean
     @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -77,7 +80,16 @@ public class AuthorizationServerConfig {
                 .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                // Suport pentru multiple redirect-uri (Local Docker, Local npm start, AWS, DuckDNS)
+                .redirectUri(uiUrl + "/auth/callback")
+                .redirectUri("http://or-scheduler.duckdns.org/auth/callback")
+                .redirectUri("http://localhost/auth/callback")
                 .redirectUri("http://localhost:4200/auth/callback")
+                .redirectUri("http://127.0.0.1/auth/callback")
+                // Post-logout
+                .postLogoutRedirectUri(uiUrl + "/auth/login")
+                .postLogoutRedirectUri("http://or-scheduler.duckdns.org/auth/login")
+                .postLogoutRedirectUri("http://localhost/auth/login")
                 .postLogoutRedirectUri("http://localhost:4200/auth/login")
                 .scope(OidcScopes.OPENID)
                 .scope(OidcScopes.PROFILE)
@@ -121,6 +133,7 @@ public class AuthorizationServerConfig {
 
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
-        return AuthorizationServerSettings.builder().build();
+        return AuthorizationServerSettings.builder()
+                .build();
     }
-}
+    }

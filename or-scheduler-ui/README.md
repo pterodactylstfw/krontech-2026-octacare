@@ -46,13 +46,40 @@ ng test
 
 ## Running end-to-end tests
 
-For end-to-end (e2e) testing, run:
+This project uses **Playwright** for E2E testing.
+
+Run smoke tests in headless mode:
 
 ```bash
-ng e2e
+npm run e2e
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+Run in headed mode:
+
+```bash
+npm run e2e:headed
+```
+
+Open Playwright UI mode for debugging and extending tests:
+
+```bash
+npm run e2e:ui
+```
+
+### E2E structure
+
+- `e2e/smoke.spec.ts` — baseline smoke test for protected route behavior
+- `playwright.config.ts` — browser, web server, retries, and CI settings
+
+### CI usage
+
+For CI environments, use:
+
+```bash
+npm run e2e:ci
+```
+
+GitHub Actions workflow: `.github/workflows/frontend-e2e.yml`
 
 ## Additional Resources
 

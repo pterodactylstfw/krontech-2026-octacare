@@ -35,7 +35,7 @@ def apply_surgeon_capacity_constraints(model: cp_model.CpModel, surgery_vars: di
         if len(intervals) > 1:
             model.AddNoOverlap(intervals)
 
-def apply_surgeon_availability_constraints(model: cp_model.CpModel, surgery_vars: dict, availabilities: list):
+def apply_surgeon_availability_constraints(model: cp_model.CpModel, surgery_vars: dict, availabilities: list, base_date):
     """
     Constrângere HARD: Operația trebuie să se desfășoare strict în timpul programului chirurgului.
     """
@@ -47,11 +47,15 @@ def apply_surgeon_availability_constraints(model: cp_model.CpModel, surgery_vars
         if s_id not in surgeon_shifts:
             surgeon_shifts[s_id] = []
 
+        day_offset = (shift.date - base_date).days
+        if day_offset < 0:
+            continue
+
         start_parts = shift.start_time.split(":")
-        start_mins = int(start_parts[0]) * 60 + int(start_parts[1])
+        start_mins = day_offset * 24 * 60 + int(start_parts[0]) * 60 + int(start_parts[1])
         
         end_parts = shift.end_time.split(":")
-        end_mins = int(end_parts[0]) * 60 + int(end_parts[1])
+        end_mins = day_offset * 24 * 60 + int(end_parts[0]) * 60 + int(end_parts[1])
 
         surgeon_shifts[s_id].append({"start": start_mins, "end": end_mins})
     
