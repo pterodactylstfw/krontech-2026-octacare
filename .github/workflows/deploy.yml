@@ -23,6 +23,9 @@ jobs:
             cd /home/ubuntu/krontech
             git pull origin main
             
+            # Free up space before build
+            sudo docker system prune -af --volumes
+            
             # Create .env file from secrets
             echo "DB_PASS=${{ secrets.DB_PASS }}" > .env
             echo "POSTGRES_PASSWORD=${{ secrets.DB_PASS }}" >> .env
