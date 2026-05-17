@@ -200,6 +200,7 @@
   backdrop-filter: blur(28px) saturate(1.5);
   -webkit-backdrop-filter: blur(28px) saturate(1.5);
   transition: background 0.3s ease;
+  z-index: 50;
 }
 
 // ─── Logo ─────────────────────────────────────────────

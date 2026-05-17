@@ -79,7 +79,7 @@ import { animate, style, transition, trigger } from '@angular/animations';
     }
 
     .dropdown-panel {
-      position: absolute; top: 0; left: 52px; /* Open to the right of the sidebar */
+      position: absolute; bottom: 0; left: 52px; /* Open upwards and to the right */
       width: 340px; 
       background: var(--surface-primary, #ffffff); 
       border-radius: var(--radius-md, 12px);
@@ -92,8 +92,8 @@ import { animate, style, transition, trigger } from '@angular/animations';
     }
 
     @keyframes dropFadeRight {
-      from { opacity: 0; transform: translateX(-10px) scale(0.98); }
-      to { opacity: 1; transform: translateX(0) scale(1); }
+      from { opacity: 0; transform: translateX(-10px) translateY(10px) scale(0.98); }
+      to { opacity: 1; transform: translateX(0) translateY(0) scale(1); }
     }
 
     .dropdown-header {
@@ -102,7 +102,7 @@ import { animate, style, transition, trigger } from '@angular/animations';
       display: flex; justify-content: space-between; align-items: center;
       font-weight: 600; font-size: 14px;
       color: var(--text-primary, #1d1d1f);
-      background: rgba(255,255,255,0.5);
+      background: transparent;
     }
 
     .mark-all-btn {
