@@ -1,4 +1,6 @@
-export const API_BASE = 'http://localhost:8080/api';
+import { environment } from '../../../environments/environment';
+
+export const API_BASE = environment.apiUrl;
 
 export const API_ENDPOINTS = {
   auth: `${API_BASE}/auth`,

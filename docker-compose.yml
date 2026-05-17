@@ -54,9 +54,15 @@ services:
       SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASS}
       RABBITMQ_HOST: rabbitmq
-      UI_URL: ${UI_URL:-http://localhost:4200}
+      UI_URL: ${UI_URL:-http://localhost}
     networks:
       - or-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/api/auth/me || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
 
   or-scheduler-ui:
     build:

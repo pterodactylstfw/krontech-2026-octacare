@@ -67,8 +67,9 @@ export class PatientService {
 
      console.log('🔧 PatientService.getMySurgeries() - calling /api/surgeries/my');
      // Call the new /my endpoint that handles current user context
-     // environment.apiUrl is http://localhost:8080/api, so we append surgeries/my to it
-     const apiUrl = `${environment.apiUrl || 'http://localhost:8080/api'}/surgeries/my`;
+     // environment.apiUrl is /api, so we append surgeries/my to it
+     const apiUrl = `${environment.apiUrl}/surgeries/my`;
+
      // The jwtInterceptor will automatically add the Authorization header with the bearer token
      return this.http.get<any[]>(apiUrl).pipe(
        switchMap((surgeries: any[]) => {
@@ -95,7 +96,7 @@ export class PatientService {
    }
 
    getAllPatients(): Observable<any[]> {
-     const apiUrl = `${environment.apiUrl || 'http://localhost:8080/api'}/patients`;
+     const apiUrl = `${environment.apiUrl}/patients`;
      return this.http.get<any[]>(apiUrl);
    }
 }

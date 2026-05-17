@@ -80,8 +80,15 @@ public class AuthorizationServerConfig {
                 .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                // Suport pentru multiple redirect-uri (Local Docker, Local npm start, AWS)
                 .redirectUri(uiUrl + "/auth/callback")
+                .redirectUri("http://localhost/auth/callback")
+                .redirectUri("http://localhost:4200/auth/callback")
+                .redirectUri("http://127.0.0.1/auth/callback")
+                // Post-logout
                 .postLogoutRedirectUri(uiUrl + "/auth/login")
+                .postLogoutRedirectUri("http://localhost/auth/login")
+                .postLogoutRedirectUri("http://localhost:4200/auth/login")
                 .scope(OidcScopes.OPENID)
                 .scope(OidcScopes.PROFILE)
                 .scope("role")
@@ -124,6 +131,7 @@ public class AuthorizationServerConfig {
 
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
-        return AuthorizationServerSettings.builder().build();
+        return AuthorizationServerSettings.builder()
+                .build();
     }
-}
+    }

@@ -5,6 +5,10 @@ export const authConfig: AuthConfig = {
   // Folosim origin-ul curent (ex: http://IP:4200) pentru că Nginx va face proxy
   issuer: window.location.origin,
 
+  // Dezactivăm validarea strictă pentru a permite login-ul pe IP-uri diferite/porturi diferite (Docker vs AWS)
+  strictDiscoveryDocumentValidation: false,
+  skipIssuerCheck: true,
+
   // URL-ul din Angular unde va fi redirecționat utilizatorul după login
   redirectUri: window.location.origin + '/auth/callback',
 
