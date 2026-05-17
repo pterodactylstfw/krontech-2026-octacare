@@ -1,0 +1,50 @@
+name: Frontend E2E
+
+on:
+  pull_request:
+    paths:
+      - 'or-scheduler-ui/**'
+      - '.github/workflows/frontend-e2e.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'or-scheduler-ui/**'
+      - '.github/workflows/frontend-e2e.yml'
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    defaults:
+      run:
+        working-directory: or-scheduler-ui
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: or-scheduler-ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npm run e2e:ci
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: or-scheduler-ui/playwright-report
+          retention-days: 7
