@@ -37,5 +37,6 @@ export interface SurgeryRequest {
 export interface SurgeryRescheduleRequest {
   newStart: string;
   newEnd: string;
+  roomId?: string;
 }
 

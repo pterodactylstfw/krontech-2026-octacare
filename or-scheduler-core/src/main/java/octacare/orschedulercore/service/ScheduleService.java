@@ -19,7 +19,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -65,11 +69,22 @@ public class ScheduleService {
                         "16:00"
                 )).toList();
 
-        // 3. Obtinem interventiile neprogramate (PENDING)
-        List<Surgery> pendingSurgeries = surgeryRepository.findByStatus(SurgeryStatus.PENDING);
-        log.info("Found {} pending surgeries", pendingSurgeries.size());
-        
-        List<SurgeryDto> surgeryDtos = new java.util.ArrayList<>();
+        // 3. Get surgeries to (re-)schedule:
+        //    - SCHEDULED ones in the requested date range (re-optimization of existing day)
+        //    - All PENDING ones (not yet assigned a slot), regardless of date
+        LocalDateTime rangeStart = startDate.atStartOfDay();
+        LocalDateTime rangeEnd   = endDate.atTime(23, 59, 59);
+        Map<UUID, Surgery> toScheduleMap = new LinkedHashMap<>();
+        surgeryRepository.findByScheduledStartBetween(rangeStart, rangeEnd)
+                .stream()
+                .filter(s -> s.getStatus() == SurgeryStatus.SCHEDULED || s.getStatus() == SurgeryStatus.PENDING)
+                .forEach(s -> toScheduleMap.put(s.getId(), s));
+        surgeryRepository.findByStatus(SurgeryStatus.PENDING)
+                .forEach(s -> toScheduleMap.put(s.getId(), s));
+        List<Surgery> pendingSurgeries = new ArrayList<>(toScheduleMap.values());
+        log.info("Found {} surgeries to (re-)schedule", pendingSurgeries.size());
+
+        List<SurgeryDto> surgeryDtos = new ArrayList<>();
         for (Surgery s : pendingSurgeries) {
             try {
                 if (s.getId() == null || s.getSurgeon() == null || s.getSurgeryType() == null) {

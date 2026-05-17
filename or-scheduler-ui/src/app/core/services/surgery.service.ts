@@ -71,11 +71,8 @@ export class SurgeryService {
     return this.http.patch<Surgery>(`${this.apiUrl}/${id}/status`, status);
   }
 
-  reschedule(id: string, newStart: string, newEnd: string): Observable<Surgery> {
-    const request: SurgeryRescheduleRequest = {
-      newStart,
-      newEnd
-    };
+  reschedule(id: string, newStart: string, newEnd: string, roomId?: string): Observable<Surgery> {
+    const request: SurgeryRescheduleRequest = { newStart, newEnd, roomId };
     return this.http.patch<Surgery>(`${this.apiUrl}/${id}/reschedule`, request);
   }
 }

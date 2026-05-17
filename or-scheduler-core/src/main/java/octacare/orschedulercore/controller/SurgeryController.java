@@ -132,7 +132,7 @@ public class SurgeryController {
     public ResponseEntity<SurgeryResponse> reschedule(
             @PathVariable UUID id,
             @Valid @RequestBody SurgeryRescheduleRequest request) {
-        return ResponseEntity.ok(surgeryService.reschedule(id, request.newStart(), request.newEnd()));
+        return ResponseEntity.ok(surgeryService.reschedule(id, request.newStart(), request.newEnd(), request.roomId()));
     }
 
     @ExceptionHandler(RuntimeException.class)

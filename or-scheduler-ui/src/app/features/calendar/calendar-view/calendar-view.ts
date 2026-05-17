@@ -35,18 +35,22 @@ export class CalendarViewComponent implements OnInit {
   today = new Date();
   selectedSurgery: Surgery | null = null;
   draggedSurgery: Surgery | null = null;
+  dragOverCell: string | null = null;
   isGenerating = false;
+  generateError = '';
 
   orRooms: ORRoom[] = [];
   surgeries: Surgery[] = [];
 
   // ── Add Surgery Modal ────────────────────────────────────────────────────────
   showAddModal = signal(false);
+  isSaving = signal(false);
+  saveError = signal('');
   patients = signal<any[]>([]);
   surgeons = signal<UserResponse[]>([]);
   rooms = signal<OperatingRoom[]>([]);
   surgeryTypes = signal<SurgeryTypeResponse[]>([]);
-  
+
   newSurgery = signal<SurgeryRequest>({
     patientId: '',
     surgeonId: '',
@@ -68,6 +72,15 @@ export class CalendarViewComponent implements OnInit {
     this.loadRooms();
     this.loadSchedule();
     this.loadModalData();
+  }
+
+  // Expose a grid-template string so the template can create one fixed left column
+  // for time labels and one column per OR room. This ensures hours are the first
+  // column and each room has its own column after that.
+  get gridTemplateColumns(): string {
+    // first column fixed for time labels (64px), then one column per room
+    const roomCols = this.orRooms && this.orRooms.length ? this.orRooms.map(() => 'minmax(160px, 1fr)').join(' ') : '';
+    return `64px ${roomCols}`.trim();
   }
 
   loadModalData(): void {
@@ -102,11 +115,12 @@ export class CalendarViewComponent implements OnInit {
   loadRooms(): void {
     this.roomService.getAll().subscribe({
       next: (rooms) => {
-        this.orRooms = (rooms || []).map(r => ({
-          id: r.id || 'new',
-          name: r.name || `OR ${String(r.id || '').substring(0, 4) || '??'}`,
-          utilizationPercent: Math.floor(Math.random() * 100)
+        this.orRooms = rooms.map(r => ({
+          id: r.id,
+          name: r.name,
+          utilizationPercent: 0
         }));
+        this.updateUtilization();
       },
       error: (err) => console.error('Failed to load rooms', err)
     });
@@ -136,8 +150,19 @@ export class CalendarViewComponent implements OnInit {
           status: item.status?.toLowerCase() as any || 'scheduled',
           color: this.getColorForStatus(item.status)
         }));
+        this.updateUtilization();
       },
       error: (err) => console.error('Failed to load schedule', err)
+    });
+  }
+
+  private updateUtilization(): void {
+    const WORKING_MINUTES = 12 * 60; // 07:00 – 19:00
+    this.orRooms = this.orRooms.map(room => {
+      const totalMin = this.surgeries
+        .filter(s => s.orRoom === room.name)
+        .reduce((sum, s) => sum + (s.durationMin || 0), 0);
+      return { ...room, utilizationPercent: Math.min(100, Math.round((totalMin / WORKING_MINUTES) * 100)) };
     });
   }
 
@@ -169,24 +194,49 @@ export class CalendarViewComponent implements OnInit {
       priority: 'ELECTIVE',
       notes: ''
     });
+    this.saveError.set('');
+    this.isSaving.set(false);
     this.showAddModal.set(true);
   }
 
   saveSurgery(): void {
     const s = this.newSurgery();
-    if (!s.patientId || !s.surgeonId || !s.surgeryTypeId) return;
+    this.saveError.set('');
 
-    this.surgeryService.create(s).subscribe({
+    if (!s.patientId) { this.saveError.set('Please select a patient.'); return; }
+    if (!s.surgeonId) { this.saveError.set('Please select a surgeon.'); return; }
+    if (!s.roomId) { this.saveError.set('Please select a room.'); return; }
+    if (!s.surgeryTypeId) { this.saveError.set('Please select a surgery type.'); return; }
+    if (!s.scheduledStart || !s.scheduledEnd) { this.saveError.set('Please set start and end times.'); return; }
+
+    // datetime-local gives "yyyy-MM-ddTHH:mm" (no seconds); backend needs "yyyy-MM-ddTHH:mm:ss"
+    const request = {
+      ...s,
+      scheduledStart: s.scheduledStart.length === 16 ? s.scheduledStart + ':00' : s.scheduledStart,
+      scheduledEnd:   s.scheduledEnd.length === 16   ? s.scheduledEnd   + ':00' : s.scheduledEnd,
+    };
+
+    this.isSaving.set(true);
+    this.surgeryService.create(request).subscribe({
       next: () => {
+        this.isSaving.set(false);
         this.showAddModal.set(false);
         this.loadSchedule();
+        this.scheduleService.emitScheduleUpdate();
       },
-      error: (err) => console.error('Failed to create surgery', err)
+      error: (err) => {
+        this.isSaving.set(false);
+        const msg = err?.error?.message || err?.error || err?.message || 'Failed to save surgery. Please try again.';
+        this.saveError.set(typeof msg === 'string' ? msg : JSON.stringify(msg));
+        console.error('Failed to create surgery', err);
+      }
     });
   }
 
   closeAddModal(): void {
     this.showAddModal.set(false);
+    this.saveError.set('');
+    this.isSaving.set(false);
   }
 
   updateSurgeryField(field: keyof SurgeryRequest, value: any): void {
@@ -200,13 +250,17 @@ export class CalendarViewComponent implements OnInit {
     const startDate = this.formatDateOnly(this.currentDate);
     const endDate = this.formatDateOnly(this.currentDate); // Generam doar pentru ziua curenta implicit
 
+    this.generateError = '';
     this.scheduleService.generateSchedule(startDate, endDate).subscribe({
       next: () => {
         this.loadSchedule();
+        this.scheduleService.emitScheduleUpdate();
         this.isGenerating = false;
       },
-      error: () => {
+      error: (err) => {
         this.isGenerating = false;
+        this.generateError = err?.error?.message || err?.message || 'Auto-schedule failed. Check if the algorithm service is running.';
+        console.error('Auto-schedule error:', err);
       }
     });
   }
@@ -297,7 +351,7 @@ export class CalendarViewComponent implements OnInit {
     
     // Extragem doar ora (ex: "08" din "08:00")
     const [slotHour] = time.split(':');
-    
+
     return this.surgeries.filter(s => {
       if (!s.startTime || !s.orRoom) return false;
       const [surgeryHour] = s.startTime.split(':');
@@ -324,15 +378,50 @@ export class CalendarViewComponent implements OnInit {
     this.draggedSurgery = surgery;
   }
 
+  onDragEnd(): void {
+    this.draggedSurgery = null;
+    this.dragOverCell = null;
+  }
+
   onDrop(orRoom: string, time: string): void {
+    this.dragOverCell = null;
     if (!this.draggedSurgery) return;
-    this.draggedSurgery.orRoom = orRoom;
-    this.draggedSurgery.startTime = time;
+
+    const surgery = this.draggedSurgery;
+    const durationMin = surgery.durationMin || 60;
+
+    const [hourStr, minStr] = time.split(':');
+    const startDate = new Date(this.currentDate);
+    startDate.setHours(Number(hourStr), Number(minStr), 0, 0);
+    const endDate = new Date(startDate.getTime() + durationMin * 60000);
+
+    // Immediate visual feedback — mutate in place so change detection picks it up
+    surgery.orRoom = orRoom;
+    surgery.startTime = `${String(startDate.getHours()).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}`;
+    surgery.endTime = `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
+    // Force array reference change so Angular re-evaluates getSurgeriesForSlot
+    this.surgeries = [...this.surgeries];
+
+    const roomId = this.orRooms.find(r => r.name === orRoom)?.id;
+    this.surgeryService.reschedule(surgery.id, this.formatLocalISO(startDate), this.formatLocalISO(endDate), roomId).subscribe({
+      next: () => {
+        this.loadSchedule();
+        this.scheduleService.emitScheduleUpdate();
+      },
+      error: (err) => {
+        console.error('Failed to reschedule surgery:', err);
+        this.loadSchedule();
+      }
+    });
+
     this.draggedSurgery = null;
   }
 
-  onDragOver(event: DragEvent): void {
+  onDragOver(event: DragEvent, room?: string, time?: string): void {
     event.preventDefault();
+    if (this.draggedSurgery && room != null && time != null) {
+      this.dragOverCell = room + time;
+    }
   }
 
   getUtilizationColor(percent?: number): string {

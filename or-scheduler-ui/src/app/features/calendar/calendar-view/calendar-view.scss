@@ -48,6 +48,31 @@
   }
 }
 
+.modal-input,
+.modal-select {
+  background: #f2f7ff;
+  color: #030303;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  width: 220px;
+  transition: all 0.2s;
+  font-family: inherit;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: #3b7fff;
+    box-shadow: 0 0 0 2px rgba(59, 127, 255, 0.2);
+  }
+}
+
+textarea.modal-input {
+  resize: vertical;
+  min-height: 60px;
+}
+
+
 .nav-buttons {
   display: flex;
   align-items: center;
@@ -205,18 +230,26 @@
   background: #0b1120;
 }
 
-.calendar-grid {
-  display: grid;
-  grid-template-columns: 64px repeat(4, 1fr);
-  min-width: 700px;
-}
+ .calendar-grid {
+   display: grid;
+   /* First column reserved for time labels (fixed), other columns are equal width for each OR. */
+   grid-template-columns: 64px repeat(auto-fit, minmax(160px, 1fr));
+   /* center columns when grid is smaller than container */
+   justify-content: center;
+   width: 100%;
+   min-width: 0;
+ }
 
 .time-header {
   background: #0b1120;
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 12;
+  /* Keep the time header visible when horizontally scrolling */
+  left: 0;
+  /* create a subtle separation to the first room column */
   border-bottom: 0.5px solid #1a2535;
+  border-right: 0.5px solid #1a2535;
 }
 
 .room-header {
@@ -245,6 +278,12 @@
   align-items: flex-start;
   min-height: 60px;
   letter-spacing: 0.02em;
+  /* Stick the left time column when horizontally scrolling */
+  position: sticky;
+  left: 0;
+  z-index: 9;
+  /* ensure time column has a solid background so content scrolls under it */
+  background-clip: padding-box;
 }
 
 .grid-cell {
@@ -257,6 +296,12 @@
 
   &:hover {
     background: #0f1825;
+  }
+
+  &.drag-over {
+    background: rgba(59, 127, 255, 0.1);
+    outline: 1px dashed rgba(59, 127, 255, 0.5);
+    outline-offset: -2px;
   }
 }
 

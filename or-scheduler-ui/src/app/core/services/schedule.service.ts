@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, tap, catchError } from 'rxjs';
+import { Observable, Subject, tap, catchError } from 'rxjs';
 import { Surgery } from '../../shared/models/surgery.model';
 import { environment } from '../../../environments/environment';
 
@@ -10,6 +10,10 @@ import { environment } from '../../../environments/environment';
 export class ScheduleService {
   private http = inject(HttpClient);
   private apiUrl: string;
+  // Subject to notify interested components that the schedule has changed
+  private scheduleUpdated = new Subject<void>();
+  // Public observable consumers can subscribe to
+  readonly scheduleUpdated$ = this.scheduleUpdated.asObservable();
 
   constructor() {
     this.apiUrl = environment.apiUrl ? environment.apiUrl.replace('/api', '') + '/api/schedule' : '/api/schedule';
@@ -24,6 +28,11 @@ export class ScheduleService {
         throw err;
       })
     );
+  }
+
+  // Emit a schedule-updated event (used after operations like reschedule/create/delete)
+  emitScheduleUpdate(): void {
+    this.scheduleUpdated.next();
   }
 
   getSchedule(start: string, end: string): Observable<Surgery[]> {

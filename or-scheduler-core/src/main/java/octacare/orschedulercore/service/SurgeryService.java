@@ -107,11 +107,16 @@ public class SurgeryService {
         }
 
         @Transactional
-        public SurgeryResponse reschedule(UUID id, LocalDateTime newStart, LocalDateTime newEnd) {
+        public SurgeryResponse reschedule(UUID id, LocalDateTime newStart, LocalDateTime newEnd, UUID newRoomId) {
                 Surgery surgery = surgeryRepository.findById(id)
                                 .orElseThrow(() -> new RuntimeException("Surgery not found"));
                 surgery.setScheduledStart(newStart);
                 surgery.setScheduledEnd(newEnd);
+                if (newRoomId != null) {
+                        OperatingRoom room = operatingRoomRepository.findById(newRoomId)
+                                        .orElseThrow(() -> new RuntimeException("Operating Room not found"));
+                        surgery.setRoom(room);
+                }
                 return SurgeryResponse.from(surgeryRepository.save(surgery));
         }
 
