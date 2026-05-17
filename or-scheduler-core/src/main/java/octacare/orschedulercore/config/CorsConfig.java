@@ -16,6 +16,7 @@ public class CorsConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOrigins(
                     uiUrl, 
+                    "http://or-scheduler.duckdns.org",
                     "http://localhost", 
                     "http://localhost:80", 
                     "http://localhost:4200", 
