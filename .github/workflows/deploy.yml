@@ -23,8 +23,15 @@ jobs:
             cd /home/ubuntu/krontech
             git pull origin main
             
-            # Free up space before build
+            # Show disk space before cleaning
+            df -h
+            
+            # Absolute nuclear prune - clear everything not running
             sudo docker system prune -af --volumes
+            sudo docker builder prune -af
+            
+            # Show disk space after cleaning
+            df -h
             
             # Create .env file from secrets
             echo "DB_PASS=${{ secrets.DB_PASS }}" > .env
