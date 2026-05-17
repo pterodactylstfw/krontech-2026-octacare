@@ -38,6 +38,9 @@ import java.util.UUID;
 @Configuration
 public class AuthorizationServerConfig {
 
+    @org.springframework.beans.factory.annotation.Value("${app.ui-url}")
+    private String uiUrl;
+
     @Bean
     @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -77,8 +80,8 @@ public class AuthorizationServerConfig {
                 .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-                .redirectUri("http://localhost:4200/auth/callback")
-                .postLogoutRedirectUri("http://localhost:4200/auth/login")
+                .redirectUri(uiUrl + "/auth/callback")
+                .postLogoutRedirectUri(uiUrl + "/auth/login")
                 .scope(OidcScopes.OPENID)
                 .scope(OidcScopes.PROFILE)
                 .scope("role")

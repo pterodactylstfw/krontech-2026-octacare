@@ -26,6 +26,7 @@ jobs:
             # Create .env file from secrets
             echo "DB_PASS=${{ secrets.DB_PASS }}" > .env
             echo "POSTGRES_PASSWORD=${{ secrets.DB_PASS }}" >> .env
+            echo "UI_URL=http://${{ secrets.AWS_HOST }}" >> .env
             
             # Install Docker if not exists (first time setup)
             if ! command -v docker &> /dev/null; then
