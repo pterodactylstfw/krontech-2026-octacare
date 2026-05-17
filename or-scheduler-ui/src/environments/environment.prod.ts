@@ -1,5 +1,6 @@
 export const environment = {
   production: true,
   useMocks: false,
-  apiUrl: 'http://localhost:8080/api'
+  // Using relative path for production so Nginx can proxy it to the backend container
+  apiUrl: '/api'
 };

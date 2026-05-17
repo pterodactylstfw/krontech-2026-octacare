@@ -1,0 +1,39 @@
+name: CI/CD Deploy to AWS
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to AWS EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.AWS_HOST }}
+          username: ubuntu
+          key: ${{ secrets.AWS_PRIVATE_KEY }}
+          script: |
+            cd /home/ubuntu/krontech || git clone https://github.com/${{ github.repository }} /home/ubuntu/krontech
+            cd /home/ubuntu/krontech
+            git pull origin main
+            
+            # Create .env file from secrets
+            echo "DB_PASS=${{ secrets.DB_PASS }}" > .env
+            echo "POSTGRES_PASSWORD=${{ secrets.DB_PASS }}" >> .env
+            
+            # Install Docker if not exists (first time setup)
+            if ! command -v docker &> /dev/null; then
+              sudo apt-get update
+              sudo apt-get install -y docker.io docker-compose
+              sudo usermod -aG docker ubuntu
+            fi
+            
+            # Restart containers
+            docker-compose down
+            docker-compose up --build -d
