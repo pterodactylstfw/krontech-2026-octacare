@@ -25,6 +25,7 @@ public class SurgeryService {
         private final PatientRepository patientRepository;
         private final OperatingRoomRepository operatingRoomRepository;
         private final SurgeryTypeRepository surgeryTypeRepository;
+        private final NotificationService notificationService;
 
         public List<SurgeryResponse> getAll() {
                 return surgeryRepository.findAll().stream()
@@ -95,7 +96,15 @@ public class SurgeryService {
                                 .notes(request.notes())
                                 .build();
 
-                return SurgeryResponse.from(surgeryRepository.save(surgery));
+                Surgery saved = surgeryRepository.save(surgery);
+
+                notificationService.sendUserNotification(
+                                surgeon.getEmail(),
+                                "Noua interventie",
+                                "O noua interventie (" + surgeryType.getName() + ") a fost adaugata in programul tau.",
+                                "info");
+
+                return SurgeryResponse.from(saved);
         }
 
         @Transactional
@@ -103,7 +112,14 @@ public class SurgeryService {
                 Surgery surgery = surgeryRepository.findById(id)
                                 .orElseThrow(() -> new RuntimeException("Surgery not found"));
                 surgery.setStatus(SurgeryStatus.valueOf(status.replace("\"", "").trim().toUpperCase()));
-                return SurgeryResponse.from(surgeryRepository.save(surgery));
+                Surgery saved = surgeryRepository.save(surgery);
+
+                notificationService.sendGlobalNotification(
+                                "Status modificat",
+                                "Interventia pentru " + saved.getPatient().getUser().getFullName() + " este acum: " + status,
+                                "info");
+
+                return SurgeryResponse.from(saved);
         }
 
         @Transactional
@@ -117,7 +133,16 @@ public class SurgeryService {
                                         .orElseThrow(() -> new RuntimeException("Operating Room not found"));
                         surgery.setRoom(room);
                 }
-                return SurgeryResponse.from(surgeryRepository.save(surgery));
+                Surgery saved = surgeryRepository.save(surgery);
+
+                notificationService.sendUserNotification(
+                                saved.getSurgeon().getEmail(),
+                                "Reprogramare interventie",
+                                "Interventia pentru " + saved.getPatient().getUser().getFullName() + " a fost mutata la ora "
+                                                + newStart.toLocalTime().toString(),
+                                "warning");
+
+                return SurgeryResponse.from(saved);
         }
 
         @Transactional

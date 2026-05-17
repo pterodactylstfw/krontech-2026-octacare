@@ -5,6 +5,7 @@ import { ThemeService } from '../../core/theme/theme.service';
 import { AuthService } from '../../core/services/auth.service';
 import { UserRole } from '../../core/enums/user-role.enum';
 import { animate, query, style, transition, trigger } from '@angular/animations';
+import { NotificationCenterComponent } from '../components/notification-center/notification-center.component';
 
 export const routeFadeAnimation = trigger('routeFade', [
   transition('* <=> *', [
@@ -18,7 +19,7 @@ export const routeFadeAnimation = trigger('routeFade', [
 @Component({
   selector: 'app-shell-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, NotificationCenterComponent],
   templateUrl: './shell-layout.html',
   styleUrls: ['./shell-layout.scss'],
   animations: [routeFadeAnimation]

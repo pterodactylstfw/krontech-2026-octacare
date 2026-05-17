@@ -15,6 +15,8 @@ services:
       retries: 5
     volumes:
       - postgres_data:/var/lib/postgresql
+    networks:
+      - or-network
 
   or-scheduler-algorithm:
     build:
@@ -27,6 +29,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - or-network
 
   or-scheduler-core:
     build:
@@ -37,6 +41,8 @@ services:
         condition: service_healthy
       or-scheduler-algorithm:
         condition: service_started
+      rabbitmq:
+        condition: service_healthy
     ports:
       - "8080:8080"
     environment:
@@ -47,6 +53,9 @@ services:
       SPRING_DATASOURCE_URL: ${DB_URL:-jdbc:postgresql://database:5432/orscheduler}
       SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASS}
+      RABBITMQ_HOST: rabbitmq
+    networks:
+      - or-network
 
   or-scheduler-ui:
     build:
@@ -56,6 +65,33 @@ services:
       - "4200:80"
     depends_on:
       - or-scheduler-core
+    networks:
+      - or-network
+
+  rabbitmq:
+    build:
+      context: ./rabbitmq
+    container_name: or-scheduler-rabbitmq
+    ports:
+      - "5672:5672"     # AMQP
+      - "15672:15672"   # Management UI
+      # Port 61613 (STOMP) removed from host mapping to avoid Windows conflicts. 
+      # It remains accessible internally for the backend.
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - or-network
+
+networks:
+  or-network:
+    driver: bridge
 
 volumes:
   postgres_data:

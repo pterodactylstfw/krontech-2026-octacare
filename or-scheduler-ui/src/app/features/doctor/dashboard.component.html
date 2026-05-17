@@ -217,7 +217,7 @@
         </div>
     </div>
 
-    @if (showAllPatients) {
+    @if (showAllPatients()) {
     <div class="patients-modal-backdrop" (click)="closeAllPatients()">
         <div class="patients-modal" (click)="$event.stopPropagation()">
             <div class="patients-modal-header">
